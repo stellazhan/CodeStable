@@ -21,6 +21,9 @@
 
 ### 复现步骤走一遍
 {按 {slug}-report.md 第 2 节复现步骤走一遍，结果是否符合期望行为?}
+
+### 独立 code review
+{subagent reviewer / fresh self-review；P0/P1 是否无阻塞；P2 如何处理}
 ```
 
 ## 2. 日志调试升级
@@ -64,7 +67,9 @@ tags: []
 
 ## 3. 验证结果
 
-## 4. 遗留事项
+## 4. 独立 code review
+
+## 5. 遗留事项
 ```
 
 ## 4. `{slug}-fix-note.md` 快速通道模板
@@ -90,5 +95,7 @@ tags: []
 
 ## 5. 验证结果
 
-## 6. 遗留事项
+## 6. 独立 code review
+
+## 7. 遗留事项
 ```

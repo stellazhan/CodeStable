@@ -11,6 +11,8 @@ description: feature 流程的超轻量通道——不写 design / checklist 直
 
 用户让你做小功能时本来 AI 就会直接动手——这个技能**不改变这件事**。它只做一件事：动手前把项目里已沉淀的 CodeStable 知识指给你，按需搜一下，写出来的代码就比裸写多一层保护；动手后回写一份**最简的 `{slug}-ff-note.md`** 让这次工作可追溯、可被 cs-arch / cs-req backfill 看到、能纳入 scoped-commit 提交。
 
+> main 协调 / worktree 执行 / 批次后 code review 规则看 `.codestable/reference/shared-conventions.md` 第 2.6 节。
+
 很轻：没有 design doc / checklist / 验收清单 / 动手前的用户确认。看完指引，该读代码读、该写代码写、写完回写一段话。
 
 ---
@@ -34,10 +36,11 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 
 ## 怎么用
 
-动手前问 2 个问题：
+动手前问 3 个问题：
 
 1. **这块代码以前有人栽过跟头吗？** → 搜 `compound/` 的 learning
 2. **这块代码有没有已经拍板的写法约束？** → 搜 `compound/` 的 decision + 看 `architecture/` 相关子系统
+3. **这次是否需要独立 worktree？** → 默认按 shared-conventions 第 2.6 节走 worktree；用户明确说直接改当前 checkout 时可以继续，但汇报要写清楚
 
 命中就把结论融进实现（**按约束来写**，不是抄）。没命中按自己判断写很正常。搜不到换几个关键词再试。
 
@@ -101,7 +104,7 @@ design / implement 的硬约束在 fastforward 的精简版。没 design doc 不
 
 ## 写完回写 `{slug}-ff-note.md`
 
-代码写完、验证完、用户确认效果 OK **之后**才动这一步——动手前先建空壳会破坏 ff 的轻体感。
+代码写完、验证完、按 shared-conventions 第 2.6 节做完独立 code review、用户确认效果 OK **之后**才动这一步——动手前先建空壳会破坏 ff 的轻体感。
 
 ### 自动生成 slug
 
@@ -132,7 +135,7 @@ tags: [...]
 - ...
 
 ## 怎么验证的
-{1-2 句：跑了哪些验证 / 浏览器走通了哪条路径 / 跑了什么测试}
+{1-2 句：跑了哪些验证 / 浏览器走通了哪条路径 / 跑了什么测试；独立 code review 是 subagent 还是 fresh self-review，P0/P1 是否无阻塞}
 
 ## 顺手发现（可选，不阻塞）
 - {文件:行号} {问题简述} — 不在本次范围
@@ -168,6 +171,7 @@ tags: [...]
 ## 退出条件
 
 - [ ] 代码写完且用户确认效果 OK
+- [ ] 批次完成后已做独立 code review；P0 / P1 已处理或明确无
 - [ ] `{slug}-ff-note.md` 已落盘且四节填齐（顺手发现可省）
 - [ ] 没有未对齐的"顺手发现"（都进 ff-note 末节，留给后续）
 

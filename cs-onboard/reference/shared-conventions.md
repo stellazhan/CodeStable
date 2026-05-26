@@ -161,6 +161,58 @@ planned  → dropped      （cs-roadmap update 模式，用户决定不做时改
 
 ---
 
+## 2.6 main 协调 + worktree 执行
+
+CodeStable 默认把"讨论 / 计划"和"改代码"拆开：
+
+- **主协调检出**：用户讨论需求、写 design / analysis / roadmap / checklist 的地方，通常是 `main` 分支所在主 checkout。
+- **执行 worktree**：真正改代码的地方。每个 feature / issue / refactor 用独立 git worktree 和独立 `codex/...` 分支，除非用户明确要求直接在当前 checkout 做。
+
+### 计划互通面
+
+worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过计划文档传递：
+
+- `.codestable/features/**`、`.codestable/issues/**`、`.codestable/refactors/**`
+- `.codestable/roadmap/**`
+- `.codestable/compound/**` 中已确认的 decision / explore / trick / learning
+- 必要时由用户指定的临时协调文档
+
+如果一个执行 worktree 发现计划需要调整，先把**计划变更**同步回主协调检出或明确提交到共享分支，再让其他 worktree 读取；不要要求其他 agent 直接去 sibling worktree 读未合并代码。
+
+### 创建执行 worktree 前
+
+动代码前先确认：
+
+1. 当前是否在主协调检出讨论 / 写计划；如果不是，说明风险并按用户偏好继续。
+2. spec / checklist / analysis 已在共享计划面可读。
+3. worktree 路径、分支名、执行范围、禁止触碰的 sibling worktree 已说清楚。
+4. worktree 从当前目标基线创建；不要从另一个功能 worktree 派生，除非用户明确要堆叠开发。
+
+推荐命名：
+
+- 分支：`codex/{slug}`
+- 路径：项目内 `.codex/worktrees/{slug}`，或用户已有的 worktree 根目录
+
+### worktree 内执行规则
+
+- 只读共享计划面和本 worktree 的代码；不要把 sibling worktree 的代码当事实来源。
+- 如果需要知道其他 worktree 的意图，读它已同步到共享计划面的 design / analysis / roadmap / note。
+- 如果发现计划冲突，停下来在主协调检出更新计划或请用户裁决，不靠私下读代码猜。
+- worktree 环境缺少本地 env / secrets 时，按项目注意事项补齐或明确标为环境 blocker，不把缺失环境误判成代码失败。
+
+### 批次完成后的独立 code review
+
+每个执行 worktree 写完一批可验收代码后，进入验收 / fix-note / apply-notes / commit 之前，必须触发一次独立 code review：
+
+1. 优先使用可用的 subagent / reviewer agent；给它最小必要输入：目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果。
+2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
+3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
+4. 如果当前环境没有 subagent 能力，执行 owner 必须做一次 fresh self-review，并在汇报里明确写"未能启动 subagent，已用本线程复核替代"。
+
+review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍然按 design / checklist 做完整闭环。
+
+---
+
 ## 3. 阶段收尾推荐
 
 **feature-acceptance** 收尾按顺序判断：

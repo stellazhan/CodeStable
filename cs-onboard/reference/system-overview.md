@@ -21,6 +21,8 @@ CodeStable 把这几类场景各配一套子技能，产物放进统一的目录
 
 两类都不直接让 AI 写代码,而是先产出 spec(功能方案 / 问题分析),用户 review 后再动手,代码和 doc 一起交付。针对的是术语冲突、范围失控、改完不留存档这三种 AI 默认会出的问题。
 
+默认执行拓扑：在主协调检出（通常是 `main`）讨论需求、写 plan/spec/checklist；真正改代码时为每个 feature / issue / refactor 创建独立 worktree 和独立 `codex/...` 分支。不同 worktree 不互读未合并代码，只通过 `.codestable/` 下已同步的 plan/spec/roadmap/compound 文档互通意图。每个 worktree 写完一批可验收代码后，进入 acceptance / fix-note / commit 前先做一次独立 code review（优先 subagent reviewer）。
+
 **沉淀**——把做事过程产生的知识存下来,下次遇到同类问题直接复用:
 
 - `cs-learn` — 回顾"做 X 时踩了 Y 这个坑"
