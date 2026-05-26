@@ -12,7 +12,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
-  <img src="https://img.shields.io/badge/skills-22-6366F1?style=flat-square" alt="Skills"/>
+  <img src="https://img.shields.io/badge/skills-27-6366F1?style=flat-square" alt="Skills"/>
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License"/>
 </p>
 
@@ -39,6 +39,8 @@ npx skills add https://github.com/liuzhengdongfortest/CodeStable
 ```
 
 `cs` 会读你的诉求，告诉你这次该走哪个 `cs-xxx`。
+
+如果你的 agent 支持自动 skill 触发，`using-codestable` 会在已接入 CodeStable 的仓库中自动检查 `.codestable/attention.md`，并把新功能、bug、重构、架构、需求、roadmap、审计、文档、决策、经验沉淀、代码调研等生命周期任务默认路由到 `cs`，不需要每次手写 `/cs`。
 
 ---
 
@@ -118,6 +120,7 @@ CodeStable 顺着软件编码的真实流程来设计，把开发活动建模成
 
 <table>
 <tr><th>分组</th><th>技能</th><th>用途</th></tr>
+<tr><td><b>自动入口</b></td><td><code>using-codestable</code></td><td>已接入 CodeStable 的仓库中，自动把软件生命周期任务路由到 <code>cs</code></td></tr>
 <tr><td><b>根入口</b></td><td><code>cs</code></td><td>统一入口——介绍体系全貌 + 把开放式诉求路由到正确的 cs-* 子技能。不知道用哪个时就喊它</td></tr>
 <tr><td rowspan="1"><b>接入</b></td><td><code>cs-onboard</code></td><td>把 CodeStable 接入到一个新仓库 / 已有零散文档的仓库</td></tr>
 <tr><td rowspan="2"><b>需求 & 架构</b></td><td><code>cs-req</code></td><td>整理 / 沉淀原始需求文档</td></tr>

@@ -12,7 +12,7 @@ Tired of OpenSpec's flimsiness, Oh-My-OpenAgent's over-engineering, and Superpow
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
-  <img src="https://img.shields.io/badge/skills-22-6366F1?style=flat-square" alt="Skills"/>
+  <img src="https://img.shields.io/badge/skills-27-6366F1?style=flat-square" alt="Skills"/>
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License"/>
 </p>
 
@@ -39,6 +39,8 @@ For daily use, when you don't know which skill fits, call the root entry:
 ```
 
 `cs` reads your intent and tells you which `cs-xxx` to run.
+
+If your agent supports automatic skill triggering, `using-codestable` checks for `.codestable/attention.md` in onboarded repositories and routes lifecycle tasks to `cs` by default. Features, bugs, refactors, architecture, requirements, roadmap work, audits, docs, decisions, learnings, code exploration, and workflow continuation no longer require typing `/cs` every time.
 
 ---
 
@@ -116,6 +118,7 @@ CodeStable models real coding work as **6 entities** and **3 flows**.
 
 <table>
 <tr><th>Group</th><th>Skill</th><th>Purpose</th></tr>
+<tr><td><b>Auto entry</b></td><td><code>using-codestable</code></td><td>In onboarded repositories, automatically routes software lifecycle tasks to <code>cs</code></td></tr>
 <tr><td><b>Root entry</b></td><td><code>cs</code></td><td>Unified entry — introduces the system and routes open-ended intents to the right cs-* skill. Call it when you don't know which one fits</td></tr>
 <tr><td><b>Onboard</b></td><td><code>cs-onboard</code></td><td>Bring CodeStable into a new repo or one with scattered docs</td></tr>
 <tr><td rowspan="2"><b>Requirement & architecture</b></td><td><code>cs-req</code></td><td>Curate / accumulate raw requirement docs</td></tr>

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Using CodeStable"
+  short_description: "Automatically route onboarded repositories through CodeStable workflows"
