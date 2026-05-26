@@ -38,6 +38,7 @@ scan（扫优化点清单）→ design（和用户定做哪几条 + 顺序）→
 ├── {slug}-scan.md              ← 阶段 1 优化点清单
 ├── {slug}-refactor-design.md   ← 阶段 2 执行方案
 ├── {slug}-checklist.yaml       ← 阶段 2 生成，阶段 3 推进
+├── {slug}-implementation-review.md ← 阶段 3 完成门禁
 └── {slug}-apply-notes.md       ← 阶段 3 执行记录
 ```
 
@@ -156,7 +157,7 @@ summary: {本次要做的几条是什么，一句话}
 
 ## 阶段 3：apply
 
-动代码前先按 shared-conventions 第 2.6 节确认执行拓扑：是否在主协调检出讨论、是否创建独立 worktree、分支 / worktree 路径、共享计划面、以及禁止触碰的 sibling worktree。
+动代码前先按 shared-conventions 第 2.6 节确认执行拓扑：是否在主协调检出讨论、是否已在独立 worktree、分支 / worktree 路径、共享计划面、以及禁止触碰的 sibling worktree。若不在执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求当前 checkout 直接做时才可继续，并在 apply-notes 里写清楚 override。
 
 ### 推进规则
 
@@ -187,6 +188,7 @@ refactor: {YYYY-MM-DD}-{slug}
 
 ## 独立 code review
 - reviewer: {subagent / fresh self-review}
+- evidence: {slug}-implementation-review.md
 - 结果: {P0/P1 无阻塞 / 已修复清单}
 - P2: {无 / 后续 issue / 用户接受风险}
 ```
@@ -194,7 +196,7 @@ refactor: {YYYY-MM-DD}-{slug}
 ### 全部完成后
 
 - 跑全量测试 + 类型检查 + lint
-- 按 shared-conventions 第 2.6 节触发独立 code review；P0 / P1 先修到无阻塞，没有 subagent 能力时做 fresh self-review 并写入 apply-notes
+- 按 shared-conventions 第 2.6 节触发独立 code review，把完整结果写入 `{slug}-implementation-review.md`；P0 / P1 先修到无阻塞，没有 subagent 能力时做 fresh self-review 并在 review 文件和 apply-notes 摘要说明。没有这份 review 文件，不输出 apply 完成汇报
 - 最后一次请用户整体目视确认（前端：打开主要页面点一圈）
 - 确认通过后收尾 commit，message 引用 refactor 目录
 
@@ -208,7 +210,7 @@ refactor: {YYYY-MM-DD}-{slug}
 - [ ] design 用户整体 review 通过 `status: approved`
 - [ ] checklist.yaml 已生成且通过 `validate-yaml.py`
 - [ ] apply 每步都有验证记录（AI 自证贴日志，HUMAN 贴用户确认语录）
-- [ ] 批次完成后已做独立 code review；P0 / P1 已处理或明确无
+- [ ] `{slug}-implementation-review.md` 已建；P0 / P1 已处理或明确无
 - [ ] 全量测试 / 类型检查 / lint 通过
 - [ ] 用户最后一次目视确认通过
 

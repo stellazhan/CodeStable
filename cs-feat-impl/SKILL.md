@@ -71,7 +71,7 @@ frontmatter：`doc_type=feature-design` / `feature` 一致 / `status=approved` /
 
 ### 4. 确认执行拓扑
 
-动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否需要创建独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。用户明确要求在当前 checkout 直接做时可以继续，但要在汇报里写清楚。
+动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否已在独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。若当前不是执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求在当前 checkout 直接做时才可继续，并在汇报里写清楚 override。
 
 ### 5. 跟用户确认从哪一步开始
 
@@ -136,7 +136,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 
 ## 写完后先做独立 code review，再输出统一汇报
 
-所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review。reviewer 有 P0 / P1 时先修，再复核；没有 subagent 能力时做 fresh self-review 并在汇报里明确说明。
+所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review，并把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核；没有 subagent 能力时做 fresh self-review 并在 review 文件和汇报里明确说明。没有这份 review 文件，不输出实现完成汇报。
 
 所有步骤完成后用下面模板汇报，**停下来等用户 review**。
 
@@ -169,7 +169,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 **Fastforward design**：对照第 2 节验收标准逐条核对
 
 ### 独立 code review
-{subagent reviewer / fresh self-review；发现了什么；P0/P1 是否已修到无阻塞；P2 如何处理}
+{review 文件路径；subagent reviewer / fresh self-review；发现了什么；P0/P1 是否已修到无阻塞；P2 如何处理}
 ```
 
 汇报后停等 review。
@@ -191,8 +191,8 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 ## 退出条件
 
 - [ ] 所有 steps 的 status 都 `done`
+- [ ] `{slug}-implementation-review.md` 已建；P0 / P1 已处理或明确无
 - [ ] 完成汇报已输出，用户 review 通过
-- [ ] 批次完成后已做独立 code review；P0 / P1 已处理或明确无
 - [ ] 没有未处理的"需要叫停"信号
 - [ ] 第 3 节关键场景每条都有证据 / 测试覆盖（fastforward 对照第 2 节）
 - [ ] 没有"顺手发现"被偷偷修掉（都进 issue 列表）

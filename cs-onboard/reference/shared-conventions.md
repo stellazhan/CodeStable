@@ -4,8 +4,6 @@
 
 skill 本身不共享文件系统（每个 skill 是独立安装单元），共享口径不能放在某个 skill 内部被别的 skill 引用。放在"工作项目"里对所有 skill 都可达。
 
----
-
 ## 0. 目录结构与路径命名
 
 onboard 完成后骨架（`cs-onboard` 负责搭建）：
@@ -29,18 +27,21 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │       ├── {slug}-brainstorm.md  （可选，case 2 时产出）
 │       ├── {slug}-design.md      （标准流程）
 │       ├── {slug}-checklist.yaml （标准流程）
+│       ├── {slug}-implementation-review.md （实现完成门禁）
 │       ├── {slug}-acceptance.md  （标准流程）
 │       └── {slug}-ff-note.md     （fastforward 通道唯一产物，与上面四份互斥）
 ├── issues/                issue spec 聚合根
 │   └── YYYY-MM-DD-{slug}/
 │       ├── {slug}-report.md
 │       ├── {slug}-analysis.md   （根因不显然才有）
+│       ├── {slug}-implementation-review.md
 │       └── {slug}-fix-note.md
 ├── refactors/             refactor spec 聚合根
 │   └── YYYY-MM-DD-{slug}/
 │       ├── {slug}-scan.md
 │       ├── {slug}-refactor-design.md
 │       ├── {slug}-checklist.yaml
+│       ├── {slug}-implementation-review.md
 │       └── {slug}-apply-notes.md
 ├── compound/              沉淀类文档统一目录
 │   └── YYYY-MM-DD-{doc_type}-{slug}.md
@@ -73,11 +74,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 
 **触发时谁负责**：`cs-arch` 的 `backfill` / `update` 模式在 Phase 6 落盘前主动检查并搬迁；命中阈值时这次操作要把"本次新加 / 改的 + 已有同类全部"一起搬，并同步改 `ARCHITECTURE.md` 链接（搬迁本身要在 Phase 5 给用户 review，不偷偷做）。`check` 模式不主动搬迁，但发现 ≥6 仍平铺时在报告末尾列为观察项。
 
-### 改目录结构
-
 改 `cs-onboard/reference/shared-conventions.md` 模板，新项目 onboard 时带上新版本；已有项目手动同步 `.codestable/reference/shared-conventions.md`。
-
----
 
 ## 1. 共享元数据口径
 
@@ -97,8 +94,6 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 **外部读者文档**（guidedoc / libdoc）：frontmatter 由各自子技能定义。无特殊说明：`draft` = 待 review，`current` = 当前有效，`outdated` = 代码已变更待同步。
 
 **写作约束**：子技能提字段时优先写"额外字段"或"阶段状态变化"，不重复展开整套通用字段。
-
----
 
 ## 2. {slug}-checklist.yaml 生命周期
 
@@ -122,8 +117,6 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 **acceptance 的职责**：只更新 `checks[].status`（`pending` → `passed` / `failed`），不重写 `steps`。
 
 **写作约束**：子技能描述 checklist 时只补本阶段读 / 写哪一部分，不重新定义生命周期。
-
----
 
 ## 2.5 roadmap ↔ feature 衔接协议
 
@@ -158,8 +151,6 @@ planned  → dropped      （cs-roadmap update 模式，用户决定不做时改
 回写是**实际写文件的动作**，验收报告要明确记录回写结果。
 
 **最小闭环标记**：items.yaml 每份只有一条 `minimal_loop: true`，标记"做完后系统能端到端跑通最窄路径"。design 启动 `minimal_loop` 条目时优先级最高。
-
----
 
 ## 2.6 main 协调 + worktree 执行
 
@@ -202,16 +193,15 @@ worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过
 
 ### 批次完成后的独立 code review
 
-每个执行 worktree 写完一批可验收代码后，进入验收 / fix-note / apply-notes / commit 之前，必须触发一次独立 code review：
+每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
 1. 优先使用可用的 subagent / reviewer agent；给它最小必要输入：目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果。
 2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
 3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
-4. 如果当前环境没有 subagent 能力，执行 owner 必须做一次 fresh self-review，并在汇报里明确写"未能启动 subagent，已用本线程复核替代"。
+4. 如果当前环境没有 subagent 能力，执行 owner 必须做 fresh self-review，并明确写"未能启动 subagent，已用本线程复核替代"。
+5. review 结果落到同一 feature / issue / refactor 目录的 `{slug}-implementation-review.md`；最终汇报、fix-note、apply-notes 可摘要引用，但不能替代这份证据文件。
 
-review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍然按 design / checklist 做完整闭环。
-
----
+review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍按 design / checklist 做闭环。`cs-onboard` 释放的 `.codestable/tools/validate-implementation-review.py` 可作为 Stop hook 门禁：有实现代码变更时必须在 linked worktree 内执行（除非显式 override），已完成的 feature / issue / refactor 必须有 implementation-review 文件。
 
 ## 3. 阶段收尾推荐
 
@@ -237,8 +227,6 @@ review 不是 acceptance 的替代品；它只保证代码批次质量，accepta
 
 **统一规则**：一律一句话提示；用户说"不用"立即跳过；不强制；上游主动提示，下游承接执行。
 
----
-
 ## 4. 收尾提交（scoped-commit）
 
 acceptance / issue-fix 走完后把本次产物提交为一个 commit：
@@ -250,8 +238,6 @@ acceptance / issue-fix 走完后把本次产物提交为一个 commit：
 
 子技能只描述本阶段特有提交范围，通用规则看这里。
 
----
-
 ## 5. 归档检索规则
 
 feature-design / issue-analyze / issue-fix 动手前到 `.codestable/compound/` 搜已有沉淀：
@@ -262,8 +248,6 @@ feature-design / issue-analyze / issue-fix 动手前到 `.codestable/compound/` 
 - 搜到和当前方向冲突的 decision → **必须**正面回应"为什么仍然这么做"或调整方向
 
 子技能只补本阶段查询命令。完整搜索语法看 `.codestable/reference/tools.md`。
-
----
 
 ## 6. 归档类子技能共享守护规则
 
@@ -280,8 +264,6 @@ feature-design / issue-analyze / issue-fix 动手前到 `.codestable/compound/` 
 6. **识别用户意图是"改已有"还是"记新的"**——用户说"改 / 更新 / 修订 / 补充 {某条}"、明确指向某条旧文档、或话题高度重合时默认走"更新已有"，不要闷头新建。分不清就问。
 
 各子技能只认自己的 `doc_type`，不读写别家产物。
-
----
 
 ## 7. 写代码时的反射检查
 

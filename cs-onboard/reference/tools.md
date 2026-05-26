@@ -98,3 +98,21 @@ python .codestable/tools/validate-yaml.py --file {文件路径} --require doc_ty
 # 批量校验目录下所有文件
 python .codestable/tools/validate-yaml.py --dir {目录} --require doc_type --require status
 ```
+
+---
+
+## 3. validate-implementation-review.py
+
+实现完成门禁。用于 Stop hook 或手动检查：有实现代码变更时应在 linked worktree 内执行；已完成的 feature / issue / refactor 要有 `{slug}-implementation-review.md`。
+
+```bash
+python .codestable/tools/validate-implementation-review.py --root . --json
+```
+
+若用户明确要求直接在主 checkout 改代码，可临时显式 override：
+
+```bash
+CODESTABLE_ALLOW_MAIN_CHECKOUT_IMPLEMENTATION=1 python .codestable/tools/validate-implementation-review.py --root .
+```
+
+配到 Codex / Claude Stop hook 时，可调用 `.codestable/tools/codestable-implementation-gate.sh`。
