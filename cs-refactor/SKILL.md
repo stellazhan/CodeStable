@@ -187,7 +187,7 @@ refactor: {YYYY-MM-DD}-{slug}
 ## 步骤 2: ...
 
 ## 独立 code review
-- reviewer: {subagent / fresh self-review}
+- reviewer: {subagent reviewer；仅平台无 subagent 能力时才写 fresh self-review fallback}
 - evidence: {slug}-implementation-review.md
 - 结果: {P0/P1 无阻塞 / 已修复清单}
 - P2: {无 / 后续 issue / 用户接受风险}
@@ -196,7 +196,7 @@ refactor: {YYYY-MM-DD}-{slug}
 ### 全部完成后
 
 - 跑全量测试 + 类型检查 + lint
-- 按 shared-conventions 第 2.6 节触发独立 code review，把完整结果写入 `{slug}-implementation-review.md`；P0 / P1 先修到无阻塞，没有 subagent 能力时做 fresh self-review 并在 review 文件和 apply-notes 摘要说明。没有这份 review 文件，不输出 apply 完成汇报
+- 按 shared-conventions 第 2.6 节触发独立 code review：必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback。把完整结果写入 `{slug}-implementation-review.md`；P0 / P1 先修到无阻塞，fallback 时在 review 文件和 apply-notes 摘要说明。没有这份 review 文件，不输出 apply 完成汇报
 - 最后一次请用户整体目视确认（前端：打开主要页面点一圈）
 - 确认通过后收尾 commit，message 引用 refactor 目录
 
@@ -210,7 +210,7 @@ refactor: {YYYY-MM-DD}-{slug}
 - [ ] design 用户整体 review 通过 `status: approved`
 - [ ] checklist.yaml 已生成且通过 `validate-yaml.py`
 - [ ] apply 每步都有验证记录（AI 自证贴日志，HUMAN 贴用户确认语录）
-- [ ] `{slug}-implementation-review.md` 已建；P0 / P1 已处理或明确无
+- [ ] `{slug}-implementation-review.md` 已建且 reviewer 为 subagent（仅平台无 subagent 能力时可 fallback）；P0 / P1 已处理或明确无
 - [ ] 全量测试 / 类型检查 / lint 通过
 - [ ] 用户最后一次目视确认通过
 

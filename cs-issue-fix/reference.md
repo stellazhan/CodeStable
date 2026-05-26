@@ -23,7 +23,7 @@
 {按 {slug}-report.md 第 2 节复现步骤走一遍，结果是否符合期望行为?}
 
 ### 独立 code review
-{implementation-review 文件路径；subagent reviewer / fresh self-review；P0/P1 是否无阻塞；P2 如何处理}
+{implementation-review 文件路径；subagent reviewer；P0/P1 是否无阻塞；P2 如何处理；仅平台无 subagent 能力时才写 fresh self-review fallback}
 ```
 
 ## 2. 日志调试升级

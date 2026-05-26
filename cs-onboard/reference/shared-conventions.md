@@ -195,13 +195,19 @@ worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过
 
 每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
-1. 优先使用可用的 subagent / reviewer agent；给它最小必要输入：目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果。
+1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。给 reviewer 最小必要输入：目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果。
 2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
 3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
-4. 如果当前环境没有 subagent 能力，执行 owner 必须做 fresh self-review，并明确写"未能启动 subagent，已用本线程复核替代"。
+4. 只有当前平台确实没有 subagent 能力时，执行 owner 才能做 fresh self-review fallback，并明确写"当前环境没有 subagent 能力，已用本线程复核替代"。不能因为任务小、时间紧、或觉得 reviewer 多余而跳过 subagent。
 5. review 结果落到同一 feature / issue / refactor 目录的 `{slug}-implementation-review.md`；最终汇报、fix-note、apply-notes 可摘要引用，但不能替代这份证据文件。
 
+review 文件必须包含单独一行 `reviewer: subagent`，这样 validator 才能确认不是 self-review 解释文本误命中。只有 fallback 时才写 `reviewer: self`，并配合环境变量 `CODESTABLE_ALLOW_SELF_REVIEW_FALLBACK=1`。
+
 review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍按 design / checklist 做闭环。`cs-onboard` 释放的 `.codestable/tools/validate-implementation-review.py` 可作为 Stop hook 门禁：有实现代码变更时必须在 linked worktree 内执行（除非显式 override），已完成的 feature / issue / refactor 必须有 implementation-review 文件。
+
+### 复杂实现的 subagent 执行选择
+
+review 强制用 subagent；实现是否用 subagent 取决于复杂度。动手前如果发现这次实现跨 3 个以上子系统、需要并行拆片、涉及高风险迁移 / 并发 / runtime contract，或单线程上下文承载明显吃紧，先停下来问用户是否切换为 subagent-driven implementation。用户同意后按最佳实践拆成互不重叠的写入范围：每个 worker 只负责自己的文件 / 模块，主线程保留集成、验证和最终 review。
 
 ## 3. 阶段收尾推荐
 

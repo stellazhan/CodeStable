@@ -103,7 +103,7 @@ python .codestable/tools/validate-yaml.py --dir {目录} --require doc_type --re
 
 ## 3. validate-implementation-review.py
 
-实现完成门禁。用于 Stop hook 或手动检查：有实现代码变更时应在 linked worktree 内执行；已完成的 feature / issue / refactor 要有 `{slug}-implementation-review.md`。
+实现完成门禁。用于 Stop hook 或手动检查：有实现代码变更时应在 linked worktree 内执行；已完成的 feature / issue / refactor 要有 `{slug}-implementation-review.md`，且默认必须声明 subagent reviewer。
 
 ```bash
 python .codestable/tools/validate-implementation-review.py --root . --json
@@ -113,6 +113,9 @@ python .codestable/tools/validate-implementation-review.py --root . --json
 
 ```bash
 CODESTABLE_ALLOW_MAIN_CHECKOUT_IMPLEMENTATION=1 python .codestable/tools/validate-implementation-review.py --root .
+
+# 只有平台确实没有 subagent 能力时，才允许 self-review fallback
+CODESTABLE_ALLOW_SELF_REVIEW_FALLBACK=1 python .codestable/tools/validate-implementation-review.py --root .
 ```
 
 配到 Codex / Claude Stop hook 时，可调用 `.codestable/tools/codestable-implementation-gate.sh`。

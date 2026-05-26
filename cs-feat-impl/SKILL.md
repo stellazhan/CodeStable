@@ -136,7 +136,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 
 ## 写完后先做独立 code review，再输出统一汇报
 
-所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review，并把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核；没有 subagent 能力时做 fresh self-review 并在 review 文件和汇报里明确说明。没有这份 review 文件，不输出实现完成汇报。
+所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review：必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
 
 所有步骤完成后用下面模板汇报，**停下来等用户 review**。
 
@@ -169,7 +169,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 **Fastforward design**：对照第 2 节验收标准逐条核对
 
 ### 独立 code review
-{review 文件路径；subagent reviewer / fresh self-review；发现了什么；P0/P1 是否已修到无阻塞；P2 如何处理}
+{review 文件路径；subagent reviewer；发现了什么；P0/P1 是否已修到无阻塞；P2 如何处理；仅平台无 subagent 能力时才写 fresh self-review fallback}
 ```
 
 汇报后停等 review。
@@ -191,7 +191,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 ## 退出条件
 
 - [ ] 所有 steps 的 status 都 `done`
-- [ ] `{slug}-implementation-review.md` 已建；P0 / P1 已处理或明确无
+- [ ] `{slug}-implementation-review.md` 已建且 reviewer 为 subagent（仅平台无 subagent 能力时可 fallback）；P0 / P1 已处理或明确无
 - [ ] 完成汇报已输出，用户 review 通过
 - [ ] 没有未处理的"需要叫停"信号
 - [ ] 第 3 节关键场景每条都有证据 / 测试覆盖（fastforward 对照第 2 节）

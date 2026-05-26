@@ -135,7 +135,7 @@ tags: [...]
 - ...
 
 ## 怎么验证的
-{1-2 句：跑了哪些验证 / 浏览器走通了哪条路径 / 跑了什么测试；独立 code review 是 subagent 还是 fresh self-review，P0/P1 是否无阻塞}
+{1-2 句：跑了哪些验证 / 浏览器走通了哪条路径 / 跑了什么测试；独立 code review 必须是 subagent reviewer，只有平台没有 subagent 能力时才写明 fresh self-review fallback；P0/P1 是否无阻塞}
 
 ## 顺手发现（可选，不阻塞）
 - {文件:行号} {问题简述} — 不在本次范围
@@ -171,7 +171,7 @@ tags: [...]
 ## 退出条件
 
 - [ ] 代码写完且用户确认效果 OK
-- [ ] 批次完成后已做独立 code review；P0 / P1 已处理或明确无
+- [ ] 批次完成后已用 subagent 做独立 code review（仅平台无 subagent 能力时可 fallback）；P0 / P1 已处理或明确无
 - [ ] `{slug}-ff-note.md` 已落盘且四节填齐（顺手发现可省）
 - [ ] 没有未对齐的"顺手发现"（都进 ff-note 末节，留给后续）
 
