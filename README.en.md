@@ -12,7 +12,7 @@ Tired of OpenSpec's flimsiness, Oh-My-OpenAgent's over-engineering, and Superpow
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
-  <img src="https://img.shields.io/badge/skills-27-6366F1?style=flat-square" alt="Skills"/>
+  <img src="https://img.shields.io/badge/skills-28-6366F1?style=flat-square" alt="Skills"/>
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License"/>
 </p>
 
@@ -141,6 +141,7 @@ CodeStable models real coding work as **6 entities** and **3 flows**.
 <tr><td><code>cs-decide</code></td><td>Record settled tech choices, architectural decisions, long-term constraints as permanent docs</td></tr>
 <tr><td rowspan="2"><b>Explore & docs</b></td><td><code>cs-explore</code></td><td>Targeted code exploration; sink "ask → read → conclude" into evidence</td></tr>
 <tr><td><code>cs-guide</code> / <code>cs-libdoc</code></td><td>Outward-facing developer guides / library reference docs</td></tr>
+<tr><td><b>Maintenance</b></td><td><code>codestable-maintainer</code></td><td>Maintain CodeStable source, harness plans, pushed-branch fresh clone verification, and installed-copy diff checks</td></tr>
 </table>
 
 ---

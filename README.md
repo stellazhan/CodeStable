@@ -12,7 +12,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
-  <img src="https://img.shields.io/badge/skills-27-6366F1?style=flat-square" alt="Skills"/>
+  <img src="https://img.shields.io/badge/skills-28-6366F1?style=flat-square" alt="Skills"/>
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License"/>
 </p>
 
@@ -143,6 +143,7 @@ CodeStable 顺着软件编码的真实流程来设计，把开发活动建模成
 <tr><td><code>cs-decide</code></td><td>把已拍板的技术选型、架构决定、长期约束记成永久文档</td></tr>
 <tr><td rowspan="2"><b>探索 & 文档</b></td><td><code>cs-explore</code></td><td>定向代码探索，把"提问 → 读代码 → 得结论"沉淀成证据</td></tr>
 <tr><td><code>cs-guide</code> / <code>cs-libdoc</code></td><td>对外的开发者指南 / 库参考文档</td></tr>
+<tr><td><b>维护</b></td><td><code>codestable-maintainer</code></td><td>维护 CodeStable 源仓库、harness 方案、push 后 fresh clone 验证和 installed copy diff-check</td></tr>
 </table>
 
 ---
