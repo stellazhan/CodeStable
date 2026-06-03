@@ -203,7 +203,14 @@ gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现
 
 每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
-1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。给 reviewer 最小必要输入：目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果。
+1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。先用 review packet 工具生成最小必要输入，再发给 reviewer：
+
+```bash
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+```
+
+packet 应包含目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果；不要把 `.env`、token、secret 或本地凭证贴进 review 输入。
+
 2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
 3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
 4. 只有当前平台确实没有 subagent 能力时，执行 owner 才能做 fresh self-review fallback，并明确写"当前环境没有 subagent 能力，已用本线程复核替代"。不能因为任务小、时间紧、或觉得 reviewer 多余而跳过 subagent。
@@ -223,6 +230,12 @@ python .codestable/tools/codestable-worktree-gate.py --root . --json commit --un
 
 ```bash
 python .codestable/tools/codestable-doctor.py --root . --json
+```
+
+若只想看未关闭的人审和 follow-up，可运行：
+
+```bash
+python .codestable/tools/codestable-backlog.py --root . --json
 ```
 
 ### 复杂实现的 subagent 执行选择
@@ -261,6 +274,14 @@ acceptance / issue-fix 走完后把本次产物提交为一个 commit：
 - **不该进**：和本次工作无关的顺手修改；属于"下次另起 feature / issue"的扩大范围
 - **提交前确认**：用户没明确同意不要 `git commit`
 - **commit message**：一句话说清"做了什么"，不贴 spec 目录路径
+
+提交前先运行 commit planner，确认 dirty tree 需要几个逻辑 commit：
+
+```bash
+python .codestable/tools/plan-commits.py --root . --json
+```
+
+planner 只读，不替你 stage。它会把 code/docs/tests、migrations/database_docs、data、logs、CodeStable 文档、installed skill deployment、unknown 分开，并提示 migration/database docs、runbook doc-sync、tracked ignored、large file、live writer 风险。
 
 子技能只描述本阶段特有提交范围，通用规则看这里。
 

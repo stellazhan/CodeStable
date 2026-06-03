@@ -197,3 +197,74 @@ python .codestable/tools/codestable-worktree-gate.py --root . --json quarantine 
 ```
 
 Phase 1 只创建安全 execution worktree，不自动搬 dirty 文件；文件迁移仍由 owner 显式处理。
+
+---
+
+## 6. build-review-packet.py
+
+独立 subagent code review 的输入包生成器。它把本次 unit 文档、diff stat、聚焦 diff、验证结果和风险提示整理成一份可发给 reviewer 的 Markdown，并自动隐藏 `.env` / token / secret 类路径和值。
+
+```bash
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md \
+  --validation "uv run pytest -> passed" \
+  --validation "CLI smoke -> passed"
+```
+
+适用时机：feature / issue / refactor 代码写完、owner 验证命令跑完之后，触发 subagent reviewer 之前。reviewer 只审查，不修改代码。review 结果仍要落到 `{slug}-implementation-review.md`，packet 只是输入材料。
+
+输出内容：
+
+- unit 下的 `.md` / `.yaml` 关键文档；
+- unstaged / staged `git diff --stat`；
+- 排除 secret-like 路径后的 focused diff；
+- owner 传入的验证命令和结果；
+- 数据库 / 迁移 / 并发 / 幂等 / crash-resume / provider cost / deterministic LLM boundary 风险提示。
+
+---
+
+## 7. plan-commits.py
+
+提交规划器。只读，不 stage、不 commit。用于提交前把 dirty tree 按逻辑 bucket 拆开，并发现 migration doc-sync、runbook doc-sync、tracked ignored、large file、live writer 等风险。
+
+```bash
+python .codestable/tools/plan-commits.py --root . --json
+```
+
+主要 bucket：
+
+- `code` / `tests` / `docs`
+- `migrations` / `database_docs`
+- `data`
+- `logs`
+- `codestable`
+- `installed_skill`
+- `unknown`
+
+典型 findings：
+
+- migration 有变化但缺少 `docs/database/` 合同文档；
+- 项目 `AGENTS.md` 声明了 source ↔ docs 映射，但 source 改了对应 runbook 没改；
+- 已追踪文件现在被 `.gitignore` 忽略；
+- 大文件或正在被写入的文件混进提交。
+
+这个工具只给出建议。是否拆 commit、怎么 stage，仍由执行者按项目规则决定。
+
+---
+
+## 8. codestable-backlog.py
+
+CodeStable 人审 / 后续事项积压扫描器。它只读 `.codestable/`，用于最终汇报前确认没有把人工决策点或 follow-up 隐藏掉。
+
+```bash
+python .codestable/tools/codestable-backlog.py --root . --json
+```
+
+会扫描：
+
+- `needs-human-review`
+- `Human review required`
+- `Follow-up` / `Follow-Ups`
+- accepted / deferred P2
+- `attention.md` candidates
+
+JSON 每个 item 带 `kind`、`severity`、`blocking`、`file`、`line`、`unit`、`action`、`excerpt`。`needs-human-review` / `Human review required` 一律 P1；带 `required`、`must`、`blocking`、`before merge/publish/release/ship/completion` 的 follow-up 也会升为 P1。其他 follow-up / P2 / attention candidates 是 P2，必须解决、转 issue，或明确延期。

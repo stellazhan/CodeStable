@@ -1,0 +1,232 @@
+from __future__ import annotations
+
+import importlib.util
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+TOOLS_DIR = ROOT / "cs-onboard/tools"
+MAINTAINER_TOOLS_DIR = ROOT / "codestable-maintainer/tools"
+sys.path.insert(0, str(TOOLS_DIR))
+
+
+def load_tool(module_name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+review_packet = load_tool("build_review_packet", TOOLS_DIR / "build-review-packet.py")
+commit_planner = load_tool("plan_commits", TOOLS_DIR / "plan-commits.py")
+backlog_tool = load_tool("codestable_backlog", TOOLS_DIR / "codestable-backlog.py")
+maintainer_verify = load_tool("codestable_maintainer_verify", MAINTAINER_TOOLS_DIR / "verify.py")
+
+
+def run(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=repo,
+        check=check,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def init_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    run(repo, "init", "-b", "main")
+    run(repo, "config", "user.email", "test@example.com")
+    run(repo, "config", "user.name", "Test User")
+    (repo / "README.md").write_text("base\n", encoding="utf-8")
+    run(repo, "add", "README.md")
+    run(repo, "commit", "-m", "init")
+    return repo
+
+
+def make_feature_unit(repo: Path) -> Path:
+    unit = repo / ".codestable/features/2026-06-03-demo"
+    unit.mkdir(parents=True)
+    (unit / "demo-design.md").write_text("design api_key=SECRET123\n", encoding="utf-8")
+    (unit / "demo-checklist.yaml").write_text("steps:\n  - id: one\n    status: done\n", encoding="utf-8")
+    return unit
+
+
+def test_review_packet_includes_unit_docs_diff_validation_and_redacts_secrets(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("TOKEN=\"supersecretvalue\"\nprint('x')\n", encoding="utf-8")
+    run(repo, "add", ".codestable/features/2026-06-03-demo/demo-checklist.yaml")
+    (repo / ".env.local").write_text("API_KEY=should_not_appear\n", encoding="utf-8")
+
+    packet = review_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        ["pytest -q -> passed with Authorization: Bearer abcdefghijklmnop"],
+    )
+
+    assert "demo-design.md" in packet
+    assert "demo-checklist.yaml" in packet
+    assert "Git Diff Stat" in packet
+    assert "Staged" in packet
+    assert "Untracked Files" in packet
+    assert "print('x')" in packet
+    assert "pytest -q -> passed" in packet
+    assert "deterministic LLM boundary" in packet
+    assert "SECRET123" not in packet
+    assert "supersecretvalue" not in packet
+    assert "abcdefghijklmnop" not in packet
+    assert "should_not_appear" not in packet
+    assert ".env.local" in packet
+
+
+def test_plan_commits_buckets_and_warnings_without_mutation(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    (repo / "AGENTS.md").write_text(
+        "| Document | Source Files |\n"
+        "|---|---|\n"
+        "| `docs/runbooks/Crawl.md` | `commands/crawl.py` |\n"
+        "| `docs/runbooks/CommandReference.md` | `commands/*.py` |\n",
+        encoding="utf-8",
+    )
+    (repo / ".gitignore").write_text("*.jsonl\n", encoding="utf-8")
+    (repo / "runtime.jsonl").write_text("old\n", encoding="utf-8")
+    run(repo, "add", "AGENTS.md", ".gitignore")
+    run(repo, "add", "-f", "runtime.jsonl")
+    run(repo, "commit", "-m", "repo docs")
+    (repo / "src/gammasource/commands").mkdir(parents=True)
+    (repo / "src/gammasource/commands/crawl.py").write_text("print('crawl')\n", encoding="utf-8")
+    (repo / "supabase/migrations").mkdir(parents=True)
+    (repo / "supabase/migrations/20260603_demo.sql").write_text("select 1;\n", encoding="utf-8")
+    (repo / "data/output").mkdir(parents=True)
+    (repo / "data/output/items.json").write_text("{}\n", encoding="utf-8")
+    (repo / "runtime.jsonl").write_text("new\n", encoding="utf-8")
+    (repo / "large.bin").write_text("x" * 20, encoding="utf-8")
+    before_status = run(repo, "status", "--porcelain", "-uall").stdout
+    before_index = run(repo, "diff", "--cached", "--name-status").stdout
+
+    payload = commit_planner.plan(repo, large_file_bytes=10)
+
+    after_status = run(repo, "status", "--porcelain", "-uall").stdout
+    after_index = run(repo, "diff", "--cached", "--name-status").stdout
+    assert payload["mutates"] is False
+    assert before_status == after_status
+    assert before_index == after_index
+    assert payload["buckets"]["code"] == ["src/gammasource/commands/crawl.py"]
+    assert payload["buckets"]["migrations"] == ["supabase/migrations/20260603_demo.sql"]
+    assert payload["buckets"]["data"] == ["data/output/items.json"]
+    assert payload["buckets"]["logs"] == ["runtime.jsonl"]
+    messages = "\n".join(finding["message"] for finding in payload["findings"])
+    assert "Migration changes" in messages
+    assert "mapped docs" in messages
+    assert "Tracked files are ignored" in messages
+    assert "Large changed files" in messages
+
+
+def test_backlog_reports_blocking_and_optional_items_with_unit(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    unit = make_feature_unit(repo)
+    (unit / "demo-acceptance.md").write_text(
+        "status: needs-human-review\n"
+        "Follow-up required before merge: confirm owner decision\n"
+        "Follow-up: polish docs\n"
+        "accepted P2 follow-up: keep for later\n"
+        "deferred P2: split helper later\n",
+        encoding="utf-8",
+    )
+    (repo / ".codestable/attention.md").write_text(
+        "## attention.md Candidates\n- remember command\n- add env warning\n## Other\n- not a candidate\n",
+        encoding="utf-8",
+    )
+
+    payload = backlog_tool.backlog(repo)
+
+    assert payload["ok"] is False
+    assert payload["blocking_count"] == 2
+    assert payload["optional_count"] >= 3
+    units = {item["unit"] for item in payload["items"]}
+    assert ".codestable/features/2026-06-03-demo" in units
+    assert any(item["kind"] == "attention-candidate" and item["excerpt"] == "remember command" for item in payload["items"])
+    assert not any(item["kind"] == "attention-candidate" and item["excerpt"] == "## attention.md Candidates" for item in payload["items"])
+    assert any(item["kind"] == "accepted-p2" for item in payload["items"])
+    assert any(item["kind"] == "deferred-p2" for item in payload["items"])
+    assert any(item["blocking"] and item["file"] == item["path"] and item["excerpt"] for item in payload["items"])
+
+
+def make_codestable_source_repo(tmp_path: Path) -> tuple[Path, Path, Path]:
+    remote = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "--bare", remote.as_posix()], check=True, stdout=subprocess.PIPE)
+    repo = tmp_path / "source"
+    repo.mkdir()
+    run(repo, "init", "-b", "main")
+    run(repo, "config", "user.email", "test@example.com")
+    run(repo, "config", "user.name", "Test User")
+    run(repo, "remote", "add", "origin", remote.as_posix())
+    (repo / "README.md").write_text("base\n", encoding="utf-8")
+    (repo / "cs-onboard").mkdir()
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: test\n---\n", encoding="utf-8")
+    (repo / "codestable-maintainer").mkdir()
+    (repo / "codestable-maintainer/SKILL.md").write_text(
+        "---\nname: codestable-maintainer\ndescription: test\n---\n",
+        encoding="utf-8",
+    )
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "init")
+    run(repo, "push", "-u", "origin", "main")
+    validator = tmp_path / "fake_validator.py"
+    validator.write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+    return repo, remote, validator
+
+
+def test_maintainer_verify_fails_unpushed_branch(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(tmp_path)
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: changed\n---\n", encoding="utf-8")
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "change skill")
+
+    payload = maintainer_verify.verify(repo, "codex/demo", "origin", tmp_path / "installed", validator.as_posix(), False)
+
+    assert payload["ok"] is False
+    assert "not pushed" in payload["findings"][0]["message"]
+
+
+def test_maintainer_verify_fails_dirty_checkout(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(tmp_path)
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: changed\n---\n", encoding="utf-8")
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "change skill")
+    run(repo, "push", "-u", "origin", "codex/demo")
+    (repo / "README.md").write_text("dirty\n", encoding="utf-8")
+
+    payload = maintainer_verify.verify(repo, "codex/demo", "origin", tmp_path / "installed", validator.as_posix(), False)
+
+    assert payload["ok"] is False
+    assert "uncommitted changes" in payload["findings"][0]["message"]
+
+
+def test_maintainer_verify_syncs_and_diff_checks_changed_skill(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(tmp_path)
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: changed\n---\n", encoding="utf-8")
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "change skill")
+    run(repo, "push", "-u", "origin", "codex/demo")
+    installed = tmp_path / "installed"
+
+    failed = maintainer_verify.verify(repo, "codex/demo", "origin", installed, validator.as_posix(), False)
+    passed = maintainer_verify.verify(repo, "codex/demo", "origin", installed, validator.as_posix(), True)
+
+    assert failed["ok"] is False
+    assert "Installed skill copy differs" in failed["findings"][0]["message"]
+    assert passed["ok"] is True
+    assert passed["installable_units"] == ["cs-onboard"]
+    assert (installed / "cs-onboard/SKILL.md").exists()

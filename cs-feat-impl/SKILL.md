@@ -144,7 +144,13 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 
 ## 写完后先做独立 code review，再输出统一汇报
 
-所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review：必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
+所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节生成 review packet，再触发独立 code review：
+
+```bash
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+```
+
+必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
 
 review 证据写完后、输出完成汇报前运行 commit gate：
 

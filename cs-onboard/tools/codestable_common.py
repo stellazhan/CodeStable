@@ -56,6 +56,36 @@ IMPLEMENTATION_SUFFIXES = (
 
 UNIT_ROOTS = ("features", "issues", "refactors")
 IMPLEMENTATION_UNIT_ROOTS = frozenset(UNIT_ROOTS)
+KNOWN_SKILL_DIRS = {
+    "browser-bridge",
+    "codestable-maintainer",
+    "cs",
+    "cs-arch",
+    "cs-audit",
+    "cs-brainstorm",
+    "cs-decide",
+    "cs-explore",
+    "cs-feat",
+    "cs-feat-accept",
+    "cs-feat-design",
+    "cs-feat-ff",
+    "cs-feat-impl",
+    "cs-guide",
+    "cs-issue",
+    "cs-issue-analyze",
+    "cs-issue-fix",
+    "cs-issue-report",
+    "cs-learn",
+    "cs-libdoc",
+    "cs-note",
+    "cs-onboard",
+    "cs-refactor",
+    "cs-refactor-ff",
+    "cs-req",
+    "cs-roadmap",
+    "cs-trick",
+    "using-codestable",
+}
 
 
 @dataclass(frozen=True)
@@ -88,6 +118,13 @@ def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
         stderr=subprocess.PIPE,
         check=False,
     )
+
+
+def git_output(root: Path, *args: str) -> str:
+    result = run_git(root, *args)
+    if result.returncode != 0:
+        return result.stderr.strip()
+    return result.stdout.strip()
 
 
 def git_status(root: Path, *extra_args: str) -> list[ChangedFile]:
@@ -176,8 +213,13 @@ def is_implementation_path(path: str) -> bool:
 def path_bucket(path: str) -> str:
     if path.startswith(".codestable/"):
         return "codestable"
+    first = Path(path).parts[0] if Path(path).parts else ""
+    if first in KNOWN_SKILL_DIRS:
+        return "installed_skill"
     if path.startswith("supabase/migrations/"):
         return "migrations"
+    if path.startswith("docs/database/"):
+        return "database_docs"
     if path.startswith(("data/input/", "data/output/")):
         return "data"
     if path.endswith((".log", ".jsonl")) or "/logs/" in path or path.startswith("logs/"):
@@ -189,6 +231,28 @@ def path_bucket(path: str) -> str:
     if is_implementation_path(path):
         return "code"
     return "unknown"
+
+
+def is_secret_like_path(path: str) -> bool:
+    lower = path.lower()
+    name = Path(lower).name
+    return name.startswith(".env") or "secret" in lower or "token" in lower or "credential" in lower
+
+
+SECRET_QUOTED_VALUE_RE = re.compile(
+    r"(?i)(token|api[_-]?key|secret|password|credential)(\s*[:=]\s*)(['\"])([^'\"\n]+)(['\"])"
+)
+SECRET_VALUE_RE = re.compile(
+    r"(?i)(token|api[_-]?key|secret|password|credential)(\s*[:=]\s*)([^\s'\"`]+)"
+)
+
+
+def redact_text(text: str) -> str:
+    text = SECRET_QUOTED_VALUE_RE.sub(r"\1\2\3[REDACTED]\5", text)
+    text = SECRET_VALUE_RE.sub(r"\1\2[REDACTED]", text)
+    text = re.sub(r"(?i)(bearer\s+)[a-z0-9._~+/=-]{12,}", r"\1[REDACTED]", text)
+    text = re.sub(r"eyJ[a-zA-Z0-9_-]{12,}\.[a-zA-Z0-9_-]{12,}\.[a-zA-Z0-9_-]{12,}", "[REDACTED_JWT]", text)
+    return text
 
 
 def bucket_paths(paths: list[str]) -> dict[str, list[str]]:
@@ -424,10 +488,12 @@ def post_baseline_implementation_changes(root: Path, baseline: dict[str, object]
 BACKLOG_PATTERNS = (
     ("needs-human-review", re.compile(r"needs-human-review", re.IGNORECASE)),
     ("human-review", re.compile(r"human review required", re.IGNORECASE)),
+    ("accepted-p2", re.compile(r"accepted.{0,40}P2|P2.{0,40}accepted", re.IGNORECASE)),
+    ("deferred-p2", re.compile(r"deferred.{0,40}P2|P2.{0,40}deferred", re.IGNORECASE)),
     ("follow-up", re.compile(r"follow[- ]ups?", re.IGNORECASE)),
-    ("accepted-p2", re.compile(r"(accepted|deferred).{0,40}P2|P2.{0,40}(accepted|deferred)", re.IGNORECASE)),
-    ("attention-candidate", re.compile(r"attention\.md.{0,40}candidates?|candidates?.{0,40}attention\.md", re.IGNORECASE)),
 )
+ATTENTION_CANDIDATES_HEADING_RE = re.compile(r"attention\.md.{0,40}candidates?|candidates?.{0,40}attention\.md", re.IGNORECASE)
+MARKDOWN_BULLET_RE = re.compile(r"^\s*[-*]\s+(.+)")
 
 
 def scan_backlog(root: Path) -> list[BacklogItem]:
@@ -443,12 +509,39 @@ def scan_backlog(root: Path) -> list[BacklogItem]:
         except UnicodeDecodeError:
             continue
         rel_path = path.relative_to(root).as_posix()
+        in_attention_candidates = False
         for line_no, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            if ATTENTION_CANDIDATES_HEADING_RE.search(stripped):
+                in_attention_candidates = True
+                continue
+            if in_attention_candidates:
+                if stripped.startswith("#"):
+                    in_attention_candidates = False
+                elif not stripped:
+                    continue
+                else:
+                    bullet = MARKDOWN_BULLET_RE.match(line)
+                    if bullet:
+                        items.append(
+                            BacklogItem(
+                                kind="attention-candidate",
+                                path=rel_path,
+                                line=line_no,
+                                text=bullet.group(1).strip(),
+                            )
+                        )
+                    continue
             for kind, pattern in BACKLOG_PATTERNS:
                 if pattern.search(line):
-                    items.append(BacklogItem(kind=kind, path=rel_path, line=line_no, text=line.strip()))
+                    items.append(BacklogItem(kind=kind, path=rel_path, line=line_no, text=stripped))
                     break
     return items
+
+
+def unit_for_path(path: str) -> str | None:
+    unit_dir = unit_dir_for(path)
+    return unit_dir.as_posix() if unit_dir is not None else None
 
 
 def has_secret_like_untracked(root: Path) -> list[str]:
@@ -461,3 +554,10 @@ def has_secret_like_untracked(root: Path) -> list[str]:
         if name.startswith(".env") or "secret" in lower or "token" in lower:
             secret_paths.append(item.path)
     return sorted(secret_paths)
+
+
+def tracked_ignored_paths(root: Path) -> list[str]:
+    result = run_git(root, "ls-files", "-ci", "--exclude-standard")
+    if result.returncode != 0:
+        return []
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]

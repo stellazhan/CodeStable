@@ -293,6 +293,10 @@ Exit criteria:
 
 Build `build-review-packet.py` and `plan-commits.py`.
 
+Status: implemented in the CodeStable source tree. Future work should treat
+these commands as the baseline behavior and extend tests before changing their
+contracts.
+
 This phase solves:
 
 - inconsistent subagent review inputs;
@@ -311,6 +315,10 @@ Exit criteria:
 
 Build `codestable-backlog.py` or extend doctor, then build
 `codestable-maintainer/tools/verify.py`.
+
+Status: implemented in the CodeStable source tree. Future work should preserve
+the pushed-branch, fresh-clone, installed-copy diff, and backlog visibility
+contracts unless a new plan explicitly replaces them.
 
 This phase solves:
 

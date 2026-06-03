@@ -74,7 +74,13 @@ issue-fix 比 feature-implement 更谨慎：**触发反射信号但结论是"该
 
 ### 代码批次完成后必须独立 review
 
-修复代码写完、验证清单通过后，写 `{slug}-fix-note.md` 或输出修复完成汇报前，按 shared-conventions 第 2.6 节触发独立 code review：必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件、修复汇报和 fix-note 里说明替代方式。把完整结果写入 issue 目录的 `{slug}-implementation-review.md`。reviewer 发现 P0 / P1 时先修并复核。没有这份 review 文件，不进入 fix-note / 完成汇报。
+修复代码写完、验证清单通过后，写 `{slug}-fix-note.md` 或输出修复完成汇报前，按 shared-conventions 第 2.6 节生成 review packet 并触发独立 code review：
+
+```bash
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/issues/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+```
+
+必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件、修复汇报和 fix-note 里说明替代方式。把完整结果写入 issue 目录的 `{slug}-implementation-review.md`。reviewer 发现 P0 / P1 时先修并复核。没有这份 review 文件，不进入 fix-note / 完成汇报。
 
 review 证据写完后、fix-note / 完成汇报前运行 commit gate：
 

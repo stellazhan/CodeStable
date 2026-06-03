@@ -46,18 +46,24 @@ validator, harness tool, or README, switch to the source repo before editing.
    explicitly in the final report.
 7. Commit source changes with a Conventional Commit message.
 8. Push the branch to a remote.
-9. Fresh-clone the pushed branch into a temporary directory and rerun the key
-   validation from the clone. Do not call the work done from the original
-   checkout alone.
-10. From the fresh clone, enumerate every changed installable unit. For each
-    changed skill directory, sync or reinstall it into the installed global
-    skill root and diff-check that installed copy against the clone. For changed
-    source files that are not installed directly, record `not installed: N/A`
-    in the final report with the reason.
+9. Run the maintainer verifier from the source checkout:
+   `python codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json`.
+   This command fresh-clones the pushed branch, validates changed skills, runs
+   harness tests when needed, syncs changed installed skill directories from the
+   clone, and diff-checks installed copies.
+10. For changed source files that are not installed directly, record
+    `not installed: N/A` in the final report with the reason from verifier
+    output.
 
 ## Fresh Clone Verification
 
-Use a branch-aware clone flow:
+Prefer the maintainer verifier:
+
+```bash
+python codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+```
+
+Use the manual branch-aware clone flow only when the verifier itself is broken:
 
 ```bash
 tmpdir="$(mktemp -d)"
