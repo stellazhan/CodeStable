@@ -83,8 +83,10 @@ skill diff as proof that all installable CodeStable changes were deployed.
 ## Harness Improvement Planning
 
 For CodeStable harness roadmap or design work, read
-`references/harness-improvement-plan.md`. It captures the current improvement
-proposal derived from GammaSource/BetaSoul failures:
+`references/harness-improvement-plan.md` first, then
+`references/harness-implementation-plan.md` when the task asks what to build
+next. Together they capture the current proposal derived from GammaSource and
+BetaSoul failures:
 
 - `codestable-doctor`
 - worktree start/commit/recovery gates
