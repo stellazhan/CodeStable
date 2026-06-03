@@ -73,6 +73,14 @@ frontmatter：`doc_type=feature-design` / `feature` 一致 / `status=approved` /
 
 动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否已在独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。若当前不是执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求在当前 checkout 直接做时才可继续，并在汇报里写清楚 override。
 
+进入实现前运行 start gate，路径用项目运行时 `.codestable/tools/...`：
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-{slug}
+```
+
+gate 不通过就不要开始改代码；用户批准 override 时先在 unit 目录写 `worktree-override.md`（reason / scope / approval）。
+
 ### 5. 跟用户确认从哪一步开始
 
 通常第 1 步；接续上次中断从已 `done` 的下一步继续。
@@ -137,6 +145,14 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 ## 写完后先做独立 code review，再输出统一汇报
 
 所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节触发独立 code review：必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
+
+review 证据写完后、输出完成汇报前运行 commit gate：
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
+```
+
+gate 不通过就先处理 findings，不把"测试已过"当成完成。
 
 所有步骤完成后用下面模板汇报，**停下来等用户 review**。
 

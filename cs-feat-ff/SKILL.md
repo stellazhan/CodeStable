@@ -42,6 +42,18 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 2. **这块代码有没有已经拍板的写法约束？** → 搜 `compound/` 的 decision + 看 `architecture/` 相关子系统
 3. **这次是否需要独立 worktree？** → 默认按 shared-conventions 第 2.6 节走 worktree；用户明确说直接改当前 checkout 时可以继续，但汇报要写清楚
 
+动手前至少运行一次 doctor，确认没有已有 worktree / review / follow-up 阻塞：
+
+```bash
+python .codestable/tools/codestable-doctor.py --root . --json
+```
+
+fastforward 通常动手后才生成 `{slug}-ff-note.md`，所以不提前造空 unit。写完 ff-note 和 review 证据后，对最终 unit 跑 commit gate：
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
+```
+
 命中就把结论融进实现（**按约束来写**，不是抄）。没命中按自己判断写很正常。搜不到换几个关键词再试。
 
 ---

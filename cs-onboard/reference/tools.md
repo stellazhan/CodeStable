@@ -119,3 +119,81 @@ CODESTABLE_ALLOW_SELF_REVIEW_FALLBACK=1 python .codestable/tools/validate-implem
 ```
 
 配到 Codex / Claude Stop hook 时，可调用 `.codestable/tools/codestable-implementation-gate.sh`。
+
+---
+
+## 4. codestable-doctor.py
+
+CodeStable 生命周期状态检查工具。只读，不修改文件。用于开始工作、恢复上下文、最终汇报前判断当前仓库是否还有阻塞项。
+
+```bash
+python .codestable/tools/codestable-doctor.py --root . --json
+```
+
+JSON 关键字段：
+
+- `status`：`idle` / `planning-safe` / `dirty` / `implementation-active` / `attention-needed` / `blocked`
+- `checkout`：当前分支、默认分支、是否 linked worktree
+- `dirty_buckets`：按 `code` / `tests` / `docs` / `migrations` / `data` / `logs` / `codestable` / `unknown` 分组的 dirty paths
+- `implementation_changes`：会触发 worktree 约束的实现文件
+- `backlog`：`needs-human-review`、`Follow-up`、accepted/deferred P2、`attention.md` candidates 等待处理项
+- `post_baseline_blocks`：工作树干净但默认分支在 gate baseline 之后出现实现变更的阻塞项
+- `findings`：按严重度列出的阻塞或待处理问题
+- `next_action`：下一步建议
+
+典型用法：
+
+```bash
+# 汇报前确认没有遗漏的人审 / follow-up / worktree 阻塞
+python .codestable/tools/codestable-doctor.py --root . --json
+```
+
+---
+
+## 5. codestable-worktree-gate.py
+
+CodeStable worktree 生命周期门禁。用于实现开始前、提交前、以及误在协调检出开工后的恢复规划。
+
+### start
+
+实现开始前运行。feature / issue / refactor 这类实现单元必须在 linked execution worktree 中开始；如果用户明确批准在主检出中实现，单元目录下必须有 `worktree-override.md`，并写明 reason、scope、approval。
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-slug
+```
+
+通过后 gate 会把 baseline 写入 Git 私有路径，不污染工作树。
+
+### commit
+
+提交或最终汇报前运行。它会阻止：
+
+- 默认分支上 staged implementation changes；
+- 工作树干净但默认分支在 start baseline 后已经出现 implementation commits；
+- 完成的 implementation unit 缺少 subagent implementation review。
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-slug
+```
+
+如果 staged 文件横跨 code / docs / data / logs / migrations 等多个 bucket，命令会给出 P2 warning；它不会替你 stage、unstage 或 commit。
+
+### quarantine
+
+误在主协调检出开始实现时，用 quarantine 先生成恢复计划。默认 dry-run，不创建分支、不创建 worktree、不移动文件、不改 index。
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json quarantine --unit .codestable/features/YYYY-MM-DD-slug
+```
+
+只有同时满足以下条件才允许创建 quarantine worktree：
+
+- 显式传 `--apply`
+- 单元目录存在带 reason / scope / approval 的 `worktree-override.md`
+- 没有未跟踪的 `.env`、token、secret 等敏感文件
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json quarantine --unit .codestable/features/YYYY-MM-DD-slug --apply
+```
+
+Phase 1 只创建安全 execution worktree，不自动搬 dirty 文件；文件迁移仍由 owner 显式处理。

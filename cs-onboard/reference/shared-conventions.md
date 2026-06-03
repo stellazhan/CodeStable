@@ -179,6 +179,14 @@ worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过
 3. worktree 路径、分支名、执行范围、禁止触碰的 sibling worktree 已说清楚。
 4. worktree 从当前目标基线创建；不要从另一个功能 worktree 派生，除非用户明确要堆叠开发。
 
+实现单元开始前先运行 worktree start gate；子技能应调用项目运行时路径，不调用 CodeStable 源仓库路径：
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-{slug}
+```
+
+gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现"工作树已经干净，但默认分支在 baseline 后被提交了实现代码"的情况。
+
 推荐命名：
 
 - 分支：`codex/{slug}`
@@ -204,6 +212,18 @@ worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过
 review 文件必须包含单独一行 `reviewer: subagent`，这样 validator 才能确认不是 self-review 解释文本误命中。只有 fallback 时才写 `reviewer: self`，并配合环境变量 `CODESTABLE_ALLOW_SELF_REVIEW_FALLBACK=1`。
 
 review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍按 design / checklist 做闭环。`cs-onboard` 释放的 `.codestable/tools/validate-implementation-review.py` 可作为 Stop hook 门禁：有实现代码变更时必须在 linked worktree 内执行（除非显式 override），已完成的 feature / issue / refactor 必须有 implementation-review 文件。
+
+提交或最终汇报前运行 commit gate：
+
+```bash
+python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
+```
+
+日常恢复上下文或最终汇报前可运行 doctor：
+
+```bash
+python .codestable/tools/codestable-doctor.py --root . --json
+```
 
 ### 复杂实现的 subagent 执行选择
 

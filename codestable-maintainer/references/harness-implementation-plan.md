@@ -71,9 +71,9 @@ Implement the source script in CodeStable at
 into a project, the runtime command paths must be:
 
 ```bash
-python .codestable/tools/codestable-worktree-gate.py start --root . --unit <path-or-slug>
-python .codestable/tools/codestable-worktree-gate.py commit --root . --unit <path-or-slug>
-python .codestable/tools/codestable-worktree-gate.py quarantine --root . --unit <path-or-slug>
+python .codestable/tools/codestable-worktree-gate.py --root . start --unit <path-or-slug>
+python .codestable/tools/codestable-worktree-gate.py --root . commit --unit <path-or-slug>
+python .codestable/tools/codestable-worktree-gate.py --root . quarantine --unit <path-or-slug>
 ```
 
 Start gate:

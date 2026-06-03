@@ -124,7 +124,7 @@ def is_linked_worktree(root: Path) -> bool:
         if git_dir_path != common_dir_path and not in_submodule:
             return True
 
-    return ".codex/worktrees" in root.resolve().as_posix()
+    return False
 
 
 def unit_dir_for(path: str) -> Path | None:

@@ -57,6 +57,27 @@ def test_code_change_requires_worktree_unless_overridden(tmp_path: Path, monkeyp
     assert findings == []
 
 
+def test_path_named_codex_worktrees_is_not_linked_worktree(tmp_path: Path) -> None:
+    repo_parent = tmp_path / ".codex/worktrees"
+    repo_parent.mkdir(parents=True)
+    repo = repo_parent / "plain-repo"
+    repo.mkdir()
+    run(repo, "init", "-b", "main")
+    run(repo, "config", "user.email", "test@example.com")
+    run(repo, "config", "user.name", "Test User")
+    (repo / "README.md").write_text("base\n", encoding="utf-8")
+    run(repo, "add", "README.md")
+    run(repo, "commit", "-m", "init")
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("print('x')\n", encoding="utf-8")
+
+    ok, findings, meta = gate.validate(repo)
+
+    assert not ok
+    assert meta["linked_worktree"] is False
+    assert "outside a linked worktree" in findings[0].message
+
+
 def test_completed_feature_requires_review_evidence(tmp_path: Path, monkeypatch) -> None:
     repo = init_repo(tmp_path)
     monkeypatch.setenv("CODESTABLE_ALLOW_MAIN_CHECKOUT_IMPLEMENTATION", "1")
