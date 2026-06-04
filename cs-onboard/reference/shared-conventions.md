@@ -203,7 +203,17 @@ gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现
 
 每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
-1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
+1. 必须使用可用的 subagent / reviewer agent。进入实现 / 修复 / 重构执行前，若当前对话还没有明确的 subagent / delegation 授权，直接按 Superpowers 的短选择式问一次：
+
+```text
+Review options:
+1. Subagent Review (recommended) - I dispatch a reviewer subagent before completion.
+2. Inline Review - only if this platform has no subagent support.
+
+Which approach?
+```
+
+用户选 1 或明确说 subagent / delegation 后，本次 implementation review 可直接触发 subagent；不要等到 review gate 才首次询问。用户选 2 且平台实际有 subagent 能力时，说明 CodeStable 完成门槛会被阻塞并停等确认。review 前先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
 
 ```bash
 python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"

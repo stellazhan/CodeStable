@@ -73,6 +73,8 @@ frontmatter：`doc_type=feature-design` / `feature` 一致 / `status=approved` /
 
 动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否已在独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。若当前不是执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求在当前 checkout 直接做时才可继续，并在汇报里写清楚 override。
 
+若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问；选 1 后继续，只有平台无 subagent 能力时选 2 才能继续。
+
 进入实现前运行 start gate，路径用项目运行时 `.codestable/tools/...`：
 
 ```bash
@@ -152,7 +154,7 @@ python .codestable/tools/build-review-packet.py --root . --unit .codestable/feat
 
 默认做 quality review；如果本 feature 需求容易走偏，追加一次 `--stage spec`；如果涉及 schema / security / core runtime，追加 `--stage verification` 且必须传 fresh command output。
 
-必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
+必须使用可用的 subagent reviewer。若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问；不要等到 review gate 才首次询问。只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
 
 review 证据写完后、输出完成汇报前运行 commit gate：
 
