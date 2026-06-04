@@ -107,7 +107,7 @@ Acceptance:
 Add:
 
 ```bash
-.codestable/tools/build-review-packet.py --unit <path-or-slug> --output /tmp/review.md
+.codestable/tools/build-review-packet.py --unit <path-or-slug> --stage quality --output /tmp/review.md
 ```
 
 It should collect:
@@ -119,14 +119,40 @@ It should collect:
 - validation commands and results provided by the owner;
 - risk hints: DB, migration, concurrency, idempotency, crash-resume, provider
   cost, production writes, deterministic LLM boundary.
+- stage-specific reviewer mission for `spec`, `quality`, `verification`, or the
+  backwards-compatible `implementation` default.
 
 Acceptance:
 
 - A reviewer can use the packet without being given hidden prior conclusions.
 - Packet generation does not include secrets or local env files.
 - P0/P1/P2 findings can be copied into `{slug}-implementation-review.md`.
+- Verification-stage packets require fresh validation evidence.
 
-### 4. Commit Planner
+### 4. Handoff Context Packet
+
+Add:
+
+```bash
+.codestable/tools/build-context-packet.py --unit <path-or-slug> --audience handoff --output /tmp/handoff.md
+```
+
+It should collect a compact handoff with:
+
+- decided;
+- rejected;
+- risks;
+- files;
+- remaining;
+- evidence.
+
+Acceptance:
+
+- Next-stage agents can read the handoff without prior chat history.
+- The handoff is short enough for human review.
+- Secret-like paths and values are redacted.
+
+### 5. Commit Planner
 
 Add:
 
@@ -157,7 +183,7 @@ Acceptance:
   buckets.
 - The planner never stages or commits by itself.
 
-### 5. Follow-Up And Human-Review Backlog
+### 6. Follow-Up And Human-Review Backlog
 
 Extend `codestable-doctor` or add:
 
@@ -179,7 +205,7 @@ Acceptance:
 - Human decision points are visible after the original acceptance turn ends.
 - Each backlog item links to the source file and line number when practical.
 
-### 6. CodeStable Source-Push-Clone-Install Verification
+### 7. CodeStable Source-Push-Clone-Install Verification
 
 Add or document a maintainer-only workflow:
 
@@ -226,6 +252,13 @@ Acceptance:
 - Add backlog scanning.
 - Add maintainer skill and source-push-clone-install workflow.
 - Add README entries and onboarded reference docs.
+
+### Phase 4: Human/Subagent Context Harness
+
+- Extend `build-review-packet.py` with `--stage spec|quality|verification`.
+- Add `build-context-packet.py --audience handoff`.
+- Update shared conventions and implementation skills with risk-tiered review
+  defaults.
 
 ## Non-Goals
 

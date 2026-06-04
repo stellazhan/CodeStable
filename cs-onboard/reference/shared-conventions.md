@@ -203,13 +203,29 @@ gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现
 
 每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
-1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。先用 review packet 工具生成最小必要输入，再发给 reviewer：
+1. 必须使用可用的 subagent / reviewer agent；用户已将 CodeStable implementation review 视为长期授权场景，不需要每次再问。先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
 ```
 
 packet 应包含目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果；不要把 `.env`、token、secret 或本地凭证贴进 review 输入。
+
+风险层级默认值：
+
+- tiny doc / typo：owner 自查即可。
+- small local code：一次 subagent quality review，使用 `--stage quality`。
+- normal feature / fix：quality review + owner 验证证据；需求容易走偏时补一次 `--stage spec`。
+- schema / security / core runtime：必须分别生成 `--stage spec`、`--stage quality`、`--stage verification`，verification stage 必须带 fresh command output，不接受记忆里的“已跑过”。
+- large multi-module：采用分阶段执行；每个阶段交接前生成 handoff context，再让下一阶段 agent / reviewer 读取。
+
+多阶段 handoff 用固定轻量格式，不把完整聊天历史塞给下一阶段：
+
+```bash
+python .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience handoff --output /tmp/codestable-handoff.md --decided "{已决定}" --remaining "{下一步}"
+```
+
+handoff 必须包含 `Decided` / `Rejected` / `Risks` / `Files` / `Remaining` / `Evidence` 六项；没有内容也写 `None recorded.`，避免隐性上下文丢失。
 
 2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
 3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。

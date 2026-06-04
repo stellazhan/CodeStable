@@ -119,7 +119,7 @@ design / implement 的硬约束在 fastforward 的精简版。没 design doc 不
 代码写完、验证完、按 shared-conventions 第 2.6 节生成 review packet 并做完独立 code review、用户确认效果 OK **之后**才动这一步——动手前先建空壳会破坏 ff 的轻体感。
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
 ```
 
 ### 自动生成 slug

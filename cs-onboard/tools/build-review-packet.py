@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a redacted packet for subagent implementation review."""
+"""Build a redacted packet for staged subagent review."""
 
 from __future__ import annotations
 
@@ -15,6 +15,53 @@ from codestable_common import (
     resolve_unit,
 )
 
+
+STAGE_BRIEFS = {
+    "implementation": {
+        "title": "Implementation Review",
+        "mission": (
+            "Review the implementation as an independent subagent. Verify the code directly from "
+            "the packet instead of trusting the implementer summary."
+        ),
+        "focus": (
+            "scope drift, hidden behavior changes, missing tests, maintainability, edge cases, "
+            "security, and production safety"
+        ),
+    },
+    "spec": {
+        "title": "Spec Compliance Review",
+        "mission": (
+            "Check whether the implementation built exactly what the approved requirement, report, "
+            "analysis, design, or checklist requested."
+        ),
+        "focus": (
+            "missing requested behavior, extra unrequested behavior, changed acceptance criteria, "
+            "scope drift, and mismatches between unit docs and code"
+        ),
+    },
+    "quality": {
+        "title": "Code Quality Review",
+        "mission": (
+            "Check whether the code is clean, tested, maintainable, secure, and robust under real "
+            "project conditions."
+        ),
+        "focus": (
+            "maintainability, readability, coupling, security, edge cases, test gaps, performance, "
+            "idempotency, crash-resume behavior, and deterministic boundaries"
+        ),
+    },
+    "verification": {
+        "title": "Verification Evidence Review",
+        "mission": (
+            "Check fresh validation evidence. Do not accept remembered claims, unstated commands, "
+            "or summaries without command output or directly inspectable evidence."
+        ),
+        "focus": (
+            "test/build/type/lint output, CLI smoke evidence, browser/runtime evidence when relevant, "
+            "failed or skipped commands, and whether evidence matches the acceptance criteria"
+        ),
+    },
+}
 
 RISK_PROMPTS = (
     "database and migration safety",
@@ -51,7 +98,22 @@ def unit_documents(root: Path, unit_dir: Path) -> list[Path]:
     )
 
 
-def build_packet(root: Path, unit_value: str, validations: list[str]) -> str:
+def stage_brief(stage: str) -> dict[str, str]:
+    if stage not in STAGE_BRIEFS:
+        raise ValueError(f"unknown review stage: {stage}")
+    return STAGE_BRIEFS[stage]
+
+
+def normalize_validations(validations: list[str]) -> list[str]:
+    return [item.strip() for item in validations if item.strip()]
+
+
+def build_packet(root: Path, unit_value: str, validations: list[str], stage: str = "implementation") -> str:
+    brief = stage_brief(stage)
+    validations = normalize_validations(validations)
+    if stage == "verification" and not validations:
+        raise ValueError("verification stage requires at least one --validation or --validation-file entry")
+
     root = root.resolve()
     unit_dir = resolve_unit(root, unit_value)
     changed = git_status(root)
@@ -61,10 +123,26 @@ def build_packet(root: Path, unit_value: str, validations: list[str]) -> str:
     omitted_paths = [path for path in changed_paths if is_secret_like_path(path)]
 
     lines: list[str] = [
-        "# CodeStable Implementation Review Packet",
+        f"# CodeStable {brief['title']} Packet",
         "",
         f"- root: `{root.as_posix()}`",
         f"- unit: `{unit_dir.as_posix()}`",
+        f"- stage: `{stage}`",
+        "",
+        "## Reviewer Mission",
+        "",
+        brief["mission"],
+        "",
+        "## Stage Focus",
+        "",
+        brief["focus"],
+        "",
+        "## Reviewer Output Contract",
+        "",
+        "- Lead with findings, ordered by severity.",
+        "- Include severity (`P0`/`P1`/`P2`/`P3`) and confidence for each finding.",
+        "- Reference concrete files, code, docs, or validation evidence when possible.",
+        "- If there are no blocking findings, say so explicitly and list residual risks or test gaps.",
         "",
         "## Unit Documents",
     ]
@@ -118,6 +196,12 @@ def main() -> int:
     parser.add_argument("--unit", required=True, help="CodeStable unit path or slug")
     parser.add_argument("--output", required=True, help="Output Markdown file")
     parser.add_argument(
+        "--stage",
+        choices=sorted(STAGE_BRIEFS),
+        default="implementation",
+        help="Review stage to shape reviewer instructions",
+    )
+    parser.add_argument(
         "--validation",
         action="append",
         default=[],
@@ -135,7 +219,7 @@ def main() -> int:
         validations = list(args.validation)
         for validation_file in args.validation_file:
             validations.append(Path(validation_file).read_text(encoding="utf-8"))
-        packet = build_packet(Path(args.root), args.unit, validations)
+        packet = build_packet(Path(args.root), args.unit, validations, args.stage)
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1

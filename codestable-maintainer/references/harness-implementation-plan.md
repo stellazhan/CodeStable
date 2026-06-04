@@ -129,7 +129,7 @@ Implement the source script in CodeStable at
 project, the runtime command path must be:
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit <path-or-slug> --output /tmp/review.md
+python .codestable/tools/build-review-packet.py --root . --unit <path-or-slug> --stage quality --output /tmp/review.md
 ```
 
 Responsibilities:
@@ -141,11 +141,15 @@ Responsibilities:
 - include risk prompts for DB, migrations, concurrency, idempotency,
   crash-resume, provider cost, production writes, and deterministic LLM
   boundary;
+- include stage-specific reviewer instructions for `implementation`, `spec`,
+  `quality`, and `verification`;
 - redact `.env`, token-looking values, and local credentials.
 
 Required tests:
 
 - packet includes unit docs and focused diff;
+- staged packets include the right reviewer mission;
+- verification-stage packets require validation evidence;
 - packet excludes secret-like files and values;
 - packet can be used by a subagent without hidden prior context.
 
@@ -269,6 +273,17 @@ Update these skills after the tools exist:
 - `codestable-maintainer`: replace the manual verify checklist with the new
   `verify.py` command once it exists.
 
+Phase 4 extends review purpose separation:
+
+- `cs-feat-impl` and `cs-issue-fix`: use `--stage quality` by default, add
+  `--stage spec` when requirement compliance is high risk, and add
+  `--stage verification` for schema, security, core runtime, or production
+  safety work.
+- `cs-refactor-ff` and `cs-feat-ff`: keep fast paths lightweight with default
+  quality review only.
+- `cs-onboard/reference/shared-conventions.md`: document risk-tiered review and
+  handoff context requirements.
+
 ## Implementation Order
 
 ### Phase 1: Stop Wrong-Worktree Completion
@@ -333,6 +348,35 @@ Exit criteria:
 - CodeStable source change reports include pushed branch, fresh clone path,
   validator result, install units, and installed-copy diff result.
 
+### Phase 4: Human/Subagent Context Harness
+
+Extend `build-review-packet.py` with staged review purposes and add
+`build-context-packet.py` for lightweight stage handoffs.
+
+Status: implemented in the CodeStable source tree. Future work should keep the
+default review path lightweight and use multiple stages only when risk warrants
+it.
+
+This phase solves:
+
+- spec compliance, code quality, and verification evidence getting mixed into a
+  single vague review;
+- reviewers depending on hidden chat history instead of a curated packet;
+- next-stage agents losing decisions, rejected options, risks, files, remaining
+  work, or evidence.
+
+Exit criteria:
+
+- `build-review-packet.py --stage spec` focuses on requirement compliance;
+- `build-review-packet.py --stage quality` focuses on maintainability,
+  security, tests, and edge cases;
+- `build-review-packet.py --stage verification` requires fresh validation
+  evidence;
+- `build-context-packet.py --audience handoff` emits `Decided`, `Rejected`,
+  `Risks`, `Files`, `Remaining`, and `Evidence`;
+- skills document the risk-tiered default instead of requiring a full staged
+  team pipeline for every small change.
+
 ## Global Acceptance Criteria
 
 The harness is considered effective only when all of these are true:
@@ -344,6 +388,10 @@ The harness is considered effective only when all of these are true:
 - A mixed dirty tree produces a commit plan with separate buckets.
 - Every completed implementation unit has subagent review evidence or an
   explicit platform fallback.
+- High-risk implementation units separate spec compliance, quality, and
+  verification evidence instead of using one generic review.
+- Stage handoffs are stored as compact artifacts when work crosses agents or
+  lifecycle stages.
 - Human-review and follow-up backlog items remain visible across turns.
 - CodeStable changes are edited in source, pushed, fresh-cloned, validated, and
   installed/diff-checked before being called done.

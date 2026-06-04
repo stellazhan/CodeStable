@@ -147,8 +147,10 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节生成 review packet，再触发独立 code review：
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
 ```
+
+默认做 quality review；如果本 feature 需求容易走偏，追加一次 `--stage spec`；如果涉及 schema / security / core runtime，追加 `--stage verification` 且必须传 fresh command output。
 
 必须使用可用的 subagent reviewer，用户已长期授权 CodeStable review subagent；只有平台确实没有 subagent 能力时才允许 fresh self-review fallback，并在 review 文件和汇报里明确说明。把完整结果写入 feature 目录的 `{slug}-implementation-review.md`。reviewer 有 P0 / P1 时先修，再复核。没有这份 review 文件，不输出实现完成汇报。
 

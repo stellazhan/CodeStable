@@ -22,6 +22,7 @@ def load_tool(module_name: str, path: Path):
 
 
 review_packet = load_tool("build_review_packet", TOOLS_DIR / "build-review-packet.py")
+context_packet = load_tool("build_context_packet", TOOLS_DIR / "build-context-packet.py")
 commit_planner = load_tool("plan_commits", TOOLS_DIR / "plan-commits.py")
 backlog_tool = load_tool("codestable_backlog", TOOLS_DIR / "codestable-backlog.py")
 maintainer_verify = load_tool("codestable_maintainer_verify", MAINTAINER_TOOLS_DIR / "verify.py")
@@ -85,6 +86,127 @@ def test_review_packet_includes_unit_docs_diff_validation_and_redacts_secrets(tm
     assert "abcdefghijklmnop" not in packet
     assert "should_not_appear" not in packet
     assert ".env.local" in packet
+
+
+def test_review_packet_stages_shape_reviewer_mission_and_keep_default(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("print('x')\n", encoding="utf-8")
+
+    default_packet = review_packet.build_packet(repo, ".codestable/features/2026-06-03-demo", ["pytest -> passed"])
+    spec_packet = review_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        ["pytest -> passed"],
+        "spec",
+    )
+    quality_packet = review_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        ["pytest -> passed"],
+        "quality",
+    )
+
+    assert "- stage: `implementation`" in default_packet
+    assert "Implementation Review Packet" in default_packet
+    assert "- stage: `spec`" in spec_packet
+    assert "Spec Compliance Review Packet" in spec_packet
+    assert "built exactly what the approved requirement" in spec_packet
+    assert "missing requested behavior" in spec_packet
+    assert "- stage: `quality`" in quality_packet
+    assert "Code Quality Review Packet" in quality_packet
+    assert "clean, tested, maintainable" in quality_packet
+
+
+def test_verification_stage_requires_fresh_validation_evidence(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+
+    for validations in ([], [""], ["   "]):
+        try:
+            review_packet.build_packet(repo, ".codestable/features/2026-06-03-demo", validations, "verification")
+        except ValueError as exc:
+            assert "requires at least one" in str(exc)
+        else:
+            raise AssertionError("verification stage should require validation evidence")
+
+    packet = review_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        ["", "pytest -q\n================ passed ================"],
+        "verification",
+    )
+
+    assert "Verification Evidence Review Packet" in packet
+    assert "Do not accept remembered claims" in packet
+    assert "pytest -q" in packet
+
+
+def test_verification_stage_cli_rejects_blank_validation_inputs(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    empty_file = tmp_path / "empty.txt"
+    empty_file.write_text("   \n", encoding="utf-8")
+
+    for args in (
+        ["--validation", "   "],
+        ["--validation-file", empty_file.as_posix()],
+    ):
+        result = subprocess.run(
+            [
+                sys.executable,
+                (TOOLS_DIR / "build-review-packet.py").as_posix(),
+                "--root",
+                repo.as_posix(),
+                "--unit",
+                ".codestable/features/2026-06-03-demo",
+                "--stage",
+                "verification",
+                "--output",
+                (tmp_path / "packet.md").as_posix(),
+                *args,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        assert result.returncode == 1
+        assert "requires at least one" in result.stderr
+
+
+def test_context_packet_builds_lightweight_handoff_with_redaction(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("print('x')\n", encoding="utf-8")
+
+    packet = context_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        "handoff",
+        ["Use staged review packets"],
+        ["Do not adopt full Team pipeline"],
+        ["verification may be skipped without a gate"],
+        [],
+        ["Update installed skills"],
+        ["pytest token=supersecretvalue -> passed"],
+    )
+
+    assert "## Handoff" in packet
+    assert "- Decided:" in packet
+    assert "- Use staged review packets" in packet
+    assert "- Rejected:" in packet
+    assert "- Do not adopt full Team pipeline" in packet
+    assert "- Risks:" in packet
+    assert "- Files:" in packet
+    assert "- src/app.py" in packet
+    assert "- Remaining:" in packet
+    assert "- Update installed skills" in packet
+    assert "- Evidence:" in packet
+    assert "supersecretvalue" not in packet
+    assert "[REDACTED]" in packet
 
 
 def test_plan_commits_buckets_and_warnings_without_mutation(tmp_path: Path) -> None:
