@@ -255,7 +255,7 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 
 audience:
 
-- `handoff`：下一阶段 agent / reviewer 的轻量交接。
+- `handoff`：下一阶段 agent / reviewer 的轻量交接，固定英文六项结构，不支持 `--language zh`。
 - `human-reviewer`：给人审的完整 context 报告。
 - `owner-decision`：给 owner 拍板风险 / 后续事项的决策简报。
 - `learner`：学习报告，解释为什么改、改了什么、如何验证。
@@ -276,7 +276,7 @@ handoff 固定输出：
 
 ## 8. check-context-sufficiency.py
 
-context packet 完整性检查器。它只读已生成的 handoff / audience report，检查结构是否可识别、是否还有未脱敏 secret-like 文本；`--strict` 还要求有至少一个 concrete file 和 evidence 条目。
+context packet 完整性检查器。它只读已生成的 handoff / audience report，检查结构是否可识别、是否还有未脱敏 secret-like 文本（含常见裸 token 形态如 `sk-...` / `ghp_...`）；`--strict` 还要求有至少一个 concrete file 和 evidence 条目。
 
 ```bash
 python3 .codestable/tools/check-context-sufficiency.py --file /tmp/codestable-human-review.md --strict --json

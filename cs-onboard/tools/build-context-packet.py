@@ -222,7 +222,9 @@ def build_packet(
         raise ValueError(f"unknown context audience: {audience}")
     if language not in {"en", "zh"}:
         raise ValueError(f"unknown context language: {language}")
-    if audience == "handoff" and language == "en":
+    if audience == "handoff" and language != "en":
+        raise ValueError("handoff context supports language=en only; use a human-report audience for zh output")
+    if audience == "handoff":
         return build_handoff_packet(root, unit_value, decided, rejected, risks, files, remaining, evidence)
     return build_audience_report(
         root,

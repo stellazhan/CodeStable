@@ -490,7 +490,7 @@ BACKLOG_PATTERNS = (
     ("human-review", re.compile(r"human review required", re.IGNORECASE)),
     ("accepted-p2", re.compile(r"accepted.{0,40}P2|P2.{0,40}accepted", re.IGNORECASE)),
     ("deferred-p2", re.compile(r"deferred.{0,40}P2|P2.{0,40}deferred", re.IGNORECASE)),
-    ("follow-up", re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?follow[- ]up\s*:", re.IGNORECASE)),
+    ("follow-up", re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?follow[- ]ups?(?:\s*:|\b)", re.IGNORECASE)),
 )
 ATTENTION_CANDIDATES_HEADING_RE = re.compile(r"attention\.md.{0,40}candidates?|candidates?.{0,40}attention\.md", re.IGNORECASE)
 MARKDOWN_BULLET_RE = re.compile(r"^\s*[-*]\s+(.+)")

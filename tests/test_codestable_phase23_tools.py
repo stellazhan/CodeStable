@@ -251,6 +251,29 @@ def test_context_packet_builds_chinese_audience_report_with_layered_context(tmp_
     assert "[REDACTED]" in packet
 
 
+def test_context_packet_rejects_chinese_handoff_shape(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+
+    try:
+        context_packet.build_packet(
+            repo,
+            ".codestable/features/2026-06-03-demo",
+            "handoff",
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            "zh",
+        )
+    except ValueError as exc:
+        assert "handoff context supports language=en only" in str(exc)
+    else:
+        raise AssertionError("handoff should reject non-English output because its shape is fixed")
+
+
 def test_context_packet_marks_omitted_items_when_lists_are_truncated() -> None:
     items = [f"item {index}" for index in range(context_packet.MAX_LIST_ITEMS + 2)]
 
@@ -361,6 +384,31 @@ def test_context_sufficiency_rejects_unredacted_secret_like_text(tmp_path: Path)
     assert any(finding["code"] == "unredacted_secret_like_text" for finding in payload["findings"])
 
 
+def test_context_sufficiency_rejects_bare_provider_token_shapes(tmp_path: Path) -> None:
+    packet_path = tmp_path / "human-review.md"
+    packet_path.write_text(
+        "\n".join(
+            [
+                "# CodeStable Human Reviewer Context",
+                "## Decision Brief",
+                "## Working Context",
+                "### Files",
+                "- src/app.py",
+                "## Evidence Appendix",
+                "### Evidence",
+                "- pytest sk-proj-abcdefghijklmnopqrstuvwxyz123456 -> passed",
+                "- review token ghp_abcdefghijklmnopqrstuvwxyz123456 -> passed",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is False
+    assert any(finding["code"] == "unredacted_secret_like_text" for finding in payload["findings"])
+
+
 def test_plan_commits_buckets_and_warnings_without_mutation(tmp_path: Path) -> None:
     repo = init_repo(tmp_path)
     (repo / "AGENTS.md").write_text(
@@ -432,6 +480,21 @@ def test_backlog_reports_blocking_and_optional_items_with_unit(tmp_path: Path) -
     assert any(item["kind"] == "accepted-p2" for item in payload["items"])
     assert any(item["kind"] == "deferred-p2" for item in payload["items"])
     assert any(item["blocking"] and item["file"] == item["path"] and item["excerpt"] for item in payload["items"])
+
+
+def test_backlog_reports_required_follow_up_without_colon(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    unit = make_feature_unit(repo)
+    (unit / "demo-acceptance.md").write_text(
+        "Follow-up required before merge: confirm owner decision\n",
+        encoding="utf-8",
+    )
+
+    payload = backlog_tool.backlog(repo)
+
+    assert payload["ok"] is False
+    assert payload["blocking_count"] == 1
+    assert payload["items"][0]["excerpt"] == "Follow-up required before merge: confirm owner decision"
 
 
 def test_backlog_scan_ignores_reference_docs_and_review_packets(tmp_path: Path) -> None:

@@ -236,6 +236,7 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 ```
 
 handoff 必须包含 `Decided` / `Rejected` / `Risks` / `Files` / `Remaining` / `Evidence` 六项；没有内容也写 `None recorded.`，避免隐性上下文丢失。
+handoff 是固定英文结构；需要中文内容时改用下面的受众报告，不要给 handoff 传 `--language zh`。
 
 当接收方是人审、owner 决策、学习报告或访谈复盘时，改用受众报告，不把结论埋在聊天记录里：
 

@@ -21,6 +21,12 @@ AUDIENCE_REPORT_SECTIONS = (
 FILE_HEADINGS = ("Files", "相关文件")
 EVIDENCE_HEADINGS = ("Evidence", "验证证据")
 EMPTY_MARKERS = {"None recorded.", "未记录。"}
+BARE_SECRET_TOKEN_RE = re.compile(
+    r"(?i)(?:"
+    r"\bsk-(?:proj-)?[a-z0-9_-]{20,}\b|"
+    r"\bgh[pousr]_[a-z0-9_]{20,}\b"
+    r")"
+)
 
 
 def has_heading(text: str, names: tuple[str, ...]) -> bool:
@@ -66,6 +72,10 @@ def detect_shape(text: str) -> str | None:
     return None
 
 
+def has_unredacted_secret_like_text(text: str) -> bool:
+    return redact_text(text) != text or bool(BARE_SECRET_TOKEN_RE.search(text))
+
+
 def check_packet(path: Path, strict: bool = False) -> dict[str, object]:
     text = path.read_text(encoding="utf-8")
     findings: list[dict[str, str]] = []
@@ -80,7 +90,7 @@ def check_packet(path: Path, strict: bool = False) -> dict[str, object]:
             }
         )
 
-    if redact_text(text) != text:
+    if has_unredacted_secret_like_text(text):
         findings.append(
             {
                 "severity": "P1",
