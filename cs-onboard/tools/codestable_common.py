@@ -490,10 +490,52 @@ BACKLOG_PATTERNS = (
     ("human-review", re.compile(r"human review required", re.IGNORECASE)),
     ("accepted-p2", re.compile(r"accepted.{0,40}P2|P2.{0,40}accepted", re.IGNORECASE)),
     ("deferred-p2", re.compile(r"deferred.{0,40}P2|P2.{0,40}deferred", re.IGNORECASE)),
-    ("follow-up", re.compile(r"follow[- ]ups?", re.IGNORECASE)),
+    ("follow-up", re.compile(r"^\s*(?:[-*]\s+|\d+\.\s+)?follow[- ]up\s*:", re.IGNORECASE)),
 )
 ATTENTION_CANDIDATES_HEADING_RE = re.compile(r"attention\.md.{0,40}candidates?|candidates?.{0,40}attention\.md", re.IGNORECASE)
 MARKDOWN_BULLET_RE = re.compile(r"^\s*[-*]\s+(.+)")
+FOLLOW_UP_SECTION_HEADING_RE = re.compile(r"^\s*#{1,6}\s+follow[- ]ups?\s*$", re.IGNORECASE)
+BACKLOG_SCAN_EXCLUDED_SUFFIXES = ("-review-packet.md",)
+BACKLOG_SCAN_EXCLUDED_PREFIXES = (".codestable/reference/",)
+FOLLOW_UP_BLOCKING_TEXT_MARKERS = (
+    "before merge",
+    "before publish",
+    "before release",
+    "before ship",
+    "before completion",
+    "blocking",
+    "must",
+    "required",
+)
+RESOLVED_FOLLOW_UP_RE = re.compile(
+    r"(?:subagent review )?follow[- ]up(?:s)?(?:\s+(?:fix(?:es)?|review|evidence|implementation)|$)|"
+    r"follow[- ]up(?:s)?.{0,40}(?:backlog|fixed;|passed after|was added before|has been fixed)|"
+    r"passed after.{0,40}follow[- ]up|"
+    r"after follow[- ]up fixes|"
+    r"follow[- ]up.{0,80}(?:no (?:new )?(?:remaining )?p0|no (?:new )?(?:remaining )?p1|"
+    r"no (?:new )?(?:remaining )?p2|closed|fixed|resolved|已修|无 p0|无 p1|无阻塞)",
+    re.IGNORECASE,
+)
+
+
+def should_scan_backlog_file(rel_path: str) -> bool:
+    return not (
+        rel_path.startswith(BACKLOG_SCAN_EXCLUDED_PREFIXES)
+        or rel_path.endswith(BACKLOG_SCAN_EXCLUDED_SUFFIXES)
+    )
+
+
+def is_blocking_follow_up_text(text: str) -> bool:
+    lowered = text.lower()
+    return any(marker in lowered for marker in FOLLOW_UP_BLOCKING_TEXT_MARKERS)
+
+
+def is_resolved_backlog_match(kind: str, text: str) -> bool:
+    if kind != "follow-up":
+        return False
+    if is_blocking_follow_up_text(text):
+        return False
+    return bool(RESOLVED_FOLLOW_UP_RE.search(text))
 
 
 def scan_backlog(root: Path) -> list[BacklogItem]:
@@ -509,11 +551,17 @@ def scan_backlog(root: Path) -> list[BacklogItem]:
         except UnicodeDecodeError:
             continue
         rel_path = path.relative_to(root).as_posix()
+        if not should_scan_backlog_file(rel_path):
+            continue
         in_attention_candidates = False
+        in_follow_up_section = False
         for line_no, line in enumerate(lines, start=1):
             stripped = line.strip()
             if ATTENTION_CANDIDATES_HEADING_RE.search(stripped):
                 in_attention_candidates = True
+                continue
+            if FOLLOW_UP_SECTION_HEADING_RE.search(stripped):
+                in_follow_up_section = True
                 continue
             if in_attention_candidates:
                 if stripped.startswith("#"):
@@ -532,8 +580,26 @@ def scan_backlog(root: Path) -> list[BacklogItem]:
                             )
                         )
                     continue
+            if in_follow_up_section:
+                if stripped.startswith("#"):
+                    in_follow_up_section = False
+                else:
+                    bullet = MARKDOWN_BULLET_RE.match(line)
+                    if bullet:
+                        text = bullet.group(1).strip()
+                        items.append(
+                            BacklogItem(
+                                kind="follow-up",
+                                path=rel_path,
+                                line=line_no,
+                                text=text,
+                            )
+                        )
+                        continue
             for kind, pattern in BACKLOG_PATTERNS:
                 if pattern.search(line):
+                    if is_resolved_backlog_match(kind, stripped):
+                        continue
                     items.append(BacklogItem(kind=kind, path=rel_path, line=line_no, text=stripped))
                     break
     return items

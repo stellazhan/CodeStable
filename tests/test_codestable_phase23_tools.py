@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 
@@ -10,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = ROOT / "cs-onboard/tools"
 MAINTAINER_TOOLS_DIR = ROOT / "codestable-maintainer/tools"
 sys.path.insert(0, str(TOOLS_DIR))
+
+from codestable_common import is_blocking_follow_up_text, scan_backlog  # noqa: E402
 
 
 def load_tool(module_name: str, path: Path):
@@ -26,6 +29,7 @@ context_packet = load_tool("build_context_packet", TOOLS_DIR / "build-context-pa
 commit_planner = load_tool("plan_commits", TOOLS_DIR / "plan-commits.py")
 backlog_tool = load_tool("codestable_backlog", TOOLS_DIR / "codestable-backlog.py")
 maintainer_verify = load_tool("codestable_maintainer_verify", MAINTAINER_TOOLS_DIR / "verify.py")
+search_yaml = load_tool("search_yaml", TOOLS_DIR / "search-yaml.py")
 
 
 def run(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -57,6 +61,11 @@ def make_feature_unit(repo: Path) -> Path:
     (unit / "demo-design.md").write_text("design api_key=SECRET123\n", encoding="utf-8")
     (unit / "demo-checklist.yaml").write_text("steps:\n  - id: one\n    status: done\n", encoding="utf-8")
     return unit
+
+
+def write_file(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
 
 
 def test_review_packet_includes_unit_docs_diff_validation_and_redacts_secrets(tmp_path: Path) -> None:
@@ -298,7 +307,7 @@ def test_backlog_reports_blocking_and_optional_items_with_unit(tmp_path: Path) -
     unit = make_feature_unit(repo)
     (unit / "demo-acceptance.md").write_text(
         "status: needs-human-review\n"
-        "Follow-up required before merge: confirm owner decision\n"
+        "Follow-up: required before merge: confirm owner decision\n"
         "Follow-up: polish docs\n"
         "accepted P2 follow-up: keep for later\n"
         "deferred P2: split helper later\n",
@@ -321,6 +330,132 @@ def test_backlog_reports_blocking_and_optional_items_with_unit(tmp_path: Path) -
     assert any(item["kind"] == "accepted-p2" for item in payload["items"])
     assert any(item["kind"] == "deferred-p2" for item in payload["items"])
     assert any(item["blocking"] and item["file"] == item["path"] and item["excerpt"] for item in payload["items"])
+
+
+def test_backlog_scan_ignores_reference_docs_and_review_packets(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/reference/tools.md",
+        "This documents `needs-human-review` and `Follow-Ups` markers.\n",
+    )
+    write_file(
+        tmp_path / ".codestable/refactors/2026-06-05-demo/demo-review-packet.md",
+        "## Follow-Ups\n- Raw reviewer input, not final backlog.\n",
+    )
+
+    assert scan_backlog(tmp_path) == []
+
+
+def test_backlog_scan_ignores_resolved_follow_up_records(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-implementation-review.md",
+        "\n".join(
+            [
+                "## Follow-up Fixes",
+                "## Subagent Review Follow-Up",
+                "Follow-up subagent review reported no remaining P0/P1/P2.",
+                "Follow-up implementation moved the runtime boundary.",
+                "Final full suite after follow-up fixes: passed.",
+                "- Passed after final P2 follow-up.",
+                "Remaining candidates are follow-up backlog items, not blockers.",
+            ]
+        ),
+    )
+
+    assert scan_backlog(tmp_path) == []
+
+
+def test_backlog_scan_reports_follow_up_section_bullets(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "status: needs-human-review",
+                "## Follow-Ups",
+                "- Follow-up: add a production canary after approval.",
+            ]
+        ),
+    )
+
+    items = scan_backlog(tmp_path)
+
+    assert [(item.kind, item.line) for item in items] == [
+        ("needs-human-review", 1),
+        ("follow-up", 3),
+    ]
+
+
+def test_backlog_scan_reports_blocking_follow_ups_before_resolved_filter(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "## Follow-Ups",
+                "- Follow-up review required before completion.",
+                "- Follow-up implementation must update contract docs.",
+            ]
+        ),
+    )
+
+    items = scan_backlog(tmp_path)
+
+    assert [item.text for item in items] == [
+        "Follow-up review required before completion.",
+        "Follow-up implementation must update contract docs.",
+    ]
+    assert all(is_blocking_follow_up_text(item.text) for item in items)
+
+
+def test_backlog_scan_reports_optional_review_follow_ups_in_follow_up_sections(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "## Follow-Ups",
+                "- Follow-up review the cleanup plan with the owner.",
+                "- Follow-up implementation can add a bounded smoke later.",
+            ]
+        ),
+    )
+
+    items = scan_backlog(tmp_path)
+
+    assert [item.text for item in items] == [
+        "Follow-up review the cleanup plan with the owner.",
+        "Follow-up implementation can add a bounded smoke later.",
+    ]
+    assert not any(is_blocking_follow_up_text(item.text) for item in items)
+
+
+def test_backlog_scan_treats_follow_up_section_closure_language_as_current_backlog(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "## Follow-Ups",
+                "- Follow-up review closure notes before release.",
+            ]
+        ),
+    )
+
+    items = scan_backlog(tmp_path)
+
+    assert [item.text for item in items] == ["Follow-up review closure notes before release."]
+    assert is_blocking_follow_up_text(items[0].text)
+
+
+def test_search_yaml_json_serializes_yaml_date_values(capsys) -> None:
+    search_yaml.print_json(
+        [
+            {
+                "file": "demo.md",
+                "meta": {"doc_type": "decision", "date": date(2026, 6, 5)},
+                "body": "# Demo",
+            }
+        ],
+        full=True,
+    )
+
+    assert '"date": "2026-06-05"' in capsys.readouterr().out
 
 
 def make_codestable_source_repo(tmp_path: Path) -> tuple[Path, Path, Path]:

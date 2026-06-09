@@ -8,20 +8,10 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from codestable_common import scan_backlog, unit_for_path
+from codestable_common import is_blocking_follow_up_text, scan_backlog, unit_for_path
 
 
 BLOCKING_KINDS = {"needs-human-review", "human-review"}
-BLOCKING_TEXT_MARKERS = (
-    "before merge",
-    "before publish",
-    "before release",
-    "before ship",
-    "before completion",
-    "blocking",
-    "must",
-    "required",
-)
 
 
 def is_blocking_item(kind: str, text: str) -> bool:
@@ -29,8 +19,7 @@ def is_blocking_item(kind: str, text: str) -> bool:
         return True
     if kind != "follow-up":
         return False
-    lowered = text.lower()
-    return any(marker in lowered for marker in BLOCKING_TEXT_MARKERS)
+    return is_blocking_follow_up_text(text)
 
 
 def backlog(root: Path) -> dict[str, object]:
