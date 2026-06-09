@@ -30,7 +30,7 @@ Implement the source script in CodeStable at
 project, the runtime command path must be:
 
 ```bash
-python .codestable/tools/codestable-doctor.py --root . --json
+python3 .codestable/tools/codestable-doctor.py --root . --json
 ```
 
 Skills and project docs must reference the runtime `.codestable/tools/...`
@@ -71,9 +71,9 @@ Implement the source script in CodeStable at
 into a project, the runtime command paths must be:
 
 ```bash
-python .codestable/tools/codestable-worktree-gate.py --root . start --unit <path-or-slug>
-python .codestable/tools/codestable-worktree-gate.py --root . commit --unit <path-or-slug>
-python .codestable/tools/codestable-worktree-gate.py --root . quarantine --unit <path-or-slug>
+python3 .codestable/tools/codestable-worktree-gate.py --root . start --unit <path-or-slug>
+python3 .codestable/tools/codestable-worktree-gate.py --root . commit --unit <path-or-slug>
+python3 .codestable/tools/codestable-worktree-gate.py --root . quarantine --unit <path-or-slug>
 ```
 
 Start gate:
@@ -129,7 +129,7 @@ Implement the source script in CodeStable at
 project, the runtime command path must be:
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit <path-or-slug> --stage quality --output /tmp/review.md
+python3 .codestable/tools/build-review-packet.py --root . --unit <path-or-slug> --stage quality --output /tmp/review.md
 ```
 
 Responsibilities:
@@ -165,7 +165,7 @@ Implement the source script in CodeStable at `cs-onboard/tools/plan-commits.py`.
 When CodeStable is onboarded into a project, the runtime command path must be:
 
 ```bash
-python .codestable/tools/plan-commits.py --root . --json
+python3 .codestable/tools/plan-commits.py --root . --json
 ```
 
 Responsibilities:
@@ -200,7 +200,7 @@ Implement this as part of `codestable-doctor` or as source script
 project, the runtime command path for the separate command must be:
 
 ```bash
-python .codestable/tools/codestable-backlog.py --root . --json
+python3 .codestable/tools/codestable-backlog.py --root . --json
 ```
 
 Responsibilities:
@@ -227,7 +227,7 @@ Acceptance:
 Add a maintainer-only helper:
 
 ```bash
-python codestable-maintainer/tools/verify.py --branch <branch> --remote origin
+python3 codestable-maintainer/tools/verify.py --branch <branch> --remote origin
 ```
 
 Responsibilities:
@@ -351,7 +351,8 @@ Exit criteria:
 ### Phase 4: Human/Subagent Context Harness
 
 Extend `build-review-packet.py` with staged review purposes and add
-`build-context-packet.py` for lightweight stage handoffs.
+`build-context-packet.py` for lightweight stage handoffs and audience-specific
+human reports.
 
 Status: implemented in the CodeStable source tree. Future work should keep the
 default review path lightweight and use multiple stages only when risk warrants
@@ -363,7 +364,9 @@ This phase solves:
   single vague review;
 - reviewers depending on hidden chat history instead of a curated packet;
 - next-stage agents losing decisions, rejected options, risks, files, remaining
-  work, or evidence.
+  work, or evidence;
+- human reviewers, owners, learners, and interviewees needing a Chinese report
+  with complete working context instead of hidden chat history.
 
 Exit criteria:
 
@@ -374,8 +377,16 @@ Exit criteria:
   evidence;
 - `build-context-packet.py --audience handoff` emits `Decided`, `Rejected`,
   `Risks`, `Files`, `Remaining`, and `Evidence`;
+- `build-context-packet.py --audience human-reviewer|owner-decision|learner|interviewee --language zh`
+  emits `Decision Brief`, `Working Context`, and `Evidence Appendix`;
 - skills document the risk-tiered default instead of requiring a full staged
   team pipeline for every small change.
+
+Known remaining follow-up:
+
+- `check-context-sufficiency.py` is still not implemented. Keep it as a future
+  gate for validating required context fields before dispatching reviewer or
+  human-facing reports.
 
 ## Global Acceptance Criteria
 

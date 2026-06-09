@@ -210,7 +210,7 @@ AI 默认翻车的姿势是**不思考就往眼前最顺手的文件里加**。
 
 方案确认后从 `{slug}-design.md` 抽出 `steps` + `checks` 落到 `{slug}-checklist.yaml`。完整格式、提取规则、典型节奏看 reference.md 第 3 节。
 
-落盘后 `python .codestable/tools/validate-yaml.py --file {path} --yaml-only` 校验。
+落盘后 `python3 .codestable/tools/validate-yaml.py --file {path} --yaml-only` 校验。
 
 ### 7. 退出
 

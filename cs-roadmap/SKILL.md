@@ -79,7 +79,7 @@ description: 把"大到塞不进单个 feature"的需求做成完整事前规划
 **共同必读**：`.codestable/attention.md` + 用户素材 + `roadmap/` 其他 roadmap（防重复）+ `requirements/` 相关 req + `architecture/` 相关 doc。
 
 **按情况读**：
-- 相关 compound 沉淀：`python .codestable/tools/search-yaml.py --dir .codestable/compound --query "{大需求关键词}"`
+- 相关 compound 沉淀：`python3 .codestable/tools/search-yaml.py --dir .codestable/compound --query "{大需求关键词}"`
 - 已有相关 feature 方案
 
 **update 额外**：当前主文档全文 + items.yaml 当前状态 + 已启动 / 完成的子 feature 的 design / acceptance。

@@ -50,8 +50,8 @@ guidedoc 产物**不在 `.codestable/` 下**——指南是面向外部读者的
 检索：
 
 ```
-python .codestable/tools/search-yaml.py --dir docs/dev --filter doc_type=dev-guide --filter status=current
-python .codestable/tools/search-yaml.py --dir docs/user --filter doc_type=user-guide --filter component={feature-slug}
+python3 .codestable/tools/search-yaml.py --dir docs/dev --filter doc_type=dev-guide --filter status=current
+python3 .codestable/tools/search-yaml.py --dir docs/user --filter doc_type=user-guide --filter component={feature-slug}
 ```
 
 ---

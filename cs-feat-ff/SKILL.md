@@ -24,9 +24,9 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 - **`architecture/`** — ARCHITECTURE.md 总入口 + 子系统 doc。改跨模块的东西前看一眼避免违反边界
 - **`compound/`** — learning / trick / decision / explore 四类沉淀：
   ```bash
-  python .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=learning --query "关键词"
-  python .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=decision --query "关键词"
-  python .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=trick --query "关键词"
+  python3 .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=learning --query "关键词"
+  python3 .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=decision --query "关键词"
+  python3 .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=trick --query "关键词"
   ```
 - **`requirements/`** — 有相关 req 时读边界
 - **`features/`** — 有同类 feature 时参考其 design
@@ -45,7 +45,7 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 动手前至少运行一次 doctor，确认没有已有 worktree / review / follow-up 阻塞：
 
 ```bash
-python .codestable/tools/codestable-doctor.py --root . --json
+python3 .codestable/tools/codestable-doctor.py --root . --json
 ```
 
 若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问；选 1 后继续，只有平台无 subagent 能力时选 2 才能继续。
@@ -53,7 +53,7 @@ python .codestable/tools/codestable-doctor.py --root . --json
 fastforward 通常动手后才生成 `{slug}-ff-note.md`，所以不提前造空 unit。写完 ff-note 和 review 证据后，对最终 unit 跑 commit gate：
 
 ```bash
-python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
+python3 .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
 ```
 
 命中就把结论融进实现（**按约束来写**，不是抄）。没命中按自己判断写很正常。搜不到换几个关键词再试。
@@ -121,7 +121,7 @@ design / implement 的硬约束在 fastforward 的精简版。没 design doc 不
 代码写完、验证完、按 shared-conventions 第 2.6 节生成 review packet 并做完独立 code review、用户确认效果 OK **之后**才动这一步——动手前先建空壳会破坏 ff 的轻体感。
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+python3 .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
 ```
 
 ### 自动生成 slug

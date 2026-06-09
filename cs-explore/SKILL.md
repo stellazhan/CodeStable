@@ -104,11 +104,11 @@ frontmatter / 正文结构 / 各节写法说明和示例见同目录 `reference.
 ```bash
 # 按类型筛选
 
-python .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=explore --filter type=module-overview --filter status=active
+python3 .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=explore --filter type=module-overview --filter status=active
 
 # 归档后查重叠
 
-python .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=explore --query "{关键词}" --json
+python3 .codestable/tools/search-yaml.py --dir .codestable/compound --filter doc_type=explore --query "{关键词}" --json
 ```
 
 ---

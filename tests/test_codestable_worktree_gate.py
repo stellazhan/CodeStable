@@ -217,8 +217,8 @@ def test_quarantine_refuses_untracked_secret_like_files(tmp_path: Path) -> None:
 def test_runtime_tool_paths_are_documented() -> None:
     tools_doc = (Path(__file__).resolve().parents[1] / "cs-onboard/reference/tools.md").read_text(encoding="utf-8")
 
-    assert "python .codestable/tools/codestable-doctor.py --root . --json" in tools_doc
-    assert "python .codestable/tools/codestable-worktree-gate.py --root . --json start" in tools_doc
+    assert "python3 .codestable/tools/codestable-doctor.py --root . --json" in tools_doc
+    assert "python3 .codestable/tools/codestable-worktree-gate.py --root . --json start" in tools_doc
 
 
 def test_missing_unit_cli_returns_json_finding(tmp_path: Path) -> None:

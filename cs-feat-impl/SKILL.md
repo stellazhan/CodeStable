@@ -78,7 +78,7 @@ frontmatter：`doc_type=feature-design` / `feature` 一致 / `status=approved` /
 进入实现前运行 start gate，路径用项目运行时 `.codestable/tools/...`：
 
 ```bash
-python .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-{slug}
+python3 .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-{slug}
 ```
 
 gate 不通过就不要开始改代码；用户批准 override 时先在 unit 目录写 `worktree-override.md`（reason / scope / approval）。
@@ -149,7 +149,7 @@ design 给的 `steps` 是 paradigm 维度切片（编排骨架 → 计算节点 
 所有 steps 完成、验证跑完后，先按 shared-conventions 第 2.6 节生成 review packet，再触发独立 code review：
 
 ```bash
-python .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
+python3 .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
 ```
 
 默认做 quality review；如果本 feature 需求容易走偏，追加一次 `--stage spec`；如果涉及 schema / security / core runtime，追加 `--stage verification` 且必须传 fresh command output。
@@ -159,7 +159,7 @@ python .codestable/tools/build-review-packet.py --root . --unit .codestable/feat
 review 证据写完后、输出完成汇报前运行 commit gate：
 
 ```bash
-python .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
+python3 .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
 ```
 
 gate 不通过就先处理 findings，不把"测试已过"当成完成。

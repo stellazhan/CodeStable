@@ -129,15 +129,16 @@ Acceptance:
 - P0/P1/P2 findings can be copied into `{slug}-implementation-review.md`.
 - Verification-stage packets require fresh validation evidence.
 
-### 4. Handoff Context Packet
+### 4. Handoff Context Packet And Human Reports
 
 Add:
 
 ```bash
 .codestable/tools/build-context-packet.py --unit <path-or-slug> --audience handoff --output /tmp/handoff.md
+.codestable/tools/build-context-packet.py --unit <path-or-slug> --audience human-reviewer --language zh --output /tmp/human-review.md
 ```
 
-It should collect a compact handoff with:
+It should collect either a compact handoff or an audience-specific report with:
 
 - decided;
 - rejected;
@@ -146,10 +147,18 @@ It should collect a compact handoff with:
 - remaining;
 - evidence.
 
+Audience report modes are `human-reviewer`, `owner-decision`, `learner`, and
+`interviewee`. They use a layered `Decision Brief` -> `Working Context` ->
+`Evidence Appendix` structure so human-facing detail lives in an artifact rather
+than in the default chat reply.
+
 Acceptance:
 
-- Next-stage agents can read the handoff without prior chat history.
+- Next-stage agents and human reviewers can read the packet without prior chat
+  history.
 - The handoff is short enough for human review.
+- Chinese human reports can be generated with complete context and evidence
+  pointers.
 - Secret-like paths and values are redacted.
 
 ### 5. Commit Planner
