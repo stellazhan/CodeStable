@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build lightweight context packets for CodeStable stage handoffs."""
+"""Build lightweight context packets for CodeStable stage handoffs and human reports."""
 
 from __future__ import annotations
 
@@ -11,12 +11,78 @@ from codestable_common import git_status, is_secret_like_path, redact_text, reso
 
 
 MAX_LIST_ITEMS = 20
+AUDIENCES = ("handoff", "human-reviewer", "owner-decision", "learner", "interviewee")
+
+AUDIENCE_TITLES = {
+    "en": {
+        "handoff": "CodeStable Handoff Context",
+        "human-reviewer": "CodeStable Human Reviewer Context",
+        "owner-decision": "CodeStable Owner Decision Brief",
+        "learner": "CodeStable Learning Report",
+        "interviewee": "CodeStable Interview Context",
+    },
+    "zh": {
+        "handoff": "CodeStable 交接上下文",
+        "human-reviewer": "CodeStable 人审上下文报告",
+        "owner-decision": "CodeStable Owner 决策简报",
+        "learner": "CodeStable 学习报告",
+        "interviewee": "CodeStable 访谈上下文",
+    },
+}
+
+AUDIENCE_MISSIONS = {
+    "en": {
+        "human-reviewer": "Review the work using only this packet and the repository state it points to.",
+        "owner-decision": "Decide whether the remaining risks and work are acceptable.",
+        "learner": "Understand what changed, why it changed, and how to verify it later.",
+        "interviewee": "Prepare a concise, evidence-backed explanation of the work.",
+    },
+    "zh": {
+        "human-reviewer": "请只基于这份报告和它指向的仓库现状做人审，不依赖隐藏聊天历史。",
+        "owner-decision": "请判断剩余风险和后续事项是否可以接受，或需要继续收敛。",
+        "learner": "用于理解这次工作为什么发生、改了什么、以后如何验证。",
+        "interviewee": "用于准备一份有证据支撑的简洁讲述，不把细节埋在聊天记录里。",
+    },
+}
 
 
 def format_items(items: list[str], empty: str = "None recorded.") -> list[str]:
     if not items:
         return [f"- {empty}"]
-    return [f"- {redact_text(item)}" for item in items[:MAX_LIST_ITEMS]]
+    lines = [f"- {redact_text(item)}" for item in items[:MAX_LIST_ITEMS]]
+    if len(items) > MAX_LIST_ITEMS:
+        lines.append(f"- ... {len(items) - MAX_LIST_ITEMS} more item(s) omitted.")
+    return lines
+
+
+def labels(language: str) -> dict[str, str]:
+    if language == "zh":
+        return {
+            "decision_brief": "决策简报",
+            "working_context": "工作上下文",
+            "evidence_appendix": "证据附录",
+            "objective": "目标",
+            "decided": "已决定",
+            "rejected": "已排除",
+            "risks": "风险",
+            "files": "相关文件",
+            "remaining": "剩余事项",
+            "evidence": "验证证据",
+            "none": "未记录。",
+        }
+    return {
+        "decision_brief": "Decision Brief",
+        "working_context": "Working Context",
+        "evidence_appendix": "Evidence Appendix",
+        "objective": "Objective",
+        "decided": "Decided",
+        "rejected": "Rejected",
+        "risks": "Risks",
+        "files": "Files",
+        "remaining": "Remaining",
+        "evidence": "Evidence",
+        "none": "None recorded.",
+    }
 
 
 def changed_files(root: Path) -> list[str]:
@@ -27,6 +93,14 @@ def changed_files(root: Path) -> list[str]:
         else:
             paths.append(item.path)
     return sorted(paths)
+
+
+def title_for(audience: str, language: str) -> str:
+    return AUDIENCE_TITLES.get(language, AUDIENCE_TITLES["en"])[audience]
+
+
+def mission_for(audience: str, language: str) -> str | None:
+    return AUDIENCE_MISSIONS.get(language, AUDIENCE_MISSIONS["en"]).get(audience)
 
 
 def build_handoff_packet(
@@ -68,6 +142,70 @@ def build_handoff_packet(
     return "\n".join(lines)
 
 
+def build_audience_report(
+    root: Path,
+    unit_value: str,
+    audience: str,
+    language: str,
+    decided: list[str],
+    rejected: list[str],
+    risks: list[str],
+    files: list[str],
+    remaining: list[str],
+    evidence: list[str],
+) -> str:
+    root = root.resolve()
+    unit_dir = resolve_unit(root, unit_value)
+    file_items = files or changed_files(root)
+    text = labels(language)
+    title = title_for(audience, language)
+    mission = mission_for(audience, language)
+
+    lines: list[str] = [
+        f"# {title}",
+        "",
+        f"- root: `{root.as_posix()}`",
+        f"- unit: `{unit_dir.as_posix()}`",
+        f"- audience: `{audience}`",
+        f"- language: `{language}`",
+    ]
+    if mission:
+        lines.extend(["", f"> {mission}"])
+    lines.extend(
+        [
+            "",
+            f"## {text['decision_brief']}",
+            "",
+            f"### {text['objective']}",
+            *format_items(remaining, text["none"]),
+            "",
+            f"### {text['decided']}",
+            *format_items(decided, text["none"]),
+            "",
+            f"### {text['rejected']}",
+            *format_items(rejected, text["none"]),
+            "",
+            f"## {text['working_context']}",
+            "",
+            f"### {text['risks']}",
+            *format_items(risks, text["none"]),
+            "",
+            f"### {text['files']}",
+            *format_items(file_items, text["none"]),
+            "",
+            f"### {text['remaining']}",
+            *format_items(remaining, text["none"]),
+            "",
+            f"## {text['evidence_appendix']}",
+            "",
+            f"### {text['evidence']}",
+            *format_items(evidence, text["none"]),
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def build_packet(
     root: Path,
     unit_value: str,
@@ -78,17 +216,34 @@ def build_packet(
     files: list[str],
     remaining: list[str],
     evidence: list[str],
+    language: str = "en",
 ) -> str:
-    if audience != "handoff":
+    if audience not in AUDIENCES:
         raise ValueError(f"unknown context audience: {audience}")
-    return build_handoff_packet(root, unit_value, decided, rejected, risks, files, remaining, evidence)
+    if language not in {"en", "zh"}:
+        raise ValueError(f"unknown context language: {language}")
+    if audience == "handoff" and language == "en":
+        return build_handoff_packet(root, unit_value, decided, rejected, risks, files, remaining, evidence)
+    return build_audience_report(
+        root,
+        unit_value,
+        audience,
+        language,
+        decided,
+        rejected,
+        risks,
+        files,
+        remaining,
+        evidence,
+    )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=".", help="Repository root")
     parser.add_argument("--unit", required=True, help="CodeStable unit path or slug")
-    parser.add_argument("--audience", choices=["handoff"], required=True, help="Context audience")
+    parser.add_argument("--audience", choices=AUDIENCES, required=True, help="Context audience")
+    parser.add_argument("--language", choices=["en", "zh"], default="en", help="Output language")
     parser.add_argument("--output", required=True, help="Output Markdown file")
     parser.add_argument("--decided", action="append", default=[], help="Decision to include; repeat as needed")
     parser.add_argument("--rejected", action="append", default=[], help="Rejected option to include; repeat as needed")
@@ -109,6 +264,7 @@ def main() -> int:
             args.file,
             args.remaining,
             args.evidence,
+            args.language,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)

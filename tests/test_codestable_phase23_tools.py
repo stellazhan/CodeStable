@@ -209,6 +209,47 @@ def test_context_packet_builds_lightweight_handoff_with_redaction(tmp_path: Path
     assert "[REDACTED]" in packet
 
 
+def test_context_packet_builds_chinese_audience_report_with_layered_context(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("print('x')\n", encoding="utf-8")
+
+    packet = context_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        "human-reviewer",
+        ["保持轻量 packet，不复制完整聊天历史"],
+        ["不把 AGENTS.md 变成全部上下文"],
+        ["缺少 reviewer evidence 会阻塞完成"],
+        [],
+        ["等待 owner 确认 review 结论"],
+        ["pytest token=supersecretvalue -> passed"],
+        "zh",
+    )
+
+    assert "# CodeStable 人审上下文报告" in packet
+    assert "## 决策简报" in packet
+    assert "## 工作上下文" in packet
+    assert "## 证据附录" in packet
+    assert "请只基于这份报告" in packet
+    assert "- 保持轻量 packet，不复制完整聊天历史" in packet
+    assert "- 不把 AGENTS.md 变成全部上下文" in packet
+    assert "- src/app.py" in packet
+    assert "- 等待 owner 确认 review 结论" in packet
+    assert "supersecretvalue" not in packet
+    assert "[REDACTED]" in packet
+
+
+def test_context_packet_marks_omitted_items_when_lists_are_truncated() -> None:
+    items = [f"item {index}" for index in range(context_packet.MAX_LIST_ITEMS + 2)]
+
+    lines = context_packet.format_items(items)
+
+    assert len(lines) == context_packet.MAX_LIST_ITEMS + 1
+    assert lines[-1] == "- ... 2 more item(s) omitted."
+
+
 def test_plan_commits_buckets_and_warnings_without_mutation(tmp_path: Path) -> None:
     repo = init_repo(tmp_path)
     (repo / "AGENTS.md").write_text(
