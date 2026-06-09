@@ -294,6 +294,7 @@ Record shape:
   "covered_head": "abc123",
   "covered_diff": "main...abc123",
   "learning_report": ".codestable/features/2026-06-09-example/example-learning-report.md",
+  "learning_report_abs": "/repo/.codestable/features/2026-06-09-example/example-learning-report.md",
   "context_check": ".codestable/features/2026-06-09-example/example-learning-context-check.json",
   "merge_readiness": ".codestable/features/2026-06-09-example/example-merge-readiness.json",
   "created_at": "2026-06-09T00:00:00Z",
@@ -324,6 +325,8 @@ Responsibilities:
   checkout or default branch;
 - resolve the unit path and current branch;
 - compute base ref, current HEAD, and diff range;
+- fail if the worktree has uncommitted changes outside the finish gate's own
+  generated report/readiness artifacts;
 - generate or refresh a Chinese learner report with `audience=learner` before
   the worktree is considered finish-ready;
 - write `covered_head`, `covered_diff`, branch, worktree path, unit, validation
@@ -332,7 +335,9 @@ Responsibilities:
   the JSON result next to it;
 - fail if implementation review evidence is missing for implementation work;
 - fail if blocking backlog exists for the unit;
-- fail if `covered_head` in the learner report does not match current HEAD;
+- record the clean branch HEAD as `covered_head`; if the branch later advances
+  with non-finish-artifact changes, the inbox must classify the record as
+  `stale-report` until the finish gate is rerun;
 - write `merge-readiness.json` in the unit and a matching Git-private inbox
   record when all checks pass;
 - never merge, rebase, delete a branch, or delete a worktree.
@@ -413,12 +418,13 @@ Required tests:
 - finish gate fails in default branch/coordinator checkout;
 - finish gate creates learner report, context check JSON, merge readiness JSON,
   and Git-private inbox record for an execution worktree;
-- finish gate fails when learner report `covered_head` is stale;
+- finish gate refreshes a stale learner report by writing a new `covered_head`;
 - inbox reports `ready-to-merge` from a different branch/worktree than the one
   that created the record;
 - inbox upgrades stale learner report to P1 after new commit on the worktree
   branch;
 - inbox reports `merged` after base branch contains `covered_head`;
+- inbox still reports `merged` after the already-merged branch is deleted;
 - doctor includes ready-to-merge records without mutating files.
 
 Acceptance:
@@ -570,7 +576,8 @@ Exit criteria:
 Build `codestable-finish-worktree.py`, `codestable-worktree-inbox.py`, and the
 doctor integration for merge reminders.
 
-Status: planned.
+Status: implemented in the CodeStable source tree on
+`codex/backlog-semantic-upstream`.
 
 This phase solves:
 
@@ -585,8 +592,8 @@ Exit criteria:
 
 - finish gate generates a Chinese learner report and strict context check before
   declaring a worktree ready to merge;
-- finish gate records `covered_head` and fails after any new commit until the
-  learner report is refreshed;
+- finish gate records `covered_head`; after any new non-finish-artifact commit,
+  the inbox reports `stale-report` until the learner report is refreshed;
 - worktree inbox records ready-to-merge state under Git common-dir local state;
 - doctor shows ready-to-merge and stale-report reminders from any branch;
 - no command auto-merges, auto-rebases, or deletes a worktree.

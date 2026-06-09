@@ -8,6 +8,7 @@ import re
 import subprocess
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -483,6 +484,87 @@ def post_baseline_implementation_changes(root: Path, baseline: dict[str, object]
         for path in changed_paths_between(root, str(default_head), str(default))
         if is_implementation_path(path)
     ]
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def git_common_dir(root: Path) -> Path:
+    result = run_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if result.returncode == 0 and result.stdout.strip():
+        return Path(result.stdout.strip()).resolve()
+    return (root / ".git").resolve()
+
+
+def inbox_dir(root: Path) -> Path:
+    return git_common_dir(root) / "codestable" / "worktree-inbox"
+
+
+def inbox_record_id(branch: str | None, unit_dir: Path | str | None) -> str:
+    source = branch or (unit_dir.as_posix() if isinstance(unit_dir, Path) else str(unit_dir or "detached"))
+    return re.sub(r"[^a-zA-Z0-9_.-]+", "_", source).strip("_") or "detached"
+
+
+def inbox_record_path(root: Path, branch: str | None, unit_dir: Path | str | None) -> Path:
+    return inbox_dir(root) / f"{inbox_record_id(branch, unit_dir)}.json"
+
+
+def write_inbox_record(root: Path, record: dict[str, object]) -> Path:
+    path = inbox_record_path(root, str(record.get("branch") or ""), str(record.get("unit") or ""))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def iter_inbox_records(root: Path) -> list[dict[str, object]]:
+    directory = inbox_dir(root)
+    if not directory.exists():
+        return []
+    records: list[dict[str, object]] = []
+    for path in sorted(directory.glob("*.json")):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if isinstance(record, dict):
+            record["_record_path"] = path.as_posix()
+            records.append(record)
+    return records
+
+
+def branch_head(root: Path, branch: str) -> str | None:
+    return ref_head(root, branch) or ref_head(root, f"refs/heads/{branch}")
+
+
+def is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
+    return run_git(root, "merge-base", "--is-ancestor", ancestor, descendant).returncode == 0
+
+
+def worktree_map(root: Path) -> dict[str, dict[str, object]]:
+    result = run_git(root, "worktree", "list", "--porcelain")
+    if result.returncode != 0:
+        return {}
+    entries: dict[str, dict[str, object]] = {}
+    current: dict[str, object] = {}
+    for line in result.stdout.splitlines():
+        if not line:
+            if current.get("path"):
+                entries[str(current["path"])] = current
+            current = {}
+            continue
+        key, _, value = line.partition(" ")
+        if key == "worktree":
+            current["path"] = str(Path(value).resolve())
+        elif key == "HEAD":
+            current["head"] = value
+        elif key == "branch":
+            current["branch"] = value.removeprefix("refs/heads/")
+        elif key == "detached":
+            current["detached"] = True
+    if current.get("path"):
+        entries[str(current["path"])] = current
+    return entries
 
 
 BACKLOG_PATTERNS = (

@@ -296,7 +296,67 @@ JSON 关键字段：
 
 ---
 
-## 9. plan-commits.py
+## 9. codestable-finish-worktree.py
+
+execution worktree 合并前 finish gate。它会生成中文学习报告、跑 context sufficiency、写 merge readiness，并把 ready-to-merge 提醒登记到 Git common-dir 本地 inbox。它不会 merge、rebase、commit 或删除 worktree。
+
+```bash
+python3 .codestable/tools/codestable-finish-worktree.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --json \
+  --validation "uv run pytest -> passed" \
+  --validation "CLI smoke -> passed"
+```
+
+会生成：
+
+- `{slug}-learning-report.md`
+- `{slug}-learning-context-check.json`
+- `{slug}-merge-readiness.json`
+- `$(git rev-parse --git-common-dir)/codestable/worktree-inbox/{branch}.json`
+
+关键规则：
+
+- 必须在 linked execution worktree 运行，不能在 default branch / coordinator checkout 里标记 ready。
+- 运行前必须没有未提交的普通变更；只允许本工具上次生成的
+  `*-learning-report.md` / `*-learning-context-check.json` /
+  `*-merge-readiness.json` 处于未提交状态并被刷新。
+- implementation unit 需要已有 subagent review evidence。
+- learner report frontmatter 会写 `covered_head`；branch 后续有新 commit 时 inbox 会报 `stale-report`。
+- 如果后续 commit 只包含 finish gate 产物，inbox 仍视为同一份报告覆盖的
+  ready-to-merge 状态；普通实现 / 文档 / 测试 commit 仍会变成 `stale-report`。
+- 缺 validation、缺 review、unit 内还有 blocking backlog 时失败。
+
+---
+
+## 10. codestable-worktree-inbox.py
+
+跨 branch/worktree 的本地 merge reminder。它读取 Git common-dir 下的 inbox 记录，所以即使你之后切到另一个 branch，也能看到之前完成但未合并的 worktree。
+
+```bash
+python3 .codestable/tools/codestable-worktree-inbox.py --root . --json
+```
+
+状态：
+
+- `ready-to-merge`：finish gate 已过，branch 尚未进入 base。
+- `stale-report`：branch HEAD 已不同于 learner report 的 `covered_head`，必须重跑 finish gate。
+- `merged`：base 已包含 `covered_head`，可以清理 worktree 或归档记录。
+- `blocked`：branch / covered_head 等关键状态缺失。
+- `abandoned`：owner 显式取消。
+
+本地控制：
+
+```bash
+python3 .codestable/tools/codestable-worktree-inbox.py --root . --snooze codex_slug --until 2026-06-12T00:00:00Z --json
+python3 .codestable/tools/codestable-worktree-inbox.py --root . --abandon codex_slug --reason "owner canceled" --json
+```
+
+未到期的 snooze 记录仍会出现在 `items` / `snoozed`，但不会进入
+`ready_to_merge`，也不会让 doctor 提醒 owner 合并。branch 在 snooze 期间产生新
+commit 时，状态仍会升级为 `stale-report` 并恢复 P1 提醒。
+
+---
+
+## 11. plan-commits.py
 
 提交规划器。只读，不 stage、不 commit。用于提交前把 dirty tree 按逻辑 bucket 拆开，并发现 migration doc-sync、runbook doc-sync、tracked ignored、large file、live writer 等风险。
 
@@ -325,7 +385,7 @@ python3 .codestable/tools/plan-commits.py --root . --json
 
 ---
 
-## 10. codestable-backlog.py
+## 12. codestable-backlog.py
 
 CodeStable 人审 / 后续事项积压扫描器。它只读 `.codestable/`，用于最终汇报前确认没有把人工决策点或 follow-up 隐藏掉。
 
