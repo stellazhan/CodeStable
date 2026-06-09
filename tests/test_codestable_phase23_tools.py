@@ -26,6 +26,7 @@ def load_tool(module_name: str, path: Path):
 
 review_packet = load_tool("build_review_packet", TOOLS_DIR / "build-review-packet.py")
 context_packet = load_tool("build_context_packet", TOOLS_DIR / "build-context-packet.py")
+context_sufficiency = load_tool("check_context_sufficiency", TOOLS_DIR / "check-context-sufficiency.py")
 commit_planner = load_tool("plan_commits", TOOLS_DIR / "plan-commits.py")
 backlog_tool = load_tool("codestable_backlog", TOOLS_DIR / "codestable-backlog.py")
 maintainer_verify = load_tool("codestable_maintainer_verify", MAINTAINER_TOOLS_DIR / "verify.py")
@@ -257,6 +258,107 @@ def test_context_packet_marks_omitted_items_when_lists_are_truncated() -> None:
 
     assert len(lines) == context_packet.MAX_LIST_ITEMS + 1
     assert lines[-1] == "- ... 2 more item(s) omitted."
+
+
+def test_context_sufficiency_accepts_complete_chinese_audience_report(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "src").mkdir()
+    (repo / "src/app.py").write_text("print('x')\n", encoding="utf-8")
+    packet_path = tmp_path / "human-review.md"
+    packet_path.write_text(
+        context_packet.build_packet(
+            repo,
+            ".codestable/features/2026-06-03-demo",
+            "human-reviewer",
+            ["Use packets"],
+            ["Do not rely on chat history"],
+            ["Reviewer evidence can be skipped"],
+            [],
+            ["Finish review"],
+            ["pytest -> passed"],
+            "zh",
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is True
+    assert payload["shape"] == "audience-report"
+
+
+def test_context_sufficiency_accepts_strict_handoff_packet(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    packet_path = tmp_path / "handoff.md"
+    packet_path.write_text(
+        context_packet.build_packet(
+            repo,
+            ".codestable/features/2026-06-03-demo",
+            "handoff",
+            ["Use packets"],
+            ["Do not rely on chat history"],
+            ["Reviewer evidence can be skipped"],
+            ["src/app.py"],
+            ["Finish review"],
+            ["pytest -> passed"],
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is True
+    assert payload["shape"] == "handoff"
+
+
+def test_context_sufficiency_strict_requires_evidence(tmp_path: Path) -> None:
+    packet_path = tmp_path / "human-review.md"
+    packet_path.write_text(
+        "\n".join(
+            [
+                "# CodeStable 人审上下文报告",
+                "## 决策简报",
+                "## 工作上下文",
+                "### 相关文件",
+                "- src/app.py",
+                "## 证据附录",
+                "### 验证证据",
+                "- 未记录。",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is False
+    assert any(finding["code"] == "missing_evidence" for finding in payload["findings"])
+
+
+def test_context_sufficiency_rejects_unredacted_secret_like_text(tmp_path: Path) -> None:
+    packet_path = tmp_path / "human-review.md"
+    packet_path.write_text(
+        "\n".join(
+            [
+                "# CodeStable Human Reviewer Context",
+                "## Decision Brief",
+                "## Working Context",
+                "### Files",
+                "- src/app.py",
+                "## Evidence Appendix",
+                "### Evidence",
+                "- pytest API_KEY=supersecretvalue -> passed",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is False
+    assert any(finding["code"] == "unredacted_secret_like_text" for finding in payload["findings"])
 
 
 def test_plan_commits_buckets_and_warnings_without_mutation(tmp_path: Path) -> None:

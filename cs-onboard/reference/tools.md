@@ -274,7 +274,29 @@ handoff 固定输出：
 
 ---
 
-## 8. plan-commits.py
+## 8. check-context-sufficiency.py
+
+context packet 完整性检查器。它只读已生成的 handoff / audience report，检查结构是否可识别、是否还有未脱敏 secret-like 文本；`--strict` 还要求有至少一个 concrete file 和 evidence 条目。
+
+```bash
+python3 .codestable/tools/check-context-sufficiency.py --file /tmp/codestable-human-review.md --strict --json
+```
+
+适用时机：
+
+- dispatch human reviewer / subagent reviewer 前，确认 packet 不依赖隐藏聊天历史。
+- 给 owner 决策或学习报告前，确认文件和证据没有空着。
+- 发现输出里仍有 token / secret / api key 时，先重新生成或手动脱敏，再发给接收方。
+
+JSON 关键字段：
+
+- `ok`：是否通过。
+- `shape`：`handoff` / `audience-report` / `null`。
+- `findings`：P1 问题清单，包含 `missing_files`、`missing_evidence`、`unredacted_secret_like_text`、`unknown_context_shape`。
+
+---
+
+## 9. plan-commits.py
 
 提交规划器。只读，不 stage、不 commit。用于提交前把 dirty tree 按逻辑 bucket 拆开，并发现 migration doc-sync、runbook doc-sync、tracked ignored、large file、live writer 等风险。
 
@@ -303,7 +325,7 @@ python3 .codestable/tools/plan-commits.py --root . --json
 
 ---
 
-## 9. codestable-backlog.py
+## 10. codestable-backlog.py
 
 CodeStable 人审 / 后续事项积压扫描器。它只读 `.codestable/`，用于最终汇报前确认没有把人工决策点或 follow-up 隐藏掉。
 

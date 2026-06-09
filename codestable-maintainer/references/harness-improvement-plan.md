@@ -136,6 +136,7 @@ Add:
 ```bash
 .codestable/tools/build-context-packet.py --unit <path-or-slug> --audience handoff --output /tmp/handoff.md
 .codestable/tools/build-context-packet.py --unit <path-or-slug> --audience human-reviewer --language zh --output /tmp/human-review.md
+.codestable/tools/check-context-sufficiency.py --file /tmp/human-review.md --strict --json
 ```
 
 It should collect either a compact handoff or an audience-specific report with:
@@ -159,6 +160,8 @@ Acceptance:
 - The handoff is short enough for human review.
 - Chinese human reports can be generated with complete context and evidence
   pointers.
+- Strict context checks fail when file or evidence entries are missing, or when
+  secret-like text was not redacted before dispatch.
 - Secret-like paths and values are redacted.
 
 ### 5. Commit Planner

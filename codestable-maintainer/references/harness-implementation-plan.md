@@ -379,14 +379,10 @@ Exit criteria:
   `Risks`, `Files`, `Remaining`, and `Evidence`;
 - `build-context-packet.py --audience human-reviewer|owner-decision|learner|interviewee --language zh`
   emits `Decision Brief`, `Working Context`, and `Evidence Appendix`;
+- `check-context-sufficiency.py --strict` validates packet shape, concrete file
+  references, evidence items, and unredacted secret-like text before dispatch;
 - skills document the risk-tiered default instead of requiring a full staged
   team pipeline for every small change.
-
-Known remaining follow-up:
-
-- `check-context-sufficiency.py` is still not implemented. Keep it as a future
-  gate for validating required context fields before dispatching reviewer or
-  human-facing reports.
 
 ## Global Acceptance Criteria
 

@@ -245,6 +245,12 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 
 可选 audience：`human-reviewer` / `owner-decision` / `learner` / `interviewee`。这些报告固定输出 `Decision Brief` / `Working Context` / `Evidence Appendix` 三层；中文报告用 `--language zh`。
 
+发给 subagent / human reviewer / owner 前先跑 sufficiency gate，避免缺 files / evidence 或漏脱敏：
+
+```bash
+python3 .codestable/tools/check-context-sufficiency.py --file /tmp/codestable-human-review.md --strict --json
+```
+
 2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
 3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
 4. 只有当前平台确实没有 subagent 能力时，执行 owner 才能做 fresh self-review fallback，并明确写"当前环境没有 subagent 能力，已用本线程复核替代"。不能因为任务小、时间紧、或觉得 reviewer 多余而跳过 subagent。
