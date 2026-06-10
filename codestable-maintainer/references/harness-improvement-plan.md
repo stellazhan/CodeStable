@@ -1,5 +1,43 @@
 # CodeStable Harness Improvement Plan
 
+## Owner Brief（中文）
+
+### 这解决什么
+
+这条路线把 CodeStable 从“靠提示词自觉执行流程”推进到“可以被工具和干净 agent 回归验证的工作流系统”。它重点解决：
+
+- agent 在主协调 checkout 里直接实现，忘记开 execution worktree；
+- `git status` 看起来干净，但实现已经被提交到 `main`；
+- code / docs / data / logs / migration 被混进一个提交；
+- subagent review、human review、follow-up、attention 候选在对话结束后消失；
+- CodeStable 源仓库已改，但本地安装副本仍然旧；
+- 当前长上下文里看似实现了流程，换成 fresh / compacted agent 后行为漂移。
+
+### 这不解决什么
+
+它不替 owner 做产品判断，不自动 commit、merge、push，也不把 CodeStable 变成重型 multi-agent 编排系统。它只让“现在处于什么状态、下一步该做什么、是否满足完成门槛”变得可检查。
+
+### 建议阶段
+
+1. Doctor + worktree gate：先防止在错误 checkout 完成实现。
+2. Review packet + commit planner：让 review 输入和提交拆分机械化。
+3. Backlog + source/install verify：让 human-review debt 和安装漂移可见。
+4. Human/subagent context packet：让上下文交接和人审报告完整但不污染默认回答。
+5. Finish inbox：让完成的 worktree 在任何分支都能提醒合并/刷新/清理。
+6. Agent behavior harness：用 sterile / compacted agent 重放场景，验证 CS 行为是否稳定复现。
+7. Spec governance：把文档偏移、人类可读、req delta、clarify 等机制纳入正式 workflow，并用 behavior harness 验证。
+
+### 需要 owner 拍板什么
+
+- 哪些 workflow 行为必须作为硬门槛，哪些先作为 warning。
+- 是否接受 sterile actor 作为“流程已稳定”的最低证明。
+- 哪些历史失败必须进入 behavior regression suite。
+- 哪些操作永远不能自动化，例如 merge、commit、spec rewrite。
+
+### 如何证明它有效
+
+每个阶段都要有 deterministic command 或 behavior scenario 证明。最终标准不是“prompt 写了”，而是 fresh clone、临时安装副本、fixture repo、干净 agent、多次重跑都能得到同样的 artifact、gate 状态和 forbidden mutation 检查结果。
+
 ## Purpose
 
 Improve CodeStable from a prompt-led workflow into a lightweight, verifiable

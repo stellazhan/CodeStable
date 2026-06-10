@@ -1,53 +1,38 @@
 # Spec Governance And Drift Control Roadmap
 
-## Owner Brief
+## Owner Brief（中文）
 
-### This Solves
+### 这解决什么
 
-This roadmap makes CodeStable specs correctable by humans instead of only useful
-to agents. It adds explicit owner-readable checkpoints for brainstorm
-conclusions, spec routing, clarifications, requirement deltas, historical spec
-drift, and acceptance-time consistency checks.
+这条路线让 CodeStable 的长期 spec 可以被人类纠偏，而不是只对 agent 有用。它给 brainstorm 收敛、spec routing、clarification、requirement delta、历史 spec 偏移、acceptance 一致性检查都加上 owner 可读的审阅入口。
 
-The intended result: when an agent changes or relies on a long-lived spec, the
-owner can review a small decision, clarification, or delta instead of reading a
-large regenerated document.
+目标结果是：当 agent 要修改或依赖长期 spec 时，owner 审的是一小段 decision、clarification 或 delta，而不是被迫通读一份重新生成的大文档。
 
-### This Does Not Solve
+### 这不解决什么
 
-This does not make CodeStable auto-decide product direction, auto-merge specs, or
-replace owner judgment. It also does not rewrite old specs wholesale. Historical
-docs are inventoried and classified first; repair happens only through approved
-clarifications, deltas, archive markers, or compaction reviews.
+它不让 CodeStable 自动决定产品方向，不自动合并 spec，也不替代 owner 判断。它也不会把旧 spec 整篇重写。历史文档必须先 inventory 和分类；修复只能通过已批准的 clarification、delta、archive marker 或 compaction review 进行。
 
-### Proposed Phases
+### 建议阶段
 
-1. Add owner decision context when brainstorm converges into actionable work.
-2. Add spec routing so agents state which specs are selected or excluded before
-   editing.
-3. Add clarification gates before design or roadmap approval.
-4. Add requirement deltas and mechanical apply during acceptance.
-5. Add no-free-rewrite and compaction-review rules for long-lived specs.
-6. Add historical spec rehabilitation for already-drifted or old-style docs.
-7. Add read-only analyze passes to catch terminology, coverage, and decision
-   drift before completion.
+1. Brainstorm 收敛成可执行方向时，先生成 owner decision context。
+2. 写 design / roadmap / req 前，先做 spec routing，列出选中和排除的 spec。
+3. Design 或 roadmap 批准前，加 clarification gate。
+4. 能力边界变化时生成 requirement delta，并在 acceptance 阶段机械合并。
+5. 对长期 spec 加 no-free-rewrite 和 compaction-review 规则。
+6. 对已经偏移或旧格式的历史 spec 做 rehabilitation。
+7. 完成前运行只读 analyze pass，捕捉术语、覆盖、decision、architecture 漂移。
 
-### Owner Decisions Needed
+### 需要 owner 拍板什么
 
-- Which long-lived requirement documents are allowed to be canonical.
-- When a change is small enough to skip requirement deltas.
-- Whether code, docs, or both should change when historical specs conflict with
-  current implementation.
-- Which old specs should be current, historical, superseded, or drift-suspected.
-- Whether an AI-proposed compaction preserves the human-important details.
+- 哪些长期 requirement 可以作为 canonical spec。
+- 哪类变化足够小，可以跳过 requirement delta。
+- 历史 spec 和当前代码冲突时，是修代码、修文档，还是两边都要改。
+- 哪些旧 spec 应标记为 current、historical、superseded 或 drift-suspected。
+- AI 提议压缩文档时，是否保留了对人重要的细节。
 
-### How We Prove It Works
+### 如何证明它有效
 
-The behavior harness must replay the original failure modes with clean or
-compacted agents. Passing proof means sterile scenarios show that agents create
-owner context, route specs, ask clarifications, generate deltas, avoid forbidden
-rewrites, recover next actions after compaction, and block acceptance when spec
-drift remains unresolved.
+Behavior harness 必须用 clean / compacted agent 重放原始失败模式。通过标准是：sterile 场景能证明 agent 会生成 owner context、执行 spec routing、询问 clarification、生成 delta、避免 forbidden rewrite、在 compact 后恢复 next action，并在 spec drift 未解决时阻止 acceptance 完成。
 
 ## Goal
 
