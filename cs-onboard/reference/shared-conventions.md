@@ -159,6 +159,20 @@ CodeStable 默认把"讨论 / 计划"和"改代码"拆开：
 - **主协调检出**：用户讨论需求、写 design / analysis / roadmap / checklist 的地方，通常是 `main` 分支所在主 checkout。
 - **执行 worktree**：真正改代码的地方。每个 feature / issue / refactor 用独立 git worktree 和独立 `codex/...` 分支，除非用户明确要求直接在当前 checkout 做。
 
+### 最短正确用法
+
+用户不需要记住每个工具名。日常只要用这几句口令驱动：
+
+1. **开始工作**：`用 CodeStable 做 {目标}` 或 `cs {目标}`。AI 先判断走 feature / issue / refactor / explore，不确定就先分诊。
+2. **进入实现**：`开 worktree 实现`。AI 在 execution worktree 上动代码，并先跑 start gate。
+3. **允许 review**：`允许 subagent`。AI 完成实现批次后必须发 reviewer，并把 review 证据写进同一 unit。
+4. **提交实现**：`提交这批实现`。AI 跑测试、commit planner、commit gate，并把代码 / docs / tests 按逻辑提交到功能分支。
+5. **完成 worktree**：`finish worktree`。AI 跑 finish gate，生成中文学习报告、context check、merge readiness，并登记本地 merge reminder。
+6. **固化 finish 产物**：finish gate 通过后，把它生成的 3 个产物作为功能分支最后一个小提交，通常用 `docs: add {slug} finish report`。这一步不合并 main，只让学习报告随功能分支一起被 review / merge。
+7. **合并回主线**：用户明确说 `合并这个 worktree 到 main` 后，AI 才切回主线、merge / push，并在合并后检查 inbox 是否变成 `merged`。
+
+如果只想知道有没有漏合并，任何同仓库 checkout 里说 `检查 worktree inbox` 或跑 doctor 即可。
+
 ### 计划互通面
 
 worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过计划文档传递：
@@ -271,6 +285,17 @@ finish gate 会写 `{slug}-learning-report.md`、`{slug}-learning-context-check.
 finish gate 运行前必须没有未提交的普通变更；只允许它自己上次生成的
 learning/context/readiness 产物处于未提交状态并被刷新。这样 `covered_head`
 始终对应已提交的工作内容，不会漏掉 dirty implementation。
+
+finish gate 通过后，推荐立即把这三个 finish 产物作为最后一个小提交提交到当前功能分支：
+
+```bash
+git add .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-report.md \
+  .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-context-check.json \
+  .codestable/features/YYYY-MM-DD-{slug}/{slug}-merge-readiness.json
+git commit -m "docs: add {slug} finish report"
+```
+
+这个提交只固化学习报告 / readiness，不等于合并主线；只有用户明确授权"合并到 main"后才执行 merge / push。finish 产物提交后不需要因为这个提交本身重跑 finish gate；inbox 会把只包含 finish 产物的后续 commit 仍视为同一次 ready-to-merge。
 
 提交或最终汇报前运行 commit gate：
 

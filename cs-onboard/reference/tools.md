@@ -325,6 +325,17 @@ python3 .codestable/tools/codestable-finish-worktree.py --root . --unit .codesta
   ready-to-merge 状态；普通实现 / 文档 / 测试 commit 仍会变成 `stale-report`。
 - 缺 validation、缺 review、unit 内还有 blocking backlog 时失败。
 
+推荐收尾提交：
+
+```bash
+git add .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-report.md \
+  .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-context-check.json \
+  .codestable/features/YYYY-MM-DD-{slug}/{slug}-merge-readiness.json
+git commit -m "docs: add {slug} finish report"
+```
+
+这一步只把学习报告和 readiness 产物固化到当前功能分支；不合并 `main`，也不替代用户明确授权的 merge / push。只包含 finish gate 产物的提交不会让 inbox 变成 `stale-report`。
+
 ---
 
 ## 10. codestable-worktree-inbox.py
