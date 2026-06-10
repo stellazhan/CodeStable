@@ -1,5 +1,54 @@
 # Spec Governance And Drift Control Roadmap
 
+## Owner Brief
+
+### This Solves
+
+This roadmap makes CodeStable specs correctable by humans instead of only useful
+to agents. It adds explicit owner-readable checkpoints for brainstorm
+conclusions, spec routing, clarifications, requirement deltas, historical spec
+drift, and acceptance-time consistency checks.
+
+The intended result: when an agent changes or relies on a long-lived spec, the
+owner can review a small decision, clarification, or delta instead of reading a
+large regenerated document.
+
+### This Does Not Solve
+
+This does not make CodeStable auto-decide product direction, auto-merge specs, or
+replace owner judgment. It also does not rewrite old specs wholesale. Historical
+docs are inventoried and classified first; repair happens only through approved
+clarifications, deltas, archive markers, or compaction reviews.
+
+### Proposed Phases
+
+1. Add owner decision context when brainstorm converges into actionable work.
+2. Add spec routing so agents state which specs are selected or excluded before
+   editing.
+3. Add clarification gates before design or roadmap approval.
+4. Add requirement deltas and mechanical apply during acceptance.
+5. Add no-free-rewrite and compaction-review rules for long-lived specs.
+6. Add historical spec rehabilitation for already-drifted or old-style docs.
+7. Add read-only analyze passes to catch terminology, coverage, and decision
+   drift before completion.
+
+### Owner Decisions Needed
+
+- Which long-lived requirement documents are allowed to be canonical.
+- When a change is small enough to skip requirement deltas.
+- Whether code, docs, or both should change when historical specs conflict with
+  current implementation.
+- Which old specs should be current, historical, superseded, or drift-suspected.
+- Whether an AI-proposed compaction preserves the human-important details.
+
+### How We Prove It Works
+
+The behavior harness must replay the original failure modes with clean or
+compacted agents. Passing proof means sterile scenarios show that agents create
+owner context, route specs, ask clarifications, generate deltas, avoid forbidden
+rewrites, recover next actions after compaction, and block acceptance when spec
+drift remains unresolved.
+
 ## Goal
 
 Make CodeStable long-lived specs human-correctable and agent-consumable without
