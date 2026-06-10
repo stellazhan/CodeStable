@@ -18,7 +18,10 @@ This plan is grounded in recurring GammaSource and BetaSoul failures:
 - `needs-human-review`, `Follow-up`, and `attention.md` candidates can disappear
   after an acceptance report;
 - CodeStable source changes can look correct while installed skill copies remain
-  stale.
+  stale;
+- a high-context conversation can make a CodeStable prompt look implemented even
+  though a fresh or compacted agent does not reliably reproduce the intended
+  workflow.
 
 ## Proposed Capabilities
 
@@ -241,6 +244,46 @@ Acceptance:
 - Installed global skill copy is either diff-clean against the clone or the
   final report says installation was intentionally skipped.
 
+### 8. Agent Behavior Regression Harness
+
+Add a maintainer-only behavior harness that runs CodeStable scenarios in clean
+fixture repositories with a fresh agent actor:
+
+```bash
+python3 codestable-maintainer/tools/agent-behavior-harness.py run \
+  --scenario codestable-maintainer/scenarios/feat-design-clarify.yaml \
+  --runs 3 \
+  --actor sterile
+```
+
+It should evaluate behavior through trace, artifacts, and repository state, not
+through a broad "looks good" answer judgment:
+
+- fixture repositories for clean, ambiguous, drifted, and finished-worktree
+  states;
+- scripted user turns that simulate real CodeStable usage;
+- actor modes for `sterile`, `compacted`, and `realistic` contexts;
+- transcript checks for required checkpoints and owner stops;
+- trajectory checks for required/forbidden workflow actions;
+- artifact checks for generated files, frontmatter, sections, and JSON/YAML
+  schemas;
+- repo-state checks for forbidden mutations and allowed diff scopes;
+- command checks for `doctor`, worktree gates, backlog, finish inbox, and
+  maintainer verify outputs;
+- repeated runs so a single lucky pass is not treated as stability.
+
+Acceptance:
+
+- a fresh no-history actor can reproduce core CodeStable routing behavior from a
+  fixture repo and user prompt;
+- compact/resume scenarios recover the same `next_action` from artifacts and
+  status tools, not from chat memory;
+- drifted-spec scenarios produce inventory, clarification, or delta artifacts
+  instead of freely rewriting long-lived specs;
+- permission-boundary scenarios stop for owner authorization and cannot forge
+  subagent review evidence;
+- behavior regression failures can be promoted into new scenario YAML files.
+
 ## Suggested Roadmap
 
 ### Phase 1: Doctor And Worktree Gate
@@ -272,15 +315,36 @@ Acceptance:
 - Update shared conventions and implementation skills with risk-tiered review
   defaults.
 
+### Phase 5: Worktree Finish And Merge Reminders
+
+- Add `codestable-finish-worktree.py`.
+- Add `codestable-worktree-inbox.py`.
+- Integrate inbox reminders into `codestable-doctor.py`.
+- Require a fresh learner report before worktree finish readiness.
+
+### Phase 6: Agent Behavior Regression Harness
+
+- Add scenario YAML fixtures for clean routing, clarify, drifted specs,
+  permission boundaries, compact/resume, and finish inbox reminders.
+- Add a maintainer-only runner that executes those scenarios with sterile,
+  compacted, and realistic actor contexts.
+- Add deterministic graders for transcript checkpoints, trajectory actions,
+  artifacts, git diff scope, and tool JSON output.
+- Extend `codestable-maintainer/tools/verify.py` so behavior regression becomes
+  part of CodeStable workflow changes once the runner is stable.
+
 ## Non-Goals
 
 - Do not turn CodeStable into a multi-agent orchestration framework.
 - Do not remove human checkpoints.
 - Do not auto-commit or auto-publish from planner tools.
 - Do not make installed skill copies the source of truth.
+- Do not make LLM-as-judge the primary pass/fail mechanism for lifecycle
+  correctness.
 
 ## Design Principle
 
 Prompt instructions remain useful, but lifecycle correctness must be checked by
-small deterministic tools. The harness should make the correct state obvious
-before the agent says "done".
+small deterministic tools. Agent behavior must also be checked from clean
+scenario replays, because a workflow that only works in a long, high-context
+conversation is not stable enough to call implemented.
