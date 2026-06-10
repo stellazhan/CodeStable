@@ -21,7 +21,9 @@ This plan is grounded in recurring GammaSource and BetaSoul failures:
   stale;
 - a high-context conversation can make a CodeStable prompt look implemented even
   though a fresh or compacted agent does not reliably reproduce the intended
-  workflow.
+  workflow;
+- long-lived specs can drift, become human-unreadable, or be rewritten by agents
+  without a small owner-reviewable change boundary.
 
 ## Proposed Capabilities
 
@@ -284,6 +286,29 @@ Acceptance:
   subagent review evidence;
 - behavior regression failures can be promoted into new scenario YAML files.
 
+### 9. Spec Governance And Drift Control
+
+Add the workflow behavior defined in
+`codestable-maintainer/references/spec-governance-roadmap.md`:
+
+- owner decision context after brainstorm convergence;
+- spec router before design, roadmap, requirement, or acceptance work;
+- clarification gates with durable `## Clarifications` entries;
+- requirement deltas instead of whole-document rewrites;
+- no-free-rewrite constraints for long-lived specs;
+- historical spec rehabilitation through inventory and drift findings;
+- read-only analyze pass before high-risk design approval or acceptance.
+
+Acceptance:
+
+- owners review small decision contexts and deltas rather than regenerated
+  long-lived specs;
+- old specs are classified before migration instead of silently cleaned up;
+- requirement updates are mechanically traceable to approved deltas or
+  clarifications;
+- behavior harness scenarios prove the original drift, routing, compaction, and
+  human-review failures are fixed.
+
 ## Suggested Roadmap
 
 ### Phase 1: Doctor And Worktree Gate
@@ -332,6 +357,14 @@ Acceptance:
   artifacts, git diff scope, and tool JSON output.
 - Extend `codestable-maintainer/tools/verify.py` so behavior regression becomes
   part of CodeStable workflow changes once the runner is stable.
+
+### Phase 7: Spec Governance And Drift Control
+
+- Implement the roadmap in `references/spec-governance-roadmap.md`.
+- Update brainstorm, design, roadmap, req, and accept workflows with owner
+  context, router, clarification, delta, rehabilitation, and analyze-pass rules.
+- Add behavior scenarios for each governance failure mode before calling the
+  behavior stable.
 
 ## Non-Goals
 

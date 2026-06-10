@@ -91,8 +91,10 @@ skill diff as proof that all installable CodeStable changes were deployed.
 For CodeStable harness roadmap or design work, read
 `references/harness-improvement-plan.md` first, then
 `references/harness-implementation-plan.md` when the task asks what to build
-next. Together they capture the current proposal derived from GammaSource and
-BetaSoul failures:
+next. For spec drift, owner-review context, requirement delta, clarification, or
+human-readable spec governance work, also read
+`references/spec-governance-roadmap.md`. Together they capture the current
+proposal derived from GammaSource, BetaSoul, and CodeStable workflow failures:
 
 - `codestable-doctor`
 - worktree start/commit/recovery gates
@@ -100,6 +102,9 @@ BetaSoul failures:
 - commit planner
 - follow-up and human-review backlog detection
 - source-push-clone-install verification
+- worktree finish reports and merge reminders
+- clean-agent behavior regression
+- spec governance and drift control
 
 ## Hard Stops
 

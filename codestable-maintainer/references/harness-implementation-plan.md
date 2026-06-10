@@ -633,6 +633,36 @@ Acceptance:
 - behavior regression reports are machine-readable and short enough for the
   maintainer final report.
 
+## Work Package 9: Spec Governance And Drift Control
+
+Implement the roadmap in
+`codestable-maintainer/references/spec-governance-roadmap.md`.
+
+This work package defines the actual CodeStable behavior for the spec drift
+problems that the behavior harness will test:
+
+- owner decision context after brainstorm convergence;
+- spec router before feature, roadmap, requirement, or acceptance work;
+- clarification gates before design or roadmap approval;
+- requirement deltas and mechanical apply during acceptance;
+- no-free-rewrite rules for long-lived requirement documents;
+- historical spec rehabilitation through inventory, classification, drift
+  findings, and owner decisions;
+- read-only analyze passes for terminology, coverage, decision, architecture,
+  and forbidden rewrite checks.
+
+Acceptance:
+
+- every item in the spec-governance roadmap has either a prompt/reference update,
+  a deterministic validator, or an explicit future tool;
+- every item has at least one matching behavior harness scenario in the
+  validation matrix;
+- `cs-brainstorm`, `cs-feat-design`, `cs-roadmap`, `cs-req`, and
+  `cs-feat-accept` are updated only after the target artifacts and owner-stop
+  rules are clear;
+- no long-lived requirement can be rewritten by a standard workflow without
+  delta, clarification, archive marker, or compaction review evidence.
+
 ## Skill Updates Required
 
 Update these skills after the tools exist:
@@ -675,6 +705,19 @@ Phase 6 extends maintainer verification:
   workflow-affecting changes after the behavior runner is stable.
 - `cs-onboard/reference/tools.md`: document behavior harness output only as a
   maintainer tool, not as a project-runtime command copied into onboarded repos.
+
+Phase 7 updates spec-facing skills after the governance roadmap is implemented:
+
+- `cs-brainstorm`: generate owner decision context when discussion converges
+  into feature, roadmap, or requirement work.
+- `cs-feat-design` and `cs-roadmap`: run spec router and clarification gates
+  before approval.
+- `cs-req`: support requirement routing metadata, safe updates, and no-free-
+  rewrite constraints.
+- `cs-feat-accept`: apply approved requirement deltas mechanically and run a
+  read-only analyze pass before completion.
+- `cs-onboard/reference/shared-conventions.md`: document long-lived specs,
+  deltas, owner context, clarification, and historical rehabilitation semantics.
 
 ## Implementation Order
 
@@ -827,6 +870,31 @@ Exit criteria:
 - behavior reports include per-run traces and deterministic grader failures;
 - maintainer verification can run a critical behavior suite for workflow changes.
 
+### Phase 7: Spec Governance And Drift Control
+
+Build the owner-review and drift-control mechanisms from
+`spec-governance-roadmap.md`, then prove them with Phase 6 behavior scenarios.
+
+This phase solves:
+
+- brainstorm conclusions that lack enough human-review context;
+- long-lived specs that are agent-readable but human-unfriendly;
+- Q&A decisions that remain only in chat;
+- wrong requirement routing when multiple docs overlap;
+- uncontrolled growth or unsafe compaction of requirement documents;
+- historical specs that are already drifted or organized under older rules;
+- acceptance flows that miss requirement, architecture, or decision drift.
+
+Exit criteria:
+
+- owner decision context, spec routing, clarification, requirement delta,
+  no-free-rewrite, rehabilitation, and analyze-pass rules are documented;
+- affected `cs-*` skills point to the new rules and stop at the required owner
+  checkpoints;
+- historical spec rehabilitation can classify old docs without rewriting them;
+- the behavior harness validation matrix in `spec-governance-roadmap.md` has
+  passing critical scenarios in `sterile` mode before the phase is called stable.
+
 ## Global Acceptance Criteria
 
 The harness is considered effective only when all of these are true:
@@ -851,6 +919,9 @@ The harness is considered effective only when all of these are true:
   installed/diff-checked before being called done.
 - Core workflow changes are behavior-regressed with sterile or compacted actors
   before they are treated as stable.
+- Spec governance changes are not considered stable until the corresponding
+  behavior harness scenarios prove the original drift and human-review failures
+  are fixed.
 
 ## Non-Goals
 
