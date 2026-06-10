@@ -268,6 +268,97 @@ Checks:
 The analyze pass reports findings and recommended owner actions. It does not
 change files by itself.
 
+## Human Context Requirements Matrix
+
+Not every CodeStable route needs the same amount of owner-facing context. The
+rule is: if a step changes long-lived intent, future agent inputs, or owner
+decision boundaries, it needs explicit human context. If it only executes an
+approved plan or reports deterministic status, concise evidence is enough.
+
+### Context Levels
+
+| Level | Use when | Required owner-facing material |
+|---|---|---|
+| L0: status/evidence only | Pure status, validation, or mechanical sync | command/result summary and next action |
+| L1: scope context | Local work that does not change long-lived intent | scope, evidence, explicit non-goals |
+| L2: owner decision context | Direction, tradeoff, or route must be chosen | decision brief, alternatives, risks, owner checklist |
+| L3: spec-change context | Long-lived spec or future agent input changes | spec router, clarifications, req delta, analyze findings |
+| L4: rehabilitation context | Existing specs are stale, conflicting, or old-style | inventory, drift findings, owner classification decisions |
+
+### Route Matrix
+
+| Route | Default level | Human context required |
+|---|---|---|
+| `cs` | L1 | Routing summary: why this route, what active work was noticed, and what the next skill will decide. |
+| `cs-onboard` | L2/L4 | Empty repo can stay L1. Existing docs require inventory, mapping, trusted/stale classification, and owner approval before migration. |
+| `cs-brainstorm` | L1 -> L2 | Freeform discussion stays light. When the owner accepts a direction or asks for the next step, produce owner decision context. |
+| `cs-roadmap` | L2/L3 | Chinese owner brief, scope/non-goals, phases, owner decisions, clarifications, and any spec deltas implied by the roadmap. |
+| `cs-feat` | L1 | Stage routing and whether this is design, fast-forward, implementation, or acceptance. Ambiguous route requires a short decision prompt. |
+| `cs-feat-design` | L2/L3 | Spec router, selected/excluded specs, clarifications, owner-readable design brief, and req-delta draft when capability boundaries change. |
+| `cs-feat-ff` | L1/L3 | Small local changes use scope plus ff-note. If capability boundaries change, upgrade to design or req-delta flow. |
+| `cs-feat-impl` | L0/L3 | Approved checklist execution needs only evidence. Any design/checklist/spec deviation requires spec-change review. |
+| `cs-feat-accept` | L3 | Analyze findings, req-delta apply summary, architecture/roadmap backwrite summary, and unresolved owner decisions. |
+| `cs-issue` | L1 | Issue route summary: report, analyze, or fix, plus next action. |
+| `cs-issue-report` | L1 | Reproduction, expected behavior, impact, environment, and evidence. |
+| `cs-issue-analyze` | L2 | Root cause, fix options, tradeoffs, risks, and recommendation. |
+| `cs-issue-fix` | L0/L3 | Follow approved analysis. If the bug exposes a wrong spec or capability boundary, produce spec-change review. |
+| `cs-refactor` | L2 | Behavior-preserving boundary, scope, risks, rollback/verification, and what is explicitly not changing. |
+| `cs-refactor-ff` | L1/L2 | Small refactors use light scope. Cross-module or risky refactors require refactor decision context. |
+| `cs-req` | L3 | Requirement draft/update/backfill always needs owner-readable context, routing metadata, and no-free-rewrite constraints. |
+| `cs-arch` | L1/L3 | Current-state code facts can use L1. Code/doc/intent conflicts need analyze findings and owner decision. |
+| `cs-audit` | L1/L2 | Findings summary and evidence. Choosing what to fix or defer requires triage decision context. |
+| `cs-explore` | L1/L2 | Question, evidence read, conclusion, and reuse value. If it becomes a decision or spec change, upgrade to L2/L3. |
+| `cs-decide` | L2/L3 | Decision brief, alternatives, tradeoffs, scope, reversal condition, and affected specs. |
+| `cs-learn` | L1 | Trigger, lesson, evidence, and future avoidance rule. |
+| `cs-trick` | L1/L2 | Applicability, non-applicability, example, and risk. Project-wide rules should upgrade to `cs-decide`. |
+| `cs-note` | L1 | Why the note belongs in always-loaded attention, target section, and expected lifetime. |
+| `cs-guide` | L1/L2 | Target reader, task scenario, source facts. User-visible behavior changes require owner review. |
+| `cs-libdoc` | L1 | Public surface source, signature, example, and evidence. Unclear semantics require clarification before writing docs. |
+
+### Escalation Rules
+
+Upgrade to L2/L3 when any route answers one of these questions:
+
+- Should we do this, defer it, or choose another direction?
+- Which long-lived spec is canonical for this work?
+- Does this change user-visible capability or boundary?
+- Does code disagree with requirement, roadmap, architecture, or decision docs?
+- Will this update influence future agents beyond this local task?
+- Is the agent proposing to compact, reorganize, or rewrite long-lived docs?
+
+Stay at L0/L1 when the route only:
+
+- executes an approved checklist;
+- runs tests, linters, validators, doctor, inbox, or commit planner;
+- applies an already approved delta mechanically;
+- reports status without changing owner intent or long-lived docs.
+
+## Areas Requiring Further Detail
+
+The matrix above is one example of a principle that must become executable
+before implementation. The same roadmap still needs these details before the
+phase can be called stable:
+
+- Artifact schemas: exact frontmatter and required sections for owner context,
+  clarifications, req deltas, compaction reviews, inventory, and analyze reports.
+- Owner-stop semantics: which steps must stop for approval, which can continue
+  with a recorded default, and how current-turn approval is recognized.
+- Skip thresholds: concrete rules for when small UI tweaks, local refactors, or
+  bug fixes do not need requirement deltas or roadmap updates.
+- Severity model: how analyze findings become blocking, warning, deferred
+  backlog, or non-goal.
+- Canonical conflict policy: how to ask the owner when code, tests, acceptance,
+  requirements, decisions, and architecture disagree.
+- Rehabilitation classification criteria: exact evidence needed for
+  `current-trusted`, `current-unreviewed`, `drift-suspected`, `historical`,
+  `superseded`, and `orphaned`.
+- Compaction safety: how to prove a shortened spec preserves human-important
+  detail, and where removed detail is archived.
+- Language and length budget: which owner-facing artifacts must be Chinese and
+  how short their owner brief must stay.
+- Behavior scenario coverage: which sterile/compacted scenarios prove each rule
+  instead of only proving that the prompt mentions it.
+
 ## Skill Integration Roadmap
 
 ### SG1: Owner Decision Context
