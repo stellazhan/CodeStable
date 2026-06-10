@@ -587,6 +587,9 @@ Build these before the harness is considered useful:
 
 - `brainstorm-owner-context`: after brainstorm convergence, the agent writes an
   owner decision context and stops before formal spec changes.
+- `owner-interview-context`: before asking roadmap or governance questions, the
+  agent explains terms, why the decision matters, option tradeoffs, default
+  recommendation, and what the answer changes.
 - `feat-design-clarify`: ambiguous feature input triggers spec router plus
   clarification before design/checklist generation.
 - `small-ui-no-req-delta`: a small user-facing interaction change does not
@@ -642,6 +645,8 @@ This work package defines the actual CodeStable behavior for the spec drift
 problems that the behavior harness will test:
 
 - owner decision context after brainstorm convergence;
+- owner interview context before asking roadmap, governance, or workflow
+  decisions;
 - spec router before feature, roadmap, requirement, or acceptance work;
 - clarification gates before design or roadmap approval;
 - requirement deltas and mechanical apply during acceptance;
@@ -888,7 +893,8 @@ This phase solves:
 Exit criteria:
 
 - owner decision context, spec routing, clarification, requirement delta,
-  no-free-rewrite, rehabilitation, and analyze-pass rules are documented;
+  owner interview context, no-free-rewrite, rehabilitation, and analyze-pass
+  rules are documented;
 - affected `cs-*` skills point to the new rules and stop at the required owner
   checkpoints;
 - historical spec rehabilitation can classify old docs without rewriting them;

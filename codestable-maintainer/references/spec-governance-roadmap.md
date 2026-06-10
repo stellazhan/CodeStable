@@ -50,6 +50,8 @@ This roadmap covers the failures raised in the owner discussion:
 
 - brainstorm conclusions can be too short for the owner to understand, challenge,
   or approve;
+- owner interviews can be meaningless when CodeStable asks questions before
+  explaining the workflow context, terms, tradeoffs, and why the decision matters;
 - feature specs and checklists can become useful to agents but hard for humans to
   review;
 - Q&A from clarify/grill conversations can evaporate in chat instead of becoming
@@ -101,6 +103,42 @@ Required sections:
 
 The agent stops for owner approval before formal spec changes unless the owner
 has already explicitly approved the same decision in the current turn.
+
+### 1.5 Owner Interview Context Gate
+
+Before CodeStable interviews the owner about a workflow, roadmap, design, or
+governance decision, it must provide enough context for the owner to answer
+meaningfully.
+
+Required interview preface:
+
+- what decision is being made;
+- why this question is being asked now;
+- definitions for non-obvious terms;
+- the background failure or risk this decision addresses;
+- the concrete effect of each option;
+- the default recommendation and why it is safe;
+- what will happen after the owner answers;
+- which actions remain non-automatic regardless of the answer.
+
+The agent must not ask shorthand questions such as "Do you accept sterile
+actor?" until it has explained what `sterile actor` means, why it matters, and
+what accepting it changes.
+
+For multi-question interviews, each section should follow this shape:
+
+```text
+Context: {one short paragraph}
+Term: {definition if needed}
+Why it matters: {risk or failure mode}
+Options: {2-4 options with tradeoffs}
+Default: {recommended option and reason}
+Question: {one direct owner decision}
+```
+
+If the owner says the interview lacks context, the interview must restart with a
+context brief before collecting answers. The failed interview should be treated
+as a behavior-harness regression seed.
 
 ### 2. Spec Router Before Spec Work
 
@@ -243,7 +281,19 @@ Acceptance:
 - once proceeding, an owner-readable decision artifact exists;
 - the default chat reply stays concise and points to the artifact.
 
-### SG2: Spec Router
+### SG2: Owner Interview Context
+
+Add interview preface rules to `cs-brainstorm`, `cs-roadmap`,
+`cs-feat-design`, `cs-req`, and `codestable-maintainer`.
+
+Acceptance:
+
+- interviews define non-obvious terms before asking about them;
+- each question states why it matters and what the answer changes;
+- owner can ask for more context and the agent restarts the interview instead of
+  continuing the original low-context flow.
+
+### SG3: Spec Router
 
 Add routing rules and output templates to `cs-feat-design`, `cs-roadmap`,
 `cs-req`, and `cs-feat-accept`.
@@ -254,7 +304,7 @@ Acceptance:
 - multiple plausible requirement docs trigger clarification;
 - small local changes can explicitly skip requirement deltas.
 
-### SG3: Clarification Gate
+### SG4: Clarification Gate
 
 Add clarification scanning to `cs-feat-design` and `cs-roadmap` approval paths.
 
@@ -265,7 +315,7 @@ Acceptance:
 - design/checklist generation does not proceed while blocking clarifications are
   unanswered.
 
-### SG4: Requirement Delta And Mechanical Apply
+### SG5: Requirement Delta And Mechanical Apply
 
 Add `{slug}-req-delta.md` creation in design/roadmap flows and mechanical apply
 in `cs-feat-accept`.
@@ -277,7 +327,7 @@ Acceptance:
 - accept updates the target requirement and change log only from an approved
   delta.
 
-### SG5: Historical Spec Rehabilitation
+### SG6: Historical Spec Rehabilitation
 
 Add a maintainer/onboard path for inventorying and classifying old specs before
 new governance rules are enforced.
@@ -289,7 +339,7 @@ Acceptance:
 - no long-lived spec is rewritten without a delta, clarification, archive marker,
   or compaction review.
 
-### SG6: Analyze Pass
+### SG7: Analyze Pass
 
 Add a read-only analyze pass that can be run before design approval and during
 acceptance.
@@ -301,7 +351,7 @@ Acceptance:
 - the pass never mutates files;
 - findings can become backlog items if the owner defers them.
 
-### SG7: Documentation And Tool Surface
+### SG8: Documentation And Tool Surface
 
 Document the new runtime behavior in `cs-onboard/reference/shared-conventions.md`
 and `cs-onboard/reference/tools.md` after the tools or prompt flows exist.
@@ -320,6 +370,7 @@ prove the rule in a sterile or compacted actor context.
 | Problem | Scenario | Expected proof |
 |---|---|---|
 | Brainstorm result is too terse to approve | `brainstorm-owner-context` | Owner context artifact exists and the agent stops before formal spec changes. |
+| Interview questions lack context | `owner-interview-context` | The actor defines terms, explains why each decision matters, states option tradeoffs, and restarts if the owner asks for more context. |
 | Agent chooses the wrong requirement | `feat-design-clarify` | Spec router lists selected and excluded docs, then asks clarification if ambiguous. |
 | Small UI tweak pollutes requirements | `small-ui-no-req-delta` | Requirement files remain unchanged; local feature artifact records the work. |
 | Capability boundary changes need durable owner review | `capability-boundary-req-delta` | A req delta is created and the long-lived requirement is not rewritten directly. |
