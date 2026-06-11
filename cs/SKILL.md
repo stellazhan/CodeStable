@@ -120,6 +120,30 @@ Context level 只用于说明轻重，不在 `cs` 阶段生成重型产物：
 
 **判不出来 / 太抽象**："听起来像 {猜测}，但你描述里 {缺什么}。是 {选项 A} 还是 {选项 B}？" 让用户选不要硬猜。
 
+### Route Level Quick Reference
+
+| Route | Default context | Escalate when |
+|---|---|---|
+| `cs-onboard` | L2/L4 | Existing docs need inventory, migration, or trusted/stale classification. |
+| `cs-brainstorm` | L1 -> L2 | Owner accepts a direction or asks for next executable step. |
+| `cs-roadmap` | L2/L3 | Roadmap implies spec changes, capability boundaries, or requirement deltas. |
+| `cs-feat` | L1 | Stage is ambiguous or user must choose design / ff / impl / accept. |
+| `cs-feat-design` | L2/L3 | Design touches long-lived specs or future agent inputs. |
+| `cs-feat-ff` | L1/L3 | Fast path discovers capability-boundary, public contract, or spec effect. |
+| `cs-feat-impl` | L0/L3 | Implementation deviates from approved design/checklist/spec. |
+| `cs-feat-accept` | L3 | Acceptance writes or validates long-lived architecture, requirement, roadmap, or finish readiness. |
+| `cs-issue` / `cs-issue-report` | L1 | Route is unclear or reproduction/impact needs owner confirmation. |
+| `cs-issue-analyze` | L2 | Owner must choose a fix option or accept risk. |
+| `cs-issue-fix` | L0/L3 | Fix reveals wrong spec, capability boundary change, or public behavior change. |
+| `cs-refactor` / `cs-refactor-ff` | L1/L2 | Refactor is cross-module, risky, or behavior boundary is uncertain. |
+| `cs-req` | L3 | Always: requirement work changes future agent source-of-truth. |
+| `cs-arch` | L1/L3 | Code/doc/intent conflict appears. |
+| `cs-audit` | L1/L2 | Owner must triage what to fix, defer, or ignore. |
+| `cs-explore` | L1/L2 | Exploration becomes a decision, rule, or spec change. |
+| `cs-decide` | L2/L3 | Decision affects long-lived specs or project-wide rules. |
+| `cs-learn` / `cs-trick` / `cs-note` | L1/L2 | Lesson becomes a project-wide rule or always-loaded instruction. |
+| `cs-guide` / `cs-libdoc` | L1/L2 | Docs change user-facing contract or public understanding. |
+
 ---
 
 ## 几种需要特别留心的情况
