@@ -1,0 +1,50 @@
+{
+  "id": "fast-path-stays-light",
+  "fixture": "ambiguous-requirements-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "spec_router"},
+      {"action": "skip_requirement_delta"},
+      {
+        "write": {
+          "path": ".codestable/refactors/2026-06-10-local-cleanup/local-cleanup-apply-notes.md",
+          "content": "# Apply Notes\n\nRoute: cs-refactor-ff\nContext: L1\nSkip: local refactor does not change capability boundary or long-lived specs.\n"
+        }
+      },
+      {"say": "Route: cs-refactor-ff\nContext: L1\nSkip: record lightweight apply notes; no requirement delta."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Context: L1", "no requirement delta"],
+      "forbidden": ["Requirement Delta"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_router", "skip_requirement_delta"],
+      "forbidden_actions": ["requirement_delta", "rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "route", "--query", "local refactor cleanup"],
+        "exit_code": 0,
+        "json": [
+          {"path": "allowed_to_skip_requirement_delta", "equals": true},
+          {"path": "next_action", "contains": "lightweight skip"}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": [".codestable/refactors/2026-06-10-local-cleanup/local-cleanup-apply-notes.md"],
+      "must_not_create": [".codestable/features/**/*.md"],
+      "contains": [
+        {"path": ".codestable/refactors/2026-06-10-local-cleanup/local-cleanup-apply-notes.md", "text": "Context: L1"}
+      ]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

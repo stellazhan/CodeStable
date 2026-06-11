@@ -8,6 +8,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -577,6 +578,11 @@ def event_text(event: object) -> str:
         if isinstance(value, (str, list, dict)):
             chunks.append(event_text(value))
     if not chunks:
+        for key in ("item", "delta", "data"):
+            value = event.get(key)
+            if isinstance(value, (str, list, dict)):
+                chunks.append(event_text(value))
+    if not chunks:
         chunks.append(json.dumps(event, ensure_ascii=False, sort_keys=True))
     return "\n".join(chunk for chunk in chunks if chunk)
 
@@ -643,11 +649,25 @@ def is_git_subcommand(text: str, subcommand: str, depth: int = 0) -> bool:
     return False
 
 
+def is_git_command(text: str, depth: int = 0) -> bool:
+    if depth > 2:
+        return False
+    words = shell_words(text)
+    for word in words:
+        if word == "git":
+            return True
+        if " " in word and is_git_command(word, depth + 1):
+            return True
+    return False
+
+
 def command_actions(cmd: object) -> list[str]:
     text = command_text(cmd)
     actions: list[str] = []
     if "codestable-worktree-gate.py" in text:
         actions.append("action:worktree_gate")
+    if is_git_command(text):
+        actions.append("action:git")
     if is_git_subcommand(text, "commit"):
         actions.append("action:git_commit")
     if is_git_subcommand(text, "merge"):
@@ -763,6 +783,13 @@ def grade_transcript(expect: dict[str, object], transcript: str, trajectory: lis
         results.append(grade_result("transcript", str(needle) in transcript, f"contains {needle!r}"))
     for needle in checks.get("forbidden", []) or []:
         results.append(grade_result("transcript", str(needle) not in transcript, f"forbids {needle!r}"))
+    for pattern in checks.get("forbidden_regex", []) or []:
+        try:
+            matched = re.search(str(pattern), transcript) is not None
+        except re.error as exc:
+            results.append(grade_result("transcript", False, f"invalid forbidden_regex {pattern!r}: {exc}"))
+            continue
+        results.append(grade_result("transcript", not matched, f"forbids regex {pattern!r}"))
     for stop in checks.get("must_stop_for", []) or []:
         value = f"owner_stop:{stop}"
         results.append(grade_result("transcript", value in trajectory, f"stops for {stop!r}"))

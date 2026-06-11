@@ -1,4 +1,4 @@
 interface:
   display_name: "CodeStable Maintainer"
   short_description: "Maintain CodeStable from source."
-  default_prompt: "Use this skill before changing CodeStable skills, workflow docs, or harness tools."
+  default_prompt: "Use this skill before changing CodeStable, harness tools, or making pushed changes available locally."

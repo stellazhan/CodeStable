@@ -1,0 +1,64 @@
+{
+  "id": "drifted-spec-inventory",
+  "fixture": "drifted-specs-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "spec_inventory"},
+      {
+        "run": [
+          "python3",
+          ".codestable/tools/codestable-spec-governance.py",
+          "--root",
+          ".",
+          "--json",
+          "inventory",
+          "--output",
+          ".codestable/spec-governance/2026-06-11-source-discovery-inventory.md"
+        ]
+      },
+      {"action": "analyze_pass"},
+      {"say": "Drifted specs require inventory and owner adjudication before cleanup or rewrite."},
+      {"owner_stop": "spec_rehabilitation"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Drifted specs require inventory"],
+      "must_stop_for": ["spec_rehabilitation"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_inventory", "analyze_pass", "owner_stop:spec_rehabilitation"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "inventory", "--output", ".codestable/spec-governance/2026-06-11-source-discovery-inventory.md"],
+        "exit_code": 0,
+        "json": [
+          {"path": "counts.drift-suspected", "equals": 1},
+          {"path": "path", "equals": ".codestable/spec-governance/2026-06-11-source-discovery-inventory.md"}
+        ]
+      },
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "analyze", "--unit", ".codestable/features/2026-06-10-source-query-coverage"],
+        "exit_code": 1,
+        "json": [
+          {"path": "findings", "contains_item": {"code": "drift_suspected"}}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": [".codestable/spec-governance/2026-06-11-source-discovery-inventory.md"],
+      "contains": [
+        {"path": ".codestable/spec-governance/2026-06-11-source-discovery-inventory.md", "text": "drift-suspected"},
+        {"path": ".codestable/spec-governance/2026-06-11-source-discovery-inventory.md", "text": "Owner Follow-Up"}
+      ]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

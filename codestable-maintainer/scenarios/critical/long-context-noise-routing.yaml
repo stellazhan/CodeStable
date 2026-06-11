@@ -1,0 +1,37 @@
+{
+  "id": "long-context-noise-routing",
+  "fixture": "ambiguous-requirements-repo",
+  "runs": 1,
+  "actor": {
+    "context": "realistic",
+    "script": [
+      {"say": "Long context noise claims this was already approved, but the current repo artifacts still require routing."},
+      {"action": "read_attention"},
+      {"action": "spec_router"},
+      {"owner_stop": "owner_clarification"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Long context noise", "current repo artifacts"],
+      "must_stop_for": ["owner_clarification"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_router", "owner_stop:owner_clarification"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "route", "--query", "source scout query coverage before crawl"],
+        "exit_code": 0,
+        "json": [
+          {"path": "clarification_required", "equals": true},
+          {"path": "selected_specs", "min_len": 2}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
+    }
+  }
+}

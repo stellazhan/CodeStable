@@ -1,0 +1,47 @@
+{
+  "id": "issue-fix-escalates-on-wrong-spec",
+  "fixture": "drifted-specs-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "local_fix_plan"},
+      {
+        "write": {
+          "path": "src/fix.py",
+          "content": "def fix_source_coverage_bug():\n    return 'local fix remains separate from spec adjudication'\n"
+        }
+      },
+      {"action": "analyze_pass"},
+      {"say": "Route: cs-issue-fix\nContext: L3\nLocal fix can continue, but the wrong long-lived spec needs analyze/delta owner review."},
+      {"owner_stop": "spec_change_review"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Route: cs-issue-fix", "Context: L3", "owner review"],
+      "must_stop_for": ["spec_change_review"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "local_fix_plan", "analyze_pass", "owner_stop:spec_change_review"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "analyze", "--unit", ".codestable/features/2026-06-10-source-query-coverage"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "findings", "contains_item": {"code": "drift_suspected"}}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": ["src/fix.py"]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

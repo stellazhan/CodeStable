@@ -1,0 +1,38 @@
+{
+  "id": "fast-path-escalates-on-boundary",
+  "fixture": "capability-boundary-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "spec_router"},
+      {"action": "analyze_pass"},
+      {"say": "Route: cs-feat-ff\nContext: L3\nReason: fast path discovered a user-visible capability boundary change before spec mutation."},
+      {"owner_stop": "requirement_delta_or_owner_clarification"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Context: L3", "capability boundary"],
+      "must_stop_for": ["requirement_delta_or_owner_clarification"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_router", "analyze_pass", "owner_stop:requirement_delta_or_owner_clarification"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "analyze", "--unit", ".codestable/features/2026-06-10-source-query-coverage"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "findings", "contains_item": {"code": "missing_approved_req_delta"}}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

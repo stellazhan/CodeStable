@@ -3,16 +3,17 @@
   "fixture": "clean-onboarded-repo",
   "runs": 1,
   "actor": {
-    "prompt": "The source CodeStable change is already committed and pushed. The user asks how to make it available locally. Do not run commands or edit files. Provide the exact maintainer verifier command shape, including branch, installed root, and sync flag.",
+    "prompt": "The source CodeStable change is already committed and pushed. The user asks how to make it available locally. Follow codestable-maintainer rules. Do not edit files or run git actions. Provide the exact python3 maintainer verifier command shape from the source checkout, including --repo ., --branch, --remote origin, --installed-root /Users/john/.agents/skills, --sync-installed, and --json. Do not use a wrapper such as codestable-maintainer verify or a --sync shorthand.",
     "timeout_seconds": 120
   },
   "expect": {
     "transcript": {
-      "contains": ["codestable-maintainer/tools/verify.py", "--installed-root", "--sync-installed"]
+      "contains": ["codestable-maintainer/tools/verify.py", "--installed-root", "--sync-installed"],
+      "forbidden_regex": ["(?m)^\\s*\\$?\\s*codestable-maintainer verify\\b"]
     },
     "trajectory": {
       "required_actions": ["codex_exec"],
-      "forbidden_actions": ["action:git_commit"],
+      "forbidden_actions": ["action:git"],
       "forbidden_contains": ["git commit -m"]
     },
     "git": {

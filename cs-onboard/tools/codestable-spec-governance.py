@@ -348,6 +348,65 @@ def inventory(root: Path) -> dict[str, object]:
     return {"ok": True, "items": items, "counts": counts}
 
 
+def render_inventory_markdown(payload: dict[str, object]) -> str:
+    counts = payload.get("counts") if isinstance(payload.get("counts"), dict) else {}
+    items = payload.get("items") if isinstance(payload.get("items"), list) else []
+    lines = [
+        "---",
+        "doc_type: spec-governance-inventory",
+        "generated_by: codestable-spec-governance.py",
+        "---",
+        "",
+        "# Spec Governance Inventory",
+        "",
+        "## Summary",
+        "",
+    ]
+    for state in sorted(REHABILITATION_STATES):
+        lines.append(f"- {state}: {counts.get(state, 0)}")
+    lines.extend(["", "## Items", ""])
+    if not items:
+        lines.append("- None")
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        lines.append(
+            "- "
+            f"`{item.get('path')}` - "
+            f"slug: `{item.get('slug')}` - "
+            f"classification: `{item.get('classification')}` - "
+            f"owner_review_state: `{item.get('owner_review_state')}`"
+        )
+    lines.extend(["", "## Owner Follow-Up", ""])
+    follow_up = [
+        item
+        for item in items
+        if isinstance(item, dict) and item.get("classification") in {"current-unreviewed", "drift-suspected"}
+    ]
+    if not follow_up:
+        lines.append("- None")
+    for item in follow_up:
+        lines.append(
+            "- "
+            f"`{item.get('path')}` needs owner adjudication before direct long-lived spec mutation."
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def write_inventory(root: Path, output_value: str) -> dict[str, object]:
+    payload = inventory(root)
+    output = Path(output_value)
+    if not output.is_absolute():
+        output = root / output
+    changed = content_write(output, render_inventory_markdown(payload))
+    try:
+        display_path = output.relative_to(root).as_posix()
+    except ValueError:
+        display_path = output.as_posix()
+    return {**payload, "path": display_path, "changed": changed}
+
+
 def approved_deltas(root: Path, unit: Path) -> list[Path]:
     return [path for path in (root / unit).glob("*-req-delta.md") if delta_is_approved(path)]
 
@@ -449,7 +508,8 @@ def main() -> int:
     apply_parser.add_argument("--delta", required=True)
     apply_parser.add_argument("--target", required=True)
 
-    subparsers.add_parser("inventory")
+    inventory_parser = subparsers.add_parser("inventory")
+    inventory_parser.add_argument("--output", help="Optional Markdown inventory artifact path")
 
     analyze_parser = subparsers.add_parser("analyze")
     analyze_parser.add_argument("--unit")
@@ -475,7 +535,7 @@ def main() -> int:
         elif args.command == "apply-delta":
             payload = apply_delta(root, args.delta, args.target)
         elif args.command == "inventory":
-            payload = inventory(root)
+            payload = write_inventory(root, args.output) if args.output else inventory(root)
         elif args.command == "analyze":
             payload = analyze(root, args.unit)
         else:

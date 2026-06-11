@@ -82,6 +82,18 @@ python3 .codestable/tools/codestable-spec-governance.py --root . --json inventor
 Old specs with `status: current` but no explicit `owner_review_state` are
 classified as `current-unreviewed`, not trusted.
 
+Write a human-readable rehabilitation artifact when the inventory needs to be
+reviewed or handed to the owner:
+
+```bash
+python3 .codestable/tools/codestable-spec-governance.py --root . --json inventory \
+  --output .codestable/spec-governance/YYYY-MM-DD-{slug}-inventory.md
+```
+
+The artifact lists classification counts, every spec item, and owner follow-up
+entries for `current-unreviewed` or `drift-suspected` specs. Re-running with the
+same state is content-aware and does not rewrite the file.
+
 ### `analyze`
 
 Run a read-only acceptance/design consistency pass:

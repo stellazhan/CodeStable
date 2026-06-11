@@ -1,0 +1,81 @@
+{
+  "id": "guide-user-contract-review",
+  "fixture": "owner-judgment-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "guide_contract_review"},
+      {
+        "run": [
+          "python3",
+          ".codestable/tools/build-context-packet.py",
+          "--root",
+          ".",
+          "--unit",
+          ".codestable/features/2026-06-10-demo",
+          "--audience",
+          "owner-judgment",
+          "--language",
+          "zh",
+          "--output",
+          ".codestable/guide-contract-owner-context.md",
+          "--decided",
+          "Guide/libdoc wording changes public understanding and needs owner context.",
+          "--rejected",
+          "Do not silently alter user-visible contract docs.",
+          "--risk",
+          "A guide can become the public contract future agents follow.",
+          "--file",
+          "docs/user-guide.md",
+          "--remaining",
+          "Wait for owner review before changing public guide semantics.",
+          "--evidence",
+          "global-route-governance: guide-user-contract-review",
+          "--judgment",
+          "是否允许这次 guide/libdoc 改变 public understanding",
+          "--why-now",
+          "下一步会改变用户和 future agents 对能力边界的理解。",
+          "--term",
+          "public understanding = 用户或 future agent 会据此判断系统承诺的行为",
+          "--option",
+          "L2 owner review 后改 guide；或退回 feature/req delta 先定义能力边界。",
+          "--default-recommendation",
+          "先 owner review，因为这是公开契约层变化。",
+          "--effect",
+          "批准后才修改 guide/libdoc；拒绝后保持 docs 不变。",
+          "--non-automatic",
+          "不会自动改 docs、commit、merge 或接受未审 public contract。"
+        ]
+      },
+      {"say": "Route: cs-guide\nContext: L2\nUser-visible guide contract requires owner review."},
+      {"owner_stop": "guide_contract_review"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Route: cs-guide", "Context: L2", "owner review"],
+      "must_stop_for": ["guide_contract_review"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "guide_contract_review", "owner_stop:guide_contract_review"],
+      "forbidden_actions": ["commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/guide-contract-owner-context.md", "--strict", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": [".codestable/guide-contract-owner-context.md"]
+    },
+    "git": {
+      "must_not_modify": ["docs/**"]
+    }
+  }
+}

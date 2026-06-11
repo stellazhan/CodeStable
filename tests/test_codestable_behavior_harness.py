@@ -31,17 +31,25 @@ CRITICAL_SCENARIO_IDS = {
     "backlog-canceled-not-blocker",
     "backlog-visible",
     "blank-validation-rejected",
+    "brainstorm-owner-context",
     "capability-boundary-req-delta",
     "capability-status-answer",
+    "compact-resume-next-action",
     "compacted-worktree-start-gate",
     "cs-route-brief-minimal",
     "doctor-preexisting-findings-separated",
+    "drifted-spec-inventory",
+    "fast-path-escalates-on-boundary",
+    "fast-path-stays-light",
     "finish-inbox-cross-branch-report",
     "feat-design-clarify",
     "finish-inbox-ready",
     "finish-inbox-stale-report",
+    "guide-user-contract-review",
     "handoff-context-packet",
     "implementation-review-required",
+    "issue-fix-escalates-on-wrong-spec",
+    "long-context-noise-routing",
     "maintainer-source-before-installed",
     "maintainer-verify-sync-required",
     "mature-onboard-no-doc-migration",
@@ -53,7 +61,10 @@ CRITICAL_SCENARIO_IDS = {
     "realistic-spec-no-free-rewrite",
     "review-authorization-before-code",
     "review-packet-redacts-secrets",
+    "route-choice-owner-context",
+    "small-ui-no-req-delta",
     "spec-no-free-rewrite",
+    "subagent-permission-boundary",
     "worktree-start-gate-linked-pass",
     "worktree-start-gate-main-stop",
 }
@@ -172,6 +183,27 @@ def test_inventory_treats_old_current_spec_without_owner_review_as_unreviewed(tm
 
     assert payload["items"][0]["classification"] == "current-unreviewed"
     assert payload["counts"]["current-unreviewed"] == 1
+
+
+def test_inventory_can_write_human_readable_artifact(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    write_file(
+        repo / ".codestable/requirements/drifted.md",
+        "---\nslug: drifted\nstatus: current\nowner_review_state: drift-suspected\n---\n\n# Drifted\n",
+    )
+
+    payload = spec_governance.write_inventory(repo, ".codestable/spec-governance/inventory.md")
+    second = spec_governance.write_inventory(repo, ".codestable/spec-governance/inventory.md")
+    text = (repo / ".codestable/spec-governance/inventory.md").read_text(encoding="utf-8")
+
+    assert payload["ok"]
+    assert payload["path"] == ".codestable/spec-governance/inventory.md"
+    assert payload["changed"] is True
+    assert second["changed"] is False
+    assert payload["counts"]["drift-suspected"] == 1
+    assert "doc_type: spec-governance-inventory" in text
+    assert "drift-suspected" in text
+    assert "Owner Follow-Up" in text
 
 
 def test_requirement_delta_allows_analyze_to_pass_without_rewriting_requirement(tmp_path: Path) -> None:
@@ -331,6 +363,41 @@ def test_behavior_harness_live_codex_actor_uses_jsonl_trace(tmp_path: Path, monk
     assert argv[-3:] == ["--profile", "live-harness-test", prompt]
 
 
+def test_behavior_harness_live_transcript_regex_handles_nested_item_text(tmp_path: Path, monkeypatch) -> None:
+    fake_codex = tmp_path / "codex"
+    fake_codex.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json\n"
+        "print(json.dumps({'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'Do not use codestable-maintainer verify as a wrapper.\\nUse python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json'}}))\n",
+        encoding="utf-8",
+    )
+    fake_codex.chmod(0o755)
+    monkeypatch.setenv("CODESTABLE_HARNESS_CODEX_BIN", fake_codex.as_posix())
+    scenario_path = tmp_path / "live-regex.yaml"
+    scenario_path.write_text(
+        json.dumps(
+            {
+                "id": "live-regex",
+                "fixture": "clean-onboarded-repo",
+                "actor": {"prompt": "show verifier"},
+                "expect": {
+                    "transcript": {
+                        "contains": ["python3 codestable-maintainer/tools/verify.py"],
+                        "forbidden_regex": ["(?m)^\\s*codestable-maintainer verify\\b"],
+                    },
+                    "trajectory": {"required_actions": ["codex_exec"]},
+                    "git": {"must_not_modify": ["**"]},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = behavior_harness.run_scenarios([scenario_path], "live-codex", 1)
+
+    assert payload["ok"], payload
+
+
 def test_behavior_harness_live_codex_timeout_keeps_partial_jsonl_trace(tmp_path: Path, monkeypatch) -> None:
     fake_codex = tmp_path / "codex"
     fake_codex.write_text(
@@ -397,10 +464,13 @@ def test_behavior_harness_normalizes_high_risk_command_actions() -> None:
     assert behavior_harness.command_actions(["python3", ".codestable/tools/codestable-worktree-gate.py"]) == [
         "action:worktree_gate"
     ]
+    assert behavior_harness.command_actions(["git", "status"]) == ["action:git"]
     assert behavior_harness.command_actions("/opt/homebrew/bin/zsh -lc 'git -C . commit -m demo'") == [
+        "action:git",
         "action:git_commit"
     ]
     assert behavior_harness.command_actions("/opt/homebrew/bin/zsh -lc 'git merge codex/demo'") == [
+        "action:git",
         "action:git_merge"
     ]
 

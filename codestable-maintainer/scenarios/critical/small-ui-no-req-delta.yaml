@@ -1,0 +1,49 @@
+{
+  "id": "small-ui-no-req-delta",
+  "fixture": "ambiguous-requirements-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "spec_router"},
+      {"action": "skip_requirement_delta"},
+      {
+        "write": {
+          "path": ".codestable/features/2026-06-10-small-ui/small-ui-ff-note.md",
+          "content": "---\ndoc_type: feature-ff-note\nfeature: small-ui\nstatus: done\n---\n\n# Fast-Forward Note\n\nContext: L1\nSkip: frontend-only display tweak; no capability boundary or requirement delta.\n"
+        }
+      },
+      {"say": "Small UI tweak stays L1 and records an ff-note instead of touching requirements."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Small UI tweak", "stays L1", "instead of touching requirements"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_router", "skip_requirement_delta"],
+      "forbidden_actions": ["requirement_delta", "rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "route", "--query", "frontend-only display tweak"],
+        "exit_code": 0,
+        "json": [
+          {"path": "allowed_to_skip_requirement_delta", "equals": true},
+          {"path": "selected_specs", "equals": []}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": [".codestable/features/2026-06-10-small-ui/small-ui-ff-note.md"],
+      "must_not_create": [".codestable/features/2026-06-10-small-ui/*-req-delta.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-small-ui/small-ui-ff-note.md", "text": "no capability boundary"}
+      ]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: codestable-maintainer
-description: Maintain the CodeStable skill library and harness. Use when changing CodeStable source skills, shared references, onboarded tools, validator scripts, README skill lists, installed skill copies, or when planning CodeStable harness improvements. Enforces source-repo edits, remote push, fresh-clone verification, and installed-copy diff checks.
+description: Maintain the CodeStable skill library and harness. Use when changing CodeStable source skills, shared references, onboarded tools, validator scripts, README skill lists, installed skill copies, when making pushed CodeStable changes available locally, or when planning CodeStable harness improvements. Enforces source-repo edits, remote push, fresh-clone verification, and installed-copy diff checks.
 ---
 
 # CodeStable Maintainer
@@ -51,6 +51,9 @@ validator, harness tool, or README, switch to the source repo before editing.
    This command fresh-clones the pushed branch, validates changed skills, runs
    harness tests when needed, syncs changed installed skill directories from the
    clone, and diff-checks installed copies.
+   Do not suggest shorthand wrappers such as `codestable-maintainer verify` or
+   `--sync`; the maintained contract is the explicit `python3
+   codestable-maintainer/tools/verify.py ... --sync-installed --json` command.
 10. For changed source files that are not installed directly, record
     `not installed: N/A` in the final report with the reason from verifier
     output.

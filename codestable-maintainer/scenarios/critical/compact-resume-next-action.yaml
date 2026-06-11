@@ -1,0 +1,39 @@
+{
+  "id": "compact-resume-next-action",
+  "fixture": "finished-worktree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "compacted",
+    "script": [
+      {"say": "Compacted history is unavailable; recover state from attention and the worktree inbox artifact."},
+      {"action": "read_attention"},
+      {"action": "read_inbox"},
+      {"run": ["python3", ".codestable/tools/codestable-worktree-inbox.py", "--root", ".", "--json"]},
+      {"say": "Route: finish-worktree\nContext: L2\nNext: Merge, snooze, or abandon ready-to-merge worktrees."},
+      {"owner_stop": "merge_decision"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Compacted history", "Route: finish-worktree", "Context: L2", "Merge, snooze, or abandon"],
+      "must_stop_for": ["merge_decision"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "read_inbox", "owner_stop:merge_decision"],
+      "forbidden_actions": ["commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-inbox.py", "--root", ".", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ready_to_merge", "min_len": 1},
+          {"path": "next_action", "contains": "Merge, snooze, or abandon"}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

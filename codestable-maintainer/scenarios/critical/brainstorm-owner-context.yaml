@@ -1,0 +1,68 @@
+{
+  "id": "brainstorm-owner-context",
+  "fixture": "owner-judgment-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "build_owner_context"},
+      {
+        "run": [
+          "python3",
+          ".codestable/tools/build-context-packet.py",
+          "--root",
+          ".",
+          "--unit",
+          ".codestable/features/2026-06-10-demo",
+          "--audience",
+          "owner-decision",
+          "--language",
+          "zh",
+          "--output",
+          ".codestable/features/2026-06-10-demo/demo-owner-context.md",
+          "--decided",
+          "Brainstorm has converged into a proposed feature direction.",
+          "--rejected",
+          "Do not create formal specs from a terse chat conclusion alone.",
+          "--risk",
+          "Owner may not understand tradeoffs if the decision stays only in chat.",
+          "--file",
+          ".codestable/features/2026-06-10-demo/demo-design.md",
+          "--remaining",
+          "Wait for owner approval before formal spec changes.",
+          "--evidence",
+          "brainstorm convergence requires owner decision context"
+        ]
+      },
+      {"say": "Brainstorm convergence produced an owner decision context artifact and stops before formal spec changes."},
+      {"owner_stop": "owner_decision"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["owner decision context"],
+      "must_stop_for": ["owner_decision"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "build_owner_context", "owner_stop:owner_decision"],
+      "forbidden_actions": ["create_formal_spec", "rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/features/2026-06-10-demo/demo-owner-context.md", "--strict", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_create": [".codestable/features/2026-06-10-demo/demo-owner-context.md"],
+      "must_not_create": [".codestable/features/2026-06-10-demo/*-req-delta.md"]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md"]
+    }
+  }
+}

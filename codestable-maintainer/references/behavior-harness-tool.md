@@ -66,6 +66,9 @@ Important fields:
 - `actor.script`: deterministic scripted actions such as `say`, `action`,
   `owner_stop`, `write`, and `run`.
 - `expect.transcript`: required text, forbidden text, and owner stops.
+  `forbidden_regex` supports Python regular expressions when a substring check
+  is too coarse, for example forbidding a wrapper command at the start of a
+  line while still allowing text that says the wrapper is rejected.
 - `expect.trajectory`: required and forbidden workflow actions.
   `required_contains` and `forbidden_contains` allow substring checks across
   live-agent tool trajectories.
@@ -89,11 +92,11 @@ Live scenarios live under `codestable-maintainer/scenarios/live/`. Their
 
 Live trajectory extraction also emits coarse normalized actions when possible,
 including `action:worktree_gate` for `codestable-worktree-gate.py` invocations
-and `action:git_commit` / `action:git_merge` for common git command forms.
-Scripted `run` steps use the same normalization, and `forbidden_actions:
-["commit", "merge"]` also blocks those normalized git actions. Keep raw
-substring checks for diagnostics, but prefer normalized actions for high-risk
-forbidden behavior.
+and `action:git`, `action:git_commit`, or `action:git_merge` for common git
+command forms. Scripted `run` steps use the same normalization, and
+`forbidden_actions: ["commit", "merge"]` also blocks those normalized commit or
+merge actions. Keep raw substring checks for diagnostics, but prefer normalized
+actions for high-risk forbidden behavior.
 
 `sterile`, `compacted`, and `realistic` are actor-mode labels for deterministic
 scripted scenarios today. They are useful proxy regressions for tool-level
@@ -105,19 +108,39 @@ eval. Use `live-codex` scenarios when grading actual Codex behavior.
 The current critical suite covers:
 
 - route brief stays lightweight;
+- ambiguous route choices produce owner context before selecting a canonical
+  requirement;
+- fast paths stay light for local refactors and small UI tweaks, record a
+  lightweight note, and leave long-lived requirements unchanged;
+- fast paths that discover capability-boundary changes escalate to L3 before
+  mutating specs;
 - compacted and realistic-context regressions still re-check repo state before
   trusting older conversation context;
+- compacted resume recovers the finish route, context level, and next action
+  from worktree inbox artifacts instead of chat;
+- long-context noise does not bypass attention reads, spec routing, owner stops,
+  or forbidden mutation checks;
+- brainstorm convergence writes owner decision context and stops before formal
+  spec changes;
 - ambiguous spec routing stops for clarification;
 - capability-boundary work creates a req delta;
 - accept/analyze blocks spec drift;
+- issue fixes can proceed locally while wrong long-lived specs escalate to
+  analyze/delta owner review instead of silent requirement edits;
+- drifted historical specs produce an inventory artifact and owner follow-up
+  before cleanup or rewrite;
 - long-lived requirements are not freely rewritten without an approved delta or
   owner clarification;
+- guide/libdoc updates that change user-visible understanding require owner
+  review context before public contract mutation;
 - implementation starts only in a linked execution worktree, and a path named
   `.codex/worktrees/...` is not enough by itself;
 - completed implementation units require implementation review evidence before
   closeout;
 - review authorization is requested before code work when the current thread has
   not already chosen the review path;
+- subagent review evidence cannot be forged before current-thread review
+  authorization;
 - CodeStable maintainer work starts in the source repo, then commits, pushes,
   fresh-clone verifies, and syncs installed copies;
 - mature onboarded repositories keep existing `docs/` contracts instead of
