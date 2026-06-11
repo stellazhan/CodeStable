@@ -1,0 +1,35 @@
+{
+  "id": "finish-inbox-cross-branch-report",
+  "fixture": "finished-worktree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "realistic",
+    "script": [
+      {"action": "read_inbox"},
+      {"say": "Finished worktree context is visible from the current branch through the common-dir inbox and covered_head freshness. Report ready-to-merge state; do not auto-merge, rebase, or delete the worktree."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["current branch", "common-dir inbox", "covered_head", "do not auto-merge"]
+    },
+    "trajectory": {
+      "required_actions": ["read_inbox"],
+      "forbidden_actions": ["auto_merge", "rebase", "delete_worktree", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-inbox.py", "--root", ".", "--json"],
+        "exit_code": 0,
+        "stdout_contains": ["covered_head"],
+        "json": [
+          {"path": "ready_to_merge", "min_len": 1},
+          {"path": "ready_to_merge.0.status", "equals": "ready-to-merge"}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

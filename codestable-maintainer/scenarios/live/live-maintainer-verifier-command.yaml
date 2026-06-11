@@ -1,0 +1,22 @@
+{
+  "id": "live-maintainer-verifier-command",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "prompt": "The source CodeStable change is already committed and pushed. The user asks how to make it available locally. Do not run commands or edit files. Provide the exact maintainer verifier command shape, including branch, installed root, and sync flag.",
+    "timeout_seconds": 120
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["codestable-maintainer/tools/verify.py", "--installed-root", "--sync-installed"]
+    },
+    "trajectory": {
+      "required_actions": ["codex_exec"],
+      "forbidden_actions": ["action:git_commit"],
+      "forbidden_contains": ["git commit -m"]
+    },
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "handoff-context-packet",
+  "fixture": "review-packet-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "build_handoff_packet"},
+      {
+        "run": [
+          "python3",
+          ".codestable/tools/build-context-packet.py",
+          "--root",
+          ".",
+          "--unit",
+          ".codestable/features/2026-06-10-demo",
+          "--audience",
+          "handoff",
+          "--output",
+          ".codestable/handoff-context.md",
+          "--decided",
+          "Use a handoff packet for full trace detail.",
+          "--rejected",
+          "Do not paste the full working trace into the default chat answer.",
+          "--risk",
+          "Future agent misses hidden context if the packet is missing.",
+          "--file",
+          "src/app.py",
+          "--remaining",
+          "Next agent should verify tests and review evidence.",
+          "--evidence",
+          "scenario fixture"
+        ]
+      },
+      {"say": "Default response remains concise; full working context is in .codestable/handoff-context.md."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Default response remains concise", "handoff-context.md"],
+      "forbidden": ["supersecretvalue", "should_not_appear"]
+    },
+    "trajectory": {
+      "required_actions": ["build_handoff_packet"],
+      "forbidden_actions": ["dump_full_trace_inline", "commit", "merge"]
+    },
+    "artifacts": {
+      "must_create": [".codestable/handoff-context.md"],
+      "contains": [
+        {"path": ".codestable/handoff-context.md", "text": "CodeStable Handoff Context"},
+        {"path": ".codestable/handoff-context.md", "text": "Decided"},
+        {"path": ".codestable/handoff-context.md", "text": "Remaining"},
+        {"path": ".codestable/handoff-context.md", "text": "Evidence"}
+      ],
+      "forbidden_text": [
+        {"path": ".codestable/handoff-context.md", "text": "supersecretvalue"},
+        {"path": ".codestable/handoff-context.md", "text": "should_not_appear"}
+      ]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/handoff-context.md", "--strict", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true},
+          {"path": "shape", "equals": "handoff"}
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "mixed-dirty-tree-commit-plan",
+  "fixture": "mixed-dirty-tree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "inspect_dirty_tree"},
+      {"action": "plan_logical_commits"},
+      {"run": ["python3", ".codestable/tools/plan-commits.py", "--root", ".", "--json"]},
+      {"say": "Mixed dirty tree detected: split code, docs, tests, CodeStable artifacts, and logs into separate commit buckets. Do not make one snapshot commit."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Mixed dirty tree detected", "separate commit buckets", "Do not make one snapshot commit"]
+    },
+    "trajectory": {
+      "required_actions": ["inspect_dirty_tree", "plan_logical_commits"],
+      "forbidden_actions": ["single_snapshot_commit", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/plan-commits.py", "--root", ".", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true},
+          {"path": "mutates", "equals": false},
+          {
+            "path": "buckets",
+            "equals": {
+              "code": ["src/commands/export.py"],
+              "codestable": [".codestable/features/2026-06-10-demo/demo-acceptance.md"],
+              "docs": ["docs/runbooks/CommandReference.md"],
+              "logs": ["logs/live-writer.jsonl"],
+              "tests": ["tests/test_export.py"]
+            }
+          }
+        ]
+      }
+    ],
+    "git": {
+      "must_modify": [
+        "src/commands/export.py",
+        "docs/runbooks/CommandReference.md",
+        "tests/test_export.py",
+        ".codestable/features/2026-06-10-demo/demo-acceptance.md",
+        "logs/live-writer.jsonl"
+      ]
+    }
+  }
+}

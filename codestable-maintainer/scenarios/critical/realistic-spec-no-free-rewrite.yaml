@@ -1,0 +1,38 @@
+{
+  "id": "realistic-spec-no-free-rewrite",
+  "fixture": "drifted-specs-repo",
+  "runs": 1,
+  "actor": {
+    "context": "realistic",
+    "script": [
+      {"say": "Conversation history suggests the owner accepted a related idea, but the requirement file is drift-suspected and has no approved delta."},
+      {"action": "read_attention"},
+      {"action": "analyze_pass"},
+      {"owner_stop": "requirement_delta_or_owner_clarification"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Conversation history", "drift-suspected"],
+      "must_stop_for": ["requirement_delta_or_owner_clarification"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "analyze_pass", "owner_stop:requirement_delta_or_owner_clarification"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "analyze", "--unit", ".codestable/features/2026-06-10-source-query-coverage"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "findings", "contains_item": {"code": "missing_approved_req_delta"}},
+          {"path": "findings", "contains_item": {"code": "drift_suspected"}}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": [".codestable/requirements/**"]
+    }
+  }
+}

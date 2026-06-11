@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -75,6 +76,10 @@ def init_repo(root: Path) -> None:
 def commit_all(root: Path, message: str) -> None:
     git(root, "add", ".")
     git(root, "commit", "-m", message)
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def copy_runtime_tools(root: Path) -> None:
@@ -286,6 +291,7 @@ def fixture_finished_worktree(root: Path) -> None:
     head = git(root, "rev-parse", "HEAD").stdout.strip()
     git(root, "checkout", "main")
     common_dir = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").stdout.strip()
+    timestamp = utc_now_iso()
     record = {
         "schema_version": 1,
         "branch": "codex/demo",
@@ -298,8 +304,8 @@ def fixture_finished_worktree(root: Path) -> None:
         "learning_report": ".codestable/features/2026-06-10-demo/demo-learning-report.md",
         "context_check": ".codestable/features/2026-06-10-demo/demo-learning-context-check.json",
         "merge_readiness": ".codestable/features/2026-06-10-demo/demo-merge-readiness.json",
-        "created_at": "2026-06-10T00:00:00Z",
-        "last_seen_at": "2026-06-10T00:00:00Z",
+        "created_at": timestamp,
+        "last_seen_at": timestamp,
         "next_action": "merge codex/demo into main after owner approval",
     }
     write_file(Path(common_dir) / "codestable/worktree-inbox/codex_demo.json", json.dumps(record, indent=2) + "\n")
@@ -331,6 +337,26 @@ def fixture_path_named_worktree(root: Path) -> None:
     commit_all(nested, "add plain repo under worktrees path")
 
 
+def fixture_mixed_dirty_tree(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    write_file(
+        root / "AGENTS.md",
+        "# Rules\n\n"
+        "| Document | Source Files |\n"
+        "|---|---|\n"
+        "| `docs/runbooks/CommandReference.md` | `commands/*.py` |\n",
+    )
+    write_file(root / "docs/runbooks/CommandReference.md", "# Command Reference\n\nExisting command docs.\n")
+    write_file(root / "src/commands/export.py", "def export():\n    return 'old'\n")
+    commit_all(root, "add mixed tree baseline")
+    write_file(root / "src/commands/export.py", "def export():\n    return 'new'\n")
+    write_file(root / "tests/test_export.py", "def test_export():\n    assert True\n")
+    write_file(root / "docs/runbooks/CommandReference.md", "# Command Reference\n\nUpdated command docs.\n")
+    write_file(root / ".codestable/features/2026-06-10-demo/demo-acceptance.md", "# Acceptance\n\nVerified.\n")
+    write_file(root / "logs/live-writer.jsonl", '{"event":"still-running"}\n')
+
+
 FIXTURES = {
     "clean-onboarded-repo": fixture_clean_onboarded,
     "ambiguous-requirements-repo": fixture_ambiguous_requirements,
@@ -348,6 +374,7 @@ FIXTURES = {
     "stale-worktree-repo": fixture_stale_worktree,
     "doctor-preexisting-repo": fixture_doctor_preexisting,
     "path-named-worktree-repo": fixture_path_named_worktree,
+    "mixed-dirty-tree-repo": fixture_mixed_dirty_tree,
 }
 
 
@@ -515,6 +542,8 @@ def run_scripted_actor(root: Path, work: Path, scenario: dict[str, object]) -> t
                 "stderr": result.stderr,
             }
             tool_calls.append(call)
+            for action in command_actions(cmd):
+                trajectory.append(action)
             trajectory.append("run:" + " ".join(cmd))
             transcript.append(result.stdout)
             if result.stderr:
@@ -592,13 +621,13 @@ def shell_words(text: str) -> list[str]:
         return text.split()
 
 
-def is_git_commit_command(text: str, depth: int = 0) -> bool:
+def is_git_subcommand(text: str, subcommand: str, depth: int = 0) -> bool:
     if depth > 2:
         return False
     words = shell_words(text)
     for index, word in enumerate(words):
         if word != "git":
-            if " " in word and is_git_commit_command(word, depth + 1):
+            if " " in word and is_git_subcommand(word, subcommand, depth + 1):
                 return True
             continue
         cursor = index + 1
@@ -610,7 +639,7 @@ def is_git_commit_command(text: str, depth: int = 0) -> bool:
             if option.startswith("-"):
                 cursor += 1
                 continue
-            return option == "commit"
+            return option == subcommand
     return False
 
 
@@ -619,8 +648,10 @@ def command_actions(cmd: object) -> list[str]:
     actions: list[str] = []
     if "codestable-worktree-gate.py" in text:
         actions.append("action:worktree_gate")
-    if is_git_commit_command(text):
+    if is_git_subcommand(text, "commit"):
         actions.append("action:git_commit")
+    if is_git_subcommand(text, "merge"):
+        actions.append("action:git_merge")
     return actions
 
 
@@ -746,7 +777,13 @@ def grade_trajectory(expect: dict[str, object], trajectory: list[str]) -> list[d
     for action in checks.get("required_actions", []) or []:
         results.append(grade_result("trajectory", str(action) in trajectory, f"requires action {action!r}"))
     for action in checks.get("forbidden_actions", []) or []:
-        results.append(grade_result("trajectory", str(action) not in trajectory, f"forbids action {action!r}"))
+        value = str(action)
+        aliases = {value}
+        if value == "commit":
+            aliases.add("action:git_commit")
+        if value == "merge":
+            aliases.add("action:git_merge")
+        results.append(grade_result("trajectory", not any(alias in trajectory for alias in aliases), f"forbids action {action!r}"))
     joined = "\n".join(trajectory)
     for needle in checks.get("required_contains", []) or []:
         results.append(grade_result("trajectory", str(needle) in joined, f"requires trajectory containing {needle!r}"))

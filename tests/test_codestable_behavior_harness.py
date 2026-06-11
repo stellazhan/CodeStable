@@ -33,19 +33,24 @@ CRITICAL_SCENARIO_IDS = {
     "blank-validation-rejected",
     "capability-boundary-req-delta",
     "capability-status-answer",
+    "compacted-worktree-start-gate",
     "cs-route-brief-minimal",
     "doctor-preexisting-findings-separated",
+    "finish-inbox-cross-branch-report",
     "feat-design-clarify",
     "finish-inbox-ready",
     "finish-inbox-stale-report",
+    "handoff-context-packet",
     "implementation-review-required",
     "maintainer-source-before-installed",
     "maintainer-verify-sync-required",
     "mature-onboard-no-doc-migration",
     "missing-unit-path-blocked",
+    "mixed-dirty-tree-commit-plan",
     "no-match-owner-stop",
     "owner-judgment-context",
     "path-named-worktree-not-linked",
+    "realistic-spec-no-free-rewrite",
     "review-authorization-before-code",
     "review-packet-redacts-secrets",
     "spec-no-free-rewrite",
@@ -246,6 +251,24 @@ def test_behavior_harness_scenario_path_suppresses_default_suite() -> None:
     assert [path.name for path in paths] == ["cs-route-brief-minimal.yaml"]
 
 
+def test_behavior_harness_runs_context_mode_regressions() -> None:
+    compacted = behavior_harness.run_scenarios(
+        [ROOT / "codestable-maintainer/scenarios/critical/compacted-worktree-start-gate.yaml"],
+        "compacted",
+        1,
+    )
+    realistic = behavior_harness.run_scenarios(
+        [ROOT / "codestable-maintainer/scenarios/critical/realistic-spec-no-free-rewrite.yaml"],
+        "realistic",
+        1,
+    )
+
+    assert compacted["ok"], compacted
+    assert realistic["ok"], realistic
+    assert compacted["results"][0]["actor_mode"] == "compacted"
+    assert realistic["results"][0]["actor_mode"] == "realistic"
+
+
 def test_behavior_harness_live_codex_actor_uses_jsonl_trace(tmp_path: Path, monkeypatch) -> None:
     fake_codex = tmp_path / "codex"
     argv_path = tmp_path / "argv.json"
@@ -377,3 +400,15 @@ def test_behavior_harness_normalizes_high_risk_command_actions() -> None:
     assert behavior_harness.command_actions("/opt/homebrew/bin/zsh -lc 'git -C . commit -m demo'") == [
         "action:git_commit"
     ]
+    assert behavior_harness.command_actions("/opt/homebrew/bin/zsh -lc 'git merge codex/demo'") == [
+        "action:git_merge"
+    ]
+
+
+def test_behavior_harness_forbidden_actions_cover_normalized_git_commands() -> None:
+    results = behavior_harness.grade_trajectory(
+        {"trajectory": {"forbidden_actions": ["commit", "merge"]}},
+        ["action:git_commit", "action:git_merge"],
+    )
+
+    assert [result["ok"] for result in results] == [False, False]

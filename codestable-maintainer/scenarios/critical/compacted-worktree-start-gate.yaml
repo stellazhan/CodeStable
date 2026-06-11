@@ -1,0 +1,37 @@
+{
+  "id": "compacted-worktree-start-gate",
+  "fixture": "worktree-start-required-repo",
+  "runs": 1,
+  "actor": {
+    "context": "compacted",
+    "script": [
+      {"say": "Compacted history says the feature is approved, but the current repo state still decides whether implementation may start."},
+      {"action": "read_attention"},
+      {"action": "worktree_start_gate"},
+      {"owner_stop": "linked_worktree_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Compacted history", "current repo state"],
+      "must_stop_for": ["linked_worktree_required"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "worktree_start_gate", "owner_stop:linked_worktree_required"],
+      "forbidden_actions": ["write:src/app.py", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "start", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "linked_worktree", "equals": false}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

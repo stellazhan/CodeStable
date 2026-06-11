@@ -89,15 +89,24 @@ Live scenarios live under `codestable-maintainer/scenarios/live/`. Their
 
 Live trajectory extraction also emits coarse normalized actions when possible,
 including `action:worktree_gate` for `codestable-worktree-gate.py` invocations
-and `action:git_commit` for common `git ... commit` command forms. Keep raw
+and `action:git_commit` / `action:git_merge` for common git command forms.
+Scripted `run` steps use the same normalization, and `forbidden_actions:
+["commit", "merge"]` also blocks those normalized git actions. Keep raw
 substring checks for diagnostics, but prefer normalized actions for high-risk
 forbidden behavior.
+
+`sterile`, `compacted`, and `realistic` are actor-mode labels for deterministic
+scripted scenarios today. They are useful proxy regressions for tool-level
+guardrails under misleading context, but they are not yet a live compaction
+eval. Use `live-codex` scenarios when grading actual Codex behavior.
 
 ## Critical Coverage
 
 The current critical suite covers:
 
 - route brief stays lightweight;
+- compacted and realistic-context regressions still re-check repo state before
+  trusting older conversation context;
 - ambiguous spec routing stops for clarification;
 - capability-boundary work creates a req delta;
 - accept/analyze blocks spec drift;
@@ -115,6 +124,8 @@ The current critical suite covers:
   migrating or rewriting them by default;
 - capability-status answers distinguish shipped surfaces from planned or
   unverified surfaces;
+- handoff context packets carry full working detail while the default response
+  stays concise;
 - review packets redact secrets;
 - verification packets reject blank validation evidence;
 - owner-judgment context passes strict sufficiency checks;
@@ -123,7 +134,10 @@ The current critical suite covers:
 - missing unit paths stop with structured JSON findings instead of tracebacks;
 - doctor findings from pre-existing lifecycle state stay separate from unrelated
   refresh results;
-- finish inbox reports ready-to-merge and stale-report state.
+- finish inbox reports ready-to-merge and stale-report state from another branch
+  without auto-merging;
+- mixed dirty worktrees are planned into logical commit buckets instead of one
+  snapshot commit.
 
 ## Verifier Integration
 
