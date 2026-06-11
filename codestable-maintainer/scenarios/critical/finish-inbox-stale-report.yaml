@@ -1,0 +1,27 @@
+{
+  "id": "finish-inbox-stale-report",
+  "fixture": "stale-worktree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_inbox"}
+    ]
+  },
+  "expect": {
+    "trajectory": {
+      "required_actions": ["read_inbox"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-inbox.py", "--root", ".", "--json"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "stale_reports", "min_len": 1},
+          {"path": "stale_reports.0.status", "equals": "stale-report"}
+        ]
+      }
+    ]
+  }
+}

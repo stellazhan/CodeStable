@@ -1,0 +1,32 @@
+{
+  "id": "implementation-review-required",
+  "fixture": "missing-review-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "commit_gate"},
+      {"owner_stop": "subagent_review_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["subagent_review_required"]
+    },
+    "trajectory": {
+      "required_actions": ["commit_gate", "owner_stop:subagent_review_required"],
+      "forbidden_actions": ["report_complete", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "commit", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "required_review", "contains": "demo-implementation-review.md"},
+          {"path": "findings.0.message", "contains": "implementation review evidence"}
+        ]
+      }
+    ]
+  }
+}

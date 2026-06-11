@@ -1,0 +1,31 @@
+{
+  "id": "missing-unit-path-blocked",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "resolve_unit"},
+      {"owner_stop": "unit_not_found"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["unit_not_found"]
+    },
+    "trajectory": {
+      "required_actions": ["resolve_unit", "owner_stop:unit_not_found"],
+      "forbidden_actions": ["commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "start", "--unit", ".codestable/features/2099-missing"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "findings.0.message", "contains": "unit not found"}
+        ]
+      }
+    ]
+  }
+}

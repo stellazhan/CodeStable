@@ -1,0 +1,45 @@
+{
+  "id": "doctor-preexisting-findings-separated",
+  "fixture": "doctor-preexisting-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "refresh_shared_assets"},
+      {"write": {"path": ".codestable/reference/refresh-marker.md", "content": "# Refresh Marker\n\nShared assets refreshed before doctor check.\n"}},
+      {"action": "run_doctor"},
+      {"say": "Doctor P1 findings are pre-existing lifecycle state in this fixture; they must be reported separately from any shared-asset refresh result."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["pre-existing lifecycle state", "reported separately"]
+    },
+    "trajectory": {
+      "required_actions": ["refresh_shared_assets", "write:.codestable/reference/refresh-marker.md", "run_doctor"],
+      "forbidden_actions": ["claim_refresh_failed", "commit", "merge"]
+    },
+    "artifacts": {
+      "must_create": [".codestable/reference/refresh-marker.md"],
+      "contains": [
+        {"path": ".codestable/reference/refresh-marker.md", "text": "Shared assets refreshed"}
+      ]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-doctor.py", "--root", ".", "--json"],
+        "exit_code": 1,
+        "stdout_forbidden": ["claim_refresh_failed", "refresh failed", "shared-asset refresh failed"],
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "status", "equals": "blocked"},
+          {"path": "changed_files", "contains": ".codestable/reference/refresh-marker.md"},
+          {"path": "findings", "contains_item": {"severity": "P1", "path": ".codestable/features/2026-06-10-demo/demo-implementation-review.md", "message": "Completed CodeStable implementation unit is missing implementation review evidence."}}
+        ]
+      }
+    ],
+    "git": {
+      "must_modify": [".codestable/reference/refresh-marker.md"]
+    }
+  }
+}

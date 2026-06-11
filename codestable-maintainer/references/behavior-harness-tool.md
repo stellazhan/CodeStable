@@ -40,13 +40,22 @@ Important fields:
 
 - `id`: stable scenario id.
 - `fixture`: fixture repository builder name.
+- `setup.files`: optional files written before actor execution. Paths can use
+  `{root}`, `{work}`, or `{source}`.
 - `actor.script`: deterministic scripted actions such as `say`, `action`,
   `owner_stop`, `write`, and `run`.
 - `expect.transcript`: required text, forbidden text, and owner stops.
 - `expect.trajectory`: required and forbidden workflow actions.
-- `expect.artifacts`: created files and content checks.
+- `expect.artifacts`: existing/created files and content checks.
 - `expect.git`: allowed or forbidden dirty path globs.
-- `expect.commands`: command exit, stdout, and JSON assertions.
+- `expect.commands`: command exit, stdout/stderr, and JSON assertions,
+  including `contains_item` checks for JSON arrays.
+- `expect.external`: hash-based checks for non-repo files under the temporary
+  work root, for example installed-copy sentinels.
+
+Path strings may use `{root}` for the fixture repo, `{work}` for the scenario
+temporary root, and `{source}` for the CodeStable source checkout containing
+the harness.
 
 ## Critical Coverage
 
@@ -56,10 +65,29 @@ The current critical suite covers:
 - ambiguous spec routing stops for clarification;
 - capability-boundary work creates a req delta;
 - accept/analyze blocks spec drift;
+- long-lived requirements are not freely rewritten without an approved delta or
+  owner clarification;
+- implementation starts only in a linked execution worktree, and a path named
+  `.codex/worktrees/...` is not enough by itself;
+- completed implementation units require implementation review evidence before
+  closeout;
+- review authorization is requested before code work when the current thread has
+  not already chosen the review path;
+- CodeStable maintainer work starts in the source repo, then commits, pushes,
+  fresh-clone verifies, and syncs installed copies;
+- mature onboarded repositories keep existing `docs/` contracts instead of
+  migrating or rewriting them by default;
+- capability-status answers distinguish shipped surfaces from planned or
+  unverified surfaces;
 - review packets redact secrets;
+- verification packets reject blank validation evidence;
 - owner-judgment context passes strict sufficiency checks;
 - backlog remains visible;
-- finish inbox reports ready-to-merge state.
+- canceled units do not surface historical follow-up items as current blockers;
+- missing unit paths stop with structured JSON findings instead of tracebacks;
+- doctor findings from pre-existing lifecycle state stay separate from unrelated
+  refresh results;
+- finish inbox reports ready-to-merge and stale-report state.
 
 ## Verifier Integration
 

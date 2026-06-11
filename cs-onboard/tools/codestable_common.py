@@ -598,6 +598,8 @@ RESOLVED_FOLLOW_UP_RE = re.compile(
     r"no (?:new )?(?:remaining )?p2|closed|fixed|resolved|已修|无 p0|无 p1|无阻塞)",
     re.IGNORECASE,
 )
+CANCELED_UNIT_STATUSES = {"canceled", "cancelled", "abandoned"}
+STATUS_RE = re.compile(r"^\s*status:\s*['\"]?([a-z0-9_-]+)['\"]?\s*$", re.IGNORECASE)
 
 
 def should_scan_backlog_file(rel_path: str) -> bool:
@@ -620,6 +622,37 @@ def is_resolved_backlog_match(kind: str, text: str) -> bool:
     return bool(RESOLVED_FOLLOW_UP_RE.search(text))
 
 
+def unit_lifecycle_status_files(root: Path, unit_dir: Path) -> list[Path]:
+    unit_root = root / unit_dir
+    slug = unit_slug(unit_dir)
+    names = (
+        f"{slug}-acceptance.md",
+        f"{slug}-ff-note.md",
+        f"{slug}-fix-note.md",
+        f"{slug}-apply-notes.md",
+    )
+    return [unit_root / name for name in names if (unit_root / name).exists()]
+
+
+def file_has_canceled_status(path: Path) -> bool:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError:
+        return False
+    for line in lines:
+        match = STATUS_RE.match(line)
+        if match and match.group(1).lower() in CANCELED_UNIT_STATUSES:
+            return True
+    return False
+
+
+def unit_has_canceled_lifecycle_status(root: Path, rel_path: str) -> bool:
+    unit_dir = unit_dir_for(rel_path)
+    if unit_dir is None:
+        return False
+    return any(file_has_canceled_status(path) for path in unit_lifecycle_status_files(root, unit_dir))
+
+
 def scan_backlog(root: Path) -> list[BacklogItem]:
     codestable = root / ".codestable"
     if not codestable.exists():
@@ -634,6 +667,8 @@ def scan_backlog(root: Path) -> list[BacklogItem]:
             continue
         rel_path = path.relative_to(root).as_posix()
         if not should_scan_backlog_file(rel_path):
+            continue
+        if unit_has_canceled_lifecycle_status(root, rel_path):
             continue
         in_attention_candidates = False
         in_follow_up_section = False

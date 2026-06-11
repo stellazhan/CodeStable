@@ -1,0 +1,36 @@
+{
+  "id": "worktree-start-gate-main-stop",
+  "fixture": "worktree-start-required-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "worktree_start_gate"},
+      {"owner_stop": "linked_worktree_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["linked_worktree_required"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "worktree_start_gate", "owner_stop:linked_worktree_required"],
+      "forbidden_actions": ["write:src/app.py", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "start", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "linked_worktree", "equals": false},
+          {"path": "findings.0.message", "contains": "linked execution worktree"}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

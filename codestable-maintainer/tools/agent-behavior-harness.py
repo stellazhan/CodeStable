@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -26,7 +28,9 @@ RUNTIME_TOOL_SOURCE = SOURCE_ROOT / "cs-onboard/tools"
 
 
 def run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return subprocess.run(cmd, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, env=env)
 
 
 def git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -201,6 +205,57 @@ def fixture_backlog(root: Path) -> None:
     commit_all(root, "add backlog fixture")
 
 
+def fixture_canceled_backlog(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    unit = write_feature_unit(root, "demo")
+    write_file(
+        unit / "demo-acceptance.md",
+        "# Acceptance\n\n"
+        "status: canceled\n\n"
+        "## Follow-Ups\n\n"
+        "- required before merge: historical owner decision that was canceled.\n",
+    )
+    write_file(
+        root / ".codestable/compound/2026-06-10-decision-cancel-demo.md",
+        "# Decision\n\nThe historical demo backlog is canceled. Current requirements remain as reference records.\n",
+    )
+    commit_all(root, "add canceled backlog fixture")
+
+
+def fixture_worktree_start_required(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    write_feature_unit(root, "demo")
+    write_file(root / "docs/notes.md", "# Notes\n\nUnrelated planning note.\n")
+    commit_all(root, "add implementation unit on main")
+
+
+def fixture_linked_worktree_unit(root: Path) -> None:
+    base = root.parent / "base-repo"
+    init_repo(base)
+    write_common_codestable(base)
+    write_feature_unit(base, "demo")
+    commit_all(base, "add implementation unit")
+    git(base, "worktree", "add", "-b", "codex/demo", root.as_posix())
+
+
+def fixture_missing_review(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    write_feature_unit(root, "demo")
+    commit_all(root, "add completed unit without review")
+
+
+def fixture_mature_onboarded(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    write_file(root / "docs/README.md", "# Docs\n\nCurrent human-facing docs root.\n")
+    write_file(root / "docs/runbooks/CommandReference.md", "# Command Reference\n\nExisting runbook.\n")
+    write_file(root / "docs/superpowers/specs/current.md", "# Current Spec\n\nExisting mature repo spec.\n")
+    commit_all(root, "add mature repo docs")
+
+
 def fixture_finished_worktree(root: Path) -> None:
     init_repo(root)
     write_common_codestable(root)
@@ -230,6 +285,32 @@ def fixture_finished_worktree(root: Path) -> None:
     write_file(Path(common_dir) / "codestable/worktree-inbox/codex_demo.json", json.dumps(record, indent=2) + "\n")
 
 
+def fixture_stale_worktree(root: Path) -> None:
+    fixture_finished_worktree(root)
+    git(root, "checkout", "codex/demo")
+    write_file(root / "src/app.py", "print('changed after finish')\n")
+    commit_all(root, "change after finish report")
+    git(root, "checkout", "main")
+
+
+def fixture_doctor_preexisting(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    write_feature_unit(root, "demo")
+    commit_all(root, "add preexisting completed unit without review")
+
+
+def fixture_path_named_worktree(root: Path) -> None:
+    init_repo(root)
+    write_common_codestable(root)
+    commit_all(root, "add outer codestable tools")
+    nested = root / ".codex/worktrees/plain-repo"
+    init_repo(nested)
+    write_common_codestable(nested)
+    write_feature_unit(nested, "demo")
+    commit_all(nested, "add plain repo under worktrees path")
+
+
 FIXTURES = {
     "clean-onboarded-repo": fixture_clean_onboarded,
     "ambiguous-requirements-repo": fixture_ambiguous_requirements,
@@ -238,7 +319,15 @@ FIXTURES = {
     "review-packet-repo": fixture_review_packet,
     "owner-judgment-repo": fixture_owner_judgment,
     "backlog-repo": fixture_backlog,
+    "canceled-backlog-repo": fixture_canceled_backlog,
+    "worktree-start-required-repo": fixture_worktree_start_required,
+    "linked-worktree-unit-repo": fixture_linked_worktree_unit,
+    "missing-review-repo": fixture_missing_review,
+    "mature-onboarded-repo": fixture_mature_onboarded,
     "finished-worktree-repo": fixture_finished_worktree,
+    "stale-worktree-repo": fixture_stale_worktree,
+    "doctor-preexisting-repo": fixture_doctor_preexisting,
+    "path-named-worktree-repo": fixture_path_named_worktree,
 }
 
 
@@ -271,12 +360,22 @@ def scenario_paths(args: argparse.Namespace) -> list[Path]:
 
 def substitute(value: object, root: Path, work: Path) -> object:
     if isinstance(value, str):
-        return value.replace("{root}", root.as_posix()).replace("{work}", work.as_posix())
+        return (
+            value.replace("{source}", SOURCE_ROOT.as_posix())
+            .replace("{root}", root.as_posix())
+            .replace("{work}", work.as_posix())
+        )
     if isinstance(value, list):
         return [substitute(item, root, work) for item in value]
     if isinstance(value, dict):
         return {str(key): substitute(item, root, work) for key, item in value.items()}
     return value
+
+
+def resolve_path(root: Path, work: Path, value: object) -> Path:
+    substituted = str(substitute(value, root, work))
+    path = Path(substituted)
+    return path if path.is_absolute() else root / path
 
 
 def dirty_paths(root: Path) -> list[str]:
@@ -294,6 +393,14 @@ def dirty_paths(root: Path) -> list[str]:
 
 def glob_exists(root: Path, pattern: str) -> bool:
     return any(root.glob(pattern))
+
+
+def glob_exists_resolved(root: Path, work: Path, pattern: object) -> bool:
+    substituted = str(substitute(pattern, root, work))
+    path = Path(substituted)
+    if path.is_absolute():
+        return any(path.parent.glob(path.name))
+    return glob_exists(root, substituted)
 
 
 def path_matches(path: str, patterns: list[str]) -> bool:
@@ -325,6 +432,23 @@ def check_json_assertions(payload: object, assertions: list[dict[str, object]]) 
             failures.append(f"{path} expected {assertion['equals']!r}, got {value!r}")
         if "contains" in assertion and str(assertion["contains"]) not in str(value):
             failures.append(f"{path} does not contain {assertion['contains']!r}")
+        if "contains_item" in assertion:
+            expected = assertion["contains_item"]
+            if not isinstance(value, list) or not isinstance(expected, dict):
+                failures.append(f"{path} cannot be checked with contains_item")
+            else:
+                matched = False
+                for item in value:
+                    if not isinstance(item, dict):
+                        continue
+                    try:
+                        if all(json_path(item, str(key)) == wanted for key, wanted in expected.items()):
+                            matched = True
+                            break
+                    except (KeyError, IndexError, ValueError, TypeError):
+                        continue
+                if not matched:
+                    failures.append(f"{path} does not contain item {expected!r}")
         if "min_len" in assertion and len(value) < int(assertion["min_len"]):  # type: ignore[arg-type]
             failures.append(f"{path} length is below {assertion['min_len']}")
     return failures
@@ -378,6 +502,19 @@ def run_actor(root: Path, work: Path, scenario: dict[str, object]) -> tuple[list
     return transcript, trajectory, tool_calls
 
 
+def setup_files(root: Path, work: Path, scenario: dict[str, object]) -> None:
+    setup = scenario.get("setup", {}) if isinstance(scenario.get("setup"), dict) else {}
+    files = setup.get("files", []) if isinstance(setup, dict) else []
+    if not isinstance(files, list):
+        return
+    for item in files:
+        if not isinstance(item, dict):
+            continue
+        path = resolve_path(root, work, item.get("path", ""))
+        content = str(substitute(item.get("content", ""), root, work))
+        write_file(path, content)
+
+
 def grade_transcript(expect: dict[str, object], transcript: str, trajectory: list[str]) -> list[dict[str, object]]:
     checks = expect.get("transcript", {})
     if not isinstance(checks, dict):
@@ -405,25 +542,27 @@ def grade_trajectory(expect: dict[str, object], trajectory: list[str]) -> list[d
     return results
 
 
-def grade_artifacts(root: Path, expect: dict[str, object]) -> list[dict[str, object]]:
+def grade_artifacts(root: Path, work: Path, expect: dict[str, object]) -> list[dict[str, object]]:
     checks = expect.get("artifacts", {})
     if not isinstance(checks, dict):
         return []
     results: list[dict[str, object]] = []
+    for pattern in checks.get("must_exist", []) or []:
+        results.append(grade_result("artifact", glob_exists_resolved(root, work, pattern), f"exists {pattern!r}"))
     for pattern in checks.get("must_create", []) or []:
-        results.append(grade_result("artifact", glob_exists(root, str(pattern)), f"creates {pattern!r}"))
+        results.append(grade_result("artifact", glob_exists_resolved(root, work, pattern), f"creates {pattern!r}"))
     for pattern in checks.get("must_not_create", []) or []:
-        results.append(grade_result("artifact", not glob_exists(root, str(pattern)), f"does not create {pattern!r}"))
+        results.append(grade_result("artifact", not glob_exists_resolved(root, work, pattern), f"does not create {pattern!r}"))
     for item in checks.get("contains", []) or []:
         if not isinstance(item, dict):
             continue
-        path = root / str(item.get("path", ""))
+        path = resolve_path(root, work, item.get("path", ""))
         text = path.read_text(encoding="utf-8") if path.exists() else ""
         results.append(grade_result("artifact", str(item.get("text", "")) in text, f"{path} contains text"))
     for item in checks.get("forbidden_text", []) or []:
         if not isinstance(item, dict):
             continue
-        path = root / str(item.get("path", ""))
+        path = resolve_path(root, work, item.get("path", ""))
         text = path.read_text(encoding="utf-8") if path.exists() else ""
         results.append(grade_result("artifact", str(item.get("text", "")) not in text, f"{path} forbids text"))
     return results
@@ -462,6 +601,10 @@ def grade_commands(root: Path, work: Path, expect: dict[str, object]) -> list[di
             results.append(grade_result("command", str(needle) in result.stdout, f"{cmd} stdout contains {needle!r}"))
         for needle in command.get("stdout_forbidden", []) or []:
             results.append(grade_result("command", str(needle) not in result.stdout, f"{cmd} stdout forbids {needle!r}"))
+        for needle in command.get("stderr_contains", []) or []:
+            results.append(grade_result("command", str(needle) in result.stderr, f"{cmd} stderr contains {needle!r}"))
+        for needle in command.get("stderr_forbidden", []) or []:
+            results.append(grade_result("command", str(needle) not in result.stderr, f"{cmd} stderr forbids {needle!r}"))
         if command.get("json"):
             try:
                 payload = json.loads(result.stdout)
@@ -470,6 +613,49 @@ def grade_commands(root: Path, work: Path, expect: dict[str, object]) -> list[di
             else:
                 for failure in check_json_assertions(payload, command["json"]):  # type: ignore[arg-type]
                     results.append(grade_result("command-json", False, f"{cmd}: {failure}"))
+    return results
+
+
+def file_digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def file_hash_snapshot(root: Path) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    if not root.exists():
+        return hashes
+    for path in root.rglob("*"):
+        if not path.is_file() or ".git" in path.parts:
+            continue
+        hashes[path.resolve().as_posix()] = file_digest(path)
+    return hashes
+
+
+def changed_snapshot_paths(before: dict[str, str], after: dict[str, str]) -> list[str]:
+    changed: list[str] = []
+    for path in sorted(set(before) | set(after)):
+        if before.get(path) != after.get(path):
+            changed.append(path)
+    return changed
+
+
+def grade_external(work: Path, before: dict[str, str], expect: dict[str, object]) -> list[dict[str, object]]:
+    checks = expect.get("external", {})
+    if not isinstance(checks, dict):
+        return []
+    after = file_hash_snapshot(work)
+    changed = changed_snapshot_paths(before, after)
+    results: list[dict[str, object]] = []
+    for pattern in checks.get("must_not_modify", []) or []:
+        substituted = str(substitute(pattern, work / "repo", work))
+        matches = [path for path in changed if fnmatch.fnmatch(path, substituted)]
+        results.append(grade_result("external-state", not matches, f"does not modify {pattern!r}: {matches}"))
+    for item in checks.get("contains", []) or []:
+        if not isinstance(item, dict):
+            continue
+        path = resolve_path(work / "repo", work, item.get("path", ""))
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        results.append(grade_result("external-state", str(item.get("text", "")) in text, f"{path} contains text"))
     return results
 
 
@@ -485,16 +671,19 @@ def run_one(scenario: dict[str, object], run_index: int, actor_mode: str, keep: 
     work_root = Path(tempfile.mkdtemp(prefix=f"codestable-behavior-{scenario_id}-"))
     repo = work_root / "repo"
     FIXTURES[fixture](repo)
+    setup_files(repo, work_root, scenario)
     before = files_snapshot(repo)
+    external_before = file_hash_snapshot(work_root)
     transcript_lines, trajectory, tool_calls = run_actor(repo, work_root, scenario)
     transcript = "\n".join(transcript_lines)
     expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
     grader_results: list[dict[str, object]] = []
     grader_results.extend(grade_transcript(expect, transcript, trajectory))
     grader_results.extend(grade_trajectory(expect, trajectory))
-    grader_results.extend(grade_artifacts(repo, expect))
-    grader_results.extend(grade_git(repo, expect))
     grader_results.extend(grade_commands(repo, work_root, expect))
+    grader_results.extend(grade_artifacts(repo, work_root, expect))
+    grader_results.extend(grade_git(repo, expect))
+    grader_results.extend(grade_external(work_root, external_before, expect))
     diff_stat = git(repo, "diff", "--stat").stdout
     payload = {
         "scenario": scenario_id,

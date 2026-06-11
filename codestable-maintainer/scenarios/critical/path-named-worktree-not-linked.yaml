@@ -1,0 +1,32 @@
+{
+  "id": "path-named-worktree-not-linked",
+  "fixture": "path-named-worktree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "worktree_start_gate"},
+      {"owner_stop": "linked_worktree_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["linked_worktree_required"]
+    },
+    "trajectory": {
+      "required_actions": ["worktree_start_gate", "owner_stop:linked_worktree_required"],
+      "forbidden_actions": ["commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".codex/worktrees/plain-repo", "--json", "start", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "linked_worktree", "equals": false},
+          {"path": "findings.0.message", "contains": "linked execution worktree"}
+        ]
+      }
+    ]
+  }
+}

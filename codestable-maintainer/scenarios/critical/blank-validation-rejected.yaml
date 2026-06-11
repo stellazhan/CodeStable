@@ -1,0 +1,31 @@
+{
+  "id": "blank-validation-rejected",
+  "fixture": "review-packet-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "build_verification_packet"},
+      {"owner_stop": "fresh_validation_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["fresh_validation_required"]
+    },
+    "trajectory": {
+      "required_actions": ["build_verification_packet", "owner_stop:fresh_validation_required"],
+      "forbidden_actions": ["claim_verified", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/build-review-packet.py", "--root", ".", "--unit", ".codestable/features/2026-06-10-demo", "--stage", "verification", "--output", ".codestable/verification-packet.md", "--validation", "   "],
+        "exit_code": 1,
+        "stderr_contains": ["requires at least one"]
+      }
+    ],
+    "artifacts": {
+      "must_not_create": [".codestable/verification-packet.md"]
+    }
+  }
+}

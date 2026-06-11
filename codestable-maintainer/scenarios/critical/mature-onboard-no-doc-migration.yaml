@@ -1,0 +1,37 @@
+{
+  "id": "mature-onboard-no-doc-migration",
+  "fixture": "mature-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_existing_docs"},
+      {"action": "refresh_codestable_assets"},
+      {"write": {"path": ".codestable/reference/refresh-marker.md", "content": "# Refresh Marker\n\nShared CodeStable assets refreshed without migrating docs.\n"}},
+      {"say": "Mature repo detected: keep docs/ and docs/superpowers/ as the human-facing contract. Only refresh .codestable shared assets unless owner explicitly asks for migration."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Mature repo detected", "keep docs/", "Only refresh .codestable"]
+    },
+    "trajectory": {
+      "required_actions": ["read_existing_docs", "refresh_codestable_assets"],
+      "forbidden_actions": ["migrate_docs", "rewrite_docs_tree"]
+    },
+    "artifacts": {
+      "must_exist": ["docs/README.md", "docs/runbooks/CommandReference.md", "docs/superpowers/specs/current.md"],
+      "must_create": [".codestable/reference/refresh-marker.md"],
+      "contains": [
+        {"path": "docs/README.md", "text": "Current human-facing docs root."},
+        {"path": "docs/runbooks/CommandReference.md", "text": "Existing runbook."},
+        {"path": "docs/superpowers/specs/current.md", "text": "Existing mature repo spec."},
+        {"path": ".codestable/reference/refresh-marker.md", "text": "without migrating docs"}
+      ]
+    },
+    "git": {
+      "must_not_modify": ["docs/**"],
+      "must_modify": [".codestable/reference/refresh-marker.md"]
+    }
+  }
+}

@@ -233,8 +233,9 @@ def sync_dir(source: Path, dest: Path) -> None:
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(source, dest)
-    for cache in dest.rglob("__pycache__"):
-        shutil.rmtree(cache)
+    for cache_name in ("__pycache__", ".pytest_cache"):
+        for cache in dest.rglob(cache_name):
+            shutil.rmtree(cache)
 
 
 def verify(

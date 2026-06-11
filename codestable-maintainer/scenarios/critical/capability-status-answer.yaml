@@ -1,0 +1,39 @@
+{
+  "id": "capability-status-answer",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "inspect_source_and_installed_surface"},
+      {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); payload={'cs_learn': (source/'cs-learn/SKILL.md').exists(), 'cs_explore': (source/'cs-explore/SKILL.md').exists(), 'review_packet': (source/'cs-onboard/tools/build-review-packet.py').exists(), 'context_packet': (source/'cs-onboard/tools/build-context-packet.py').exists(), 'handoff_packet': 'handoff' in (source/'cs-onboard/tools/build-context-packet.py').read_text(encoding='utf-8'), 'full_learner_report_shipped': (source/'cs-onboard/tools/build-learner-report.py').exists()}; print(json.dumps(payload, sort_keys=True))"]},
+      {"say": "Live surfaces: cs-learn, cs-explore, Review Packet, Context Packet, Handoff Packet.\nNot shipped as a separate all-in-one command: full learner report.\nVerification required: compare CodeStable source repo and installed copies before claiming local availability."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Live surfaces:", "Not shipped", "Verification required", "installed copies"]
+    },
+    "trajectory": {
+      "required_actions": ["inspect_source_and_installed_surface"],
+      "forbidden_actions": ["vague_yes_no"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); payload={'cs_learn': (source/'cs-learn/SKILL.md').exists(), 'cs_explore': (source/'cs-explore/SKILL.md').exists(), 'review_packet': (source/'cs-onboard/tools/build-review-packet.py').exists(), 'context_packet': (source/'cs-onboard/tools/build-context-packet.py').exists(), 'handoff_packet': 'handoff' in (source/'cs-onboard/tools/build-context-packet.py').read_text(encoding='utf-8'), 'full_learner_report_shipped': (source/'cs-onboard/tools/build-learner-report.py').exists()}; print(json.dumps(payload, sort_keys=True))"],
+        "exit_code": 0,
+        "json": [
+          {"path": "cs_learn", "equals": true},
+          {"path": "cs_explore", "equals": true},
+          {"path": "review_packet", "equals": true},
+          {"path": "context_packet", "equals": true},
+          {"path": "handoff_packet", "equals": true},
+          {"path": "full_learner_report_shipped", "equals": false}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

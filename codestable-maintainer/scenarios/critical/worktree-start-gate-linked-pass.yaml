@@ -1,0 +1,32 @@
+{
+  "id": "worktree-start-gate-linked-pass",
+  "fixture": "linked-worktree-unit-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "worktree_start_gate"}
+    ]
+  },
+  "expect": {
+    "trajectory": {
+      "required_actions": ["read_attention", "worktree_start_gate"],
+      "forbidden_actions": ["owner_stop:linked_worktree_required"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "start", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true},
+          {"path": "linked_worktree", "equals": true},
+          {"path": "baseline.linked_worktree", "equals": true}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

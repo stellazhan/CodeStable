@@ -1,0 +1,27 @@
+{
+  "id": "backlog-canceled-not-blocker",
+  "fixture": "canceled-backlog-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "scan_backlog"}
+    ]
+  },
+  "expect": {
+    "trajectory": {
+      "required_actions": ["scan_backlog"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-backlog.py", "--root", ".", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true},
+          {"path": "blocking_count", "equals": 0},
+          {"path": "items", "equals": []}
+        ]
+      }
+    ]
+  }
+}

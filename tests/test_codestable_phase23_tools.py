@@ -715,6 +715,56 @@ def test_backlog_scan_treats_follow_up_section_closure_language_as_current_backl
     assert is_blocking_follow_up_text(items[0].text)
 
 
+def test_backlog_scan_ignores_canceled_unit_follow_ups(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "# Acceptance",
+                "status: canceled",
+                "## Follow-Ups",
+                "- Follow-up required before merge: historical owner decision.",
+            ]
+        ),
+    )
+
+    payload = backlog_tool.backlog(tmp_path)
+
+    assert payload["ok"] is True
+    assert payload["blocking_count"] == 0
+    assert payload["items"] == []
+
+
+def test_backlog_scan_does_not_hide_active_unit_when_subitem_is_canceled(tmp_path: Path) -> None:
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-acceptance.md",
+        "\n".join(
+            [
+                "# Acceptance",
+                "status: current",
+                "## Follow-Ups",
+                "- Follow-up required before merge: current owner decision.",
+            ]
+        ),
+    )
+    write_file(
+        tmp_path / ".codestable/features/2026-06-05-demo/demo-checklist.yaml",
+        "\n".join(
+            [
+                "steps:",
+                "  - id: old",
+                "    status: canceled",
+            ]
+        ),
+    )
+
+    payload = backlog_tool.backlog(tmp_path)
+
+    assert payload["ok"] is False
+    assert payload["blocking_count"] == 1
+    assert payload["items"][0]["excerpt"] == "Follow-up required before merge: current owner decision."
+
+
 def test_search_yaml_json_serializes_yaml_date_values(capsys) -> None:
     search_yaml.print_json(
         [
@@ -810,6 +860,27 @@ def test_maintainer_verify_syncs_and_diff_checks_changed_skill(tmp_path: Path) -
     assert (installed / "cs-onboard/SKILL.md").exists()
     argv = json.loads((Path(passed["fresh_clone"]) / "behavior-argv.json").read_text(encoding="utf-8"))
     assert argv == ["run", "--suite", "critical", "--actor", "sterile", "--json"]
+
+
+def test_maintainer_verify_installed_compare_and_sync_ignore_runtime_caches(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    dest = tmp_path / "installed"
+    write_file(source / "SKILL.md", "---\nname: demo\n---\n")
+    write_file(source / "tools/run.py", "print('x')\n")
+    write_file(source / "__pycache__/run.pyc", "cache\n")
+    write_file(source / ".pytest_cache/CACHEDIR.TAG", "cache\n")
+    write_file(dest / "SKILL.md", "---\nname: demo\n---\n")
+    write_file(dest / "tools/run.py", "print('x')\n")
+    write_file(dest / "__pycache__/old.pyc", "old\n")
+    write_file(dest / ".pytest_cache/CACHEDIR.TAG", "old\n")
+
+    assert maintainer_verify.dirs_match(source, dest)
+
+    maintainer_verify.sync_dir(source, dest)
+
+    assert maintainer_verify.dirs_match(source, dest)
+    assert not any(path.name == "__pycache__" for path in dest.rglob("*") if path.is_dir())
+    assert not any(path.name == ".pytest_cache" for path in dest.rglob("*") if path.is_dir())
 
 
 def test_maintainer_verify_fails_when_behavior_harness_fails(tmp_path: Path) -> None:

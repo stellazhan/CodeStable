@@ -25,6 +25,34 @@ spec_governance = load_tool("codestable_spec_governance_for_tests", TOOLS_DIR / 
 behavior_harness = load_tool("agent_behavior_harness_for_tests", MAINTAINER_TOOLS_DIR / "agent-behavior-harness.py")
 
 
+CRITICAL_SCENARIO_IDS = {
+    "accept-analyze-spec-drift",
+    "backlog-canceled-not-blocker",
+    "backlog-visible",
+    "blank-validation-rejected",
+    "capability-boundary-req-delta",
+    "capability-status-answer",
+    "cs-route-brief-minimal",
+    "doctor-preexisting-findings-separated",
+    "feat-design-clarify",
+    "finish-inbox-ready",
+    "finish-inbox-stale-report",
+    "implementation-review-required",
+    "maintainer-source-before-installed",
+    "maintainer-verify-sync-required",
+    "mature-onboard-no-doc-migration",
+    "missing-unit-path-blocked",
+    "no-match-owner-stop",
+    "owner-judgment-context",
+    "path-named-worktree-not-linked",
+    "review-authorization-before-code",
+    "review-packet-redacts-secrets",
+    "spec-no-free-rewrite",
+    "worktree-start-gate-linked-pass",
+    "worktree-start-gate-main-stop",
+}
+
+
 def run(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", *args],
@@ -200,7 +228,8 @@ def test_behavior_harness_runs_critical_suite() -> None:
     payload = behavior_harness.run_scenarios(paths, "sterile", 1)
 
     assert payload["ok"], payload
-    assert payload["scenario_count"] >= 9
+    assert {result["scenario"] for result in payload["results"]} == CRITICAL_SCENARIO_IDS
+    assert payload["scenario_count"] == len(CRITICAL_SCENARIO_IDS)
     assert payload["run_count"] == payload["scenario_count"]
     assert all(result["repo"] is None for result in payload["results"])
     assert all(result["actor_adapter"] == "scripted" for result in payload["results"])
