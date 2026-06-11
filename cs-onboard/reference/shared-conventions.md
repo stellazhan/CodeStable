@@ -217,17 +217,21 @@ gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现
 
 每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
 
-1. 必须使用可用的 subagent / reviewer agent。进入实现 / 修复 / 重构执行前，若当前对话还没有明确的 subagent / delegation 授权，直接按 Superpowers 的短选择式问一次：
+1. 必须使用可用的 subagent / reviewer agent。进入实现 / 修复 / 重构执行前，若当前对话还没有明确的 subagent / delegation 授权，先走 owner-judgment checkpoint；不要只给低上下文二选一。
 
 ```text
-Review options:
-1. Subagent Review (recommended) - I dispatch a reviewer subagent before completion.
-2. Inline Review - only if this platform has no subagent support.
-
-Which approach?
+Context: CodeStable 的完成门槛要求独立 implementation review；这个授权会决定是否能在本轮完成前派出 reviewer。
+Term: Subagent Review = 由独立 reviewer agent 基于 review packet 做只读审查，不修改代码。
+Why it matters: 如果没有独立 review，P0/P1 问题可能在完成汇报后才暴露；如果平台没有 subagent 能力，才允许 fresh self-review fallback。
+Options:
+1. Subagent Review (recommended) - dispatch a reviewer subagent before completion.
+2. Inline Review - only valid if this platform has no subagent support.
+Default: Subagent Review, because it is the normal CodeStable completion gate when available.
+Non-automatic: This does not commit, merge, push, accept P0/P1 findings, or approve unrelated delegated work.
+Question: Which review authorization should CodeStable use for this work?
 ```
 
-用户选 1 或明确说 subagent / delegation 后，本次 implementation review 可直接触发 subagent；不要等到 review gate 才首次询问。用户选 2 且平台实际有 subagent 能力时，说明 CodeStable 完成门槛会被阻塞并停等确认。review 前先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
+用户选择 Subagent Review 或明确说 subagent / delegation 后，本次 implementation review 可直接触发 subagent；不要等到 review gate 才首次询问。用户选择 Inline Review 且平台实际有 subagent 能力时，说明 CodeStable 完成门槛会被阻塞并停等确认。review 前先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
 
 ```bash
 python3 .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
@@ -252,13 +256,13 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 handoff 必须包含 `Decided` / `Rejected` / `Risks` / `Files` / `Remaining` / `Evidence` 六项；没有内容也写 `None recorded.`，避免隐性上下文丢失。
 handoff 是固定英文结构；需要中文内容时改用下面的受众报告，不要给 handoff 传 `--language zh`。
 
-当接收方是人审、owner 决策、学习报告或访谈复盘时，改用受众报告，不把结论埋在聊天记录里：
+当接收方是人审、owner 决策、owner 判断、学习报告或访谈复盘时，改用受众报告，不把结论埋在聊天记录里：
 
 ```bash
 python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience human-reviewer --language zh --output /tmp/codestable-human-review.md --decided "{已决定}" --remaining "{下一步}" --evidence "{验证证据}"
 ```
 
-可选 audience：`human-reviewer` / `owner-decision` / `learner` / `interviewee`。这些报告固定输出 `Decision Brief` / `Working Context` / `Evidence Appendix` 三层；中文报告用 `--language zh`。
+可选 audience：`human-reviewer` / `owner-decision` / `owner-judgment` / `learner` / `interviewee`。这些报告固定输出 `Decision Brief` / `Working Context` / `Evidence Appendix` 三层；中文报告用 `--language zh`。`owner-judgment` 用于 route、授权、acceptance、finish / merge 等需要人判断但不是访谈的 checkpoint。
 
 发给 subagent / human reviewer / owner 前先跑 sufficiency gate，避免缺 files / evidence 或漏脱敏：
 

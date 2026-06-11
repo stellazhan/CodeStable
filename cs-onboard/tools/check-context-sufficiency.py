@@ -20,6 +20,15 @@ AUDIENCE_REPORT_SECTIONS = (
 )
 FILE_HEADINGS = ("Files", "相关文件")
 EVIDENCE_HEADINGS = ("Evidence", "验证证据")
+OWNER_JUDGMENT_REQUIRED_SECTIONS = {
+    "missing_judgment": ("Judgment Needed", "需要判断"),
+    "missing_why_now": ("Why Now", "为什么现在问"),
+    "missing_terms": ("Terms", "术语"),
+    "missing_options": ("Options And Tradeoffs", "选项与取舍"),
+    "missing_default_recommendation": ("Default Recommendation", "默认建议"),
+    "missing_effects": ("What Changes After The Answer", "回答后的影响"),
+    "missing_non_automatic": ("Actions That Remain Non-Automatic", "不会自动执行的动作"),
+}
 EMPTY_MARKERS = {"None recorded.", "未记录。"}
 BARE_SECRET_TOKEN_RE = re.compile(
     r"(?i)(?:"
@@ -72,6 +81,13 @@ def detect_shape(text: str) -> str | None:
     return None
 
 
+def packet_audience(text: str) -> str | None:
+    match = re.search(r"^\s*-\s+audience:\s+`([^`]+)`\s*$", text, re.MULTILINE)
+    if not match:
+        return None
+    return match.group(1)
+
+
 def has_unredacted_secret_like_text(text: str) -> bool:
     return redact_text(text) != text or bool(BARE_SECRET_TOKEN_RE.search(text))
 
@@ -116,6 +132,16 @@ def check_packet(path: Path, strict: bool = False) -> dict[str, object]:
                     "message": "Strict context checks require at least one evidence item.",
                 }
             )
+        if packet_audience(text) == "owner-judgment":
+            for code, headings in OWNER_JUDGMENT_REQUIRED_SECTIONS.items():
+                if not section_items(text, headings):
+                    findings.append(
+                        {
+                            "severity": "P1",
+                            "code": code,
+                            "message": f"Owner judgment context requires a non-empty {'/'.join(headings)} section.",
+                        }
+                    )
 
     return {
         "ok": not findings,

@@ -585,11 +585,26 @@ primary pass/fail mechanism for lifecycle correctness.
 
 Build these before the harness is considered useful:
 
+- `cs-route-brief-minimal`: a short `cs` prompt routes to the correct child
+  workflow, emits default context level, and does not create heavyweight
+  artifacts.
+- `route-choice-owner-context`: an ambiguous prompt produces route options,
+  tradeoffs, recommendation, and owner stop.
+- `fast-path-stays-light`: a small UI/docs/refactor prompt stays L1, records a
+  short skip, and leaves long-lived specs unchanged.
+- `fast-path-escalates-on-boundary`: a fast path that discovers capability
+  boundary or public-contract change upgrades to L3 before spec mutation.
+- `issue-fix-escalates-on-wrong-spec`: a fix can proceed locally, but wrong
+  long-lived specs become analyze/delta owner review instead of silent edits.
+- `guide-user-contract-review`: user-facing guide or libdoc changes that alter
+  public understanding require L2/L3 context.
 - `brainstorm-owner-context`: after brainstorm convergence, the agent writes an
   owner decision context and stops before formal spec changes.
-- `owner-interview-context`: before asking roadmap or governance questions, the
-  agent explains terms, why the decision matters, option tradeoffs, default
-  recommendation, and what the answer changes.
+- `owner-judgment-context`: before any owner or human checkpoint that asks for a
+  route choice, approval, authorization, review sign-off, finish/merge decision,
+  or interview-style answer, the agent explains terms, why the judgment matters,
+  option tradeoffs, evidence, default recommendation, and what the answer
+  changes.
 - `feat-design-clarify`: ambiguous feature input triggers spec router plus
   clarification before design/checklist generation.
 - `small-ui-no-req-delta`: a small user-facing interaction change does not
@@ -606,8 +621,9 @@ Build these before the harness is considered useful:
   the inbox report `stale-report` until finish is refreshed.
 
 Every new CodeStable workflow rule should add or update at least one behavior
-scenario. Every observed CodeStable behavior failure should be minimized into a
-fixture and scenario before the fix is called durable.
+scenario or record an explicit non-goal. Every observed CodeStable behavior
+failure should be minimized into a fixture and scenario before the fix is called
+durable.
 
 ### Verification Integration
 
@@ -636,17 +652,27 @@ Acceptance:
 - behavior regression reports are machine-readable and short enough for the
   maintainer final report.
 
-## Work Package 9: Spec Governance And Drift Control
+## Work Package 9: Global Route Governance And Spec Drift Control
 
-Implement the roadmap in
+Implement the root route protocol in
+`codestable-maintainer/references/global-route-governance.md`, then implement
+the L3/L4 spec specialization in
 `codestable-maintainer/references/spec-governance-roadmap.md`.
 
-This work package defines the actual CodeStable behavior for the spec drift
-problems that the behavior harness will test:
+This work package defines the actual CodeStable behavior for all routed flows
+and the spec drift problems that the behavior harness will test:
 
+- route-time brief for `cs` and root routers;
+- flow-time contract for every `cs-*` skill: default level, escalation triggers,
+  owner-stop conditions, allowed artifacts, skip record, finish checks, and
+  behavior scenario;
+- lightweight default behavior for local changes that do not alter long-lived
+  intent;
+- mandatory escalation when a fast path discovers capability-boundary changes,
+  future-agent instruction changes, wrong specs, or finish/merge decisions;
 - owner decision context after brainstorm convergence;
-- owner interview context before asking roadmap, governance, or workflow
-  decisions;
+- owner judgment context before asking roadmap, governance, workflow, review,
+  authorization, acceptance, finish, or merge decisions;
 - spec router before feature, roadmap, requirement, or acceptance work;
 - clarification gates before design or roadmap approval;
 - requirement deltas and mechanical apply during acceptance;
@@ -658,13 +684,16 @@ problems that the behavior harness will test:
 
 Acceptance:
 
-- every item in the spec-governance roadmap has either a prompt/reference update,
-  a deterministic validator, or an explicit future tool;
-- every item has at least one matching behavior harness scenario in the
-  validation matrix;
+- every route in the global route matrix has either a prompt/reference update, a
+  deterministic validator, or an explicit future tool;
+- every global route rule and every spec-governance item has at least one
+  matching behavior harness scenario or explicit non-goal;
+- `cs`, all root routers, and every `cs-*` skill declare default context level,
+  escalation triggers, owner-stop conditions, allowed artifacts, skip-record
+  format, finish-time checks, and harness scenario coverage;
 - `cs-brainstorm`, `cs-feat-design`, `cs-roadmap`, `cs-req`, and
-  `cs-feat-accept` are updated only after the target artifacts and owner-stop
-  rules are clear;
+  `cs-feat-accept` get heavier spec updates only after the target artifacts and
+  owner-stop rules are clear;
 - no long-lived requirement can be rewritten by a standard workflow without
   delta, clarification, archive marker, or compaction review evidence.
 
@@ -711,8 +740,14 @@ Phase 6 extends maintainer verification:
 - `cs-onboard/reference/tools.md`: document behavior harness output only as a
   maintainer tool, not as a project-runtime command copied into onboarded repos.
 
-Phase 7 updates spec-facing skills after the governance roadmap is implemented:
+Phase 7 updates every routed skill after the global route governance matrix is
+implemented:
 
+- `cs`: emit route-time brief, context level, nearby route exclusions when
+  ambiguous, escalation trigger, and next action.
+- every `cs-*` skill: declare default context level, escalation triggers,
+  owner-stop conditions, allowed artifacts, skip-record format, finish-time
+  checks, and behavior scenario coverage.
 - `cs-brainstorm`: generate owner decision context when discussion converges
   into feature, roadmap, or requirement work.
 - `cs-feat-design` and `cs-roadmap`: run spec router and clarification gates
@@ -721,8 +756,14 @@ Phase 7 updates spec-facing skills after the governance roadmap is implemented:
   rewrite constraints.
 - `cs-feat-accept`: apply approved requirement deltas mechanically and run a
   read-only analyze pass before completion.
-- `cs-onboard/reference/shared-conventions.md`: document long-lived specs,
-  deltas, owner context, clarification, and historical rehabilitation semantics.
+- `cs-feat-ff`, `cs-issue-fix`, `cs-refactor-ff`, `cs-guide`, and `cs-libdoc`:
+  stay lightweight by default, record explicit skips, and escalate when they
+  discover capability-boundary, public-contract, or long-lived spec effects.
+- `finish-worktree`: enforce learner/context report freshness, `covered_head`,
+  inbox state, stale-report, and unresolved gate checks before merge readiness.
+- `cs-onboard/reference/shared-conventions.md`: document global route
+  governance, long-lived specs, deltas, owner context, clarification, and
+  historical rehabilitation semantics.
 
 ## Implementation Order
 
@@ -805,8 +846,8 @@ This phase solves:
 - reviewers depending on hidden chat history instead of a curated packet;
 - next-stage agents losing decisions, rejected options, risks, files, remaining
   work, or evidence;
-- human reviewers, owners, learners, and interviewees needing a Chinese report
-  with complete working context instead of hidden chat history.
+- human reviewers, owners, learners, and judgment participants needing a Chinese
+  report with complete working context instead of hidden chat history.
 
 Exit criteria:
 
@@ -817,7 +858,7 @@ Exit criteria:
   evidence;
 - `build-context-packet.py --audience handoff` emits `Decided`, `Rejected`,
   `Risks`, `Files`, `Remaining`, and `Evidence`;
-- `build-context-packet.py --audience human-reviewer|owner-decision|learner|interviewee --language zh`
+- `build-context-packet.py --audience human-reviewer|owner-decision|owner-judgment|learner|interviewee --language zh`
   emits `Decision Brief`, `Working Context`, and `Evidence Appendix`;
 - `check-context-sufficiency.py --strict` validates packet shape, concrete file
   references, evidence items, and unredacted secret-like text before dispatch;
@@ -869,19 +910,24 @@ Exit criteria:
 
 - the scenario DSL supports transcript, trajectory, artifact, repo-state, and
   command assertions;
-- at least the eight required regression scenarios above pass in `sterile` mode;
+- the required critical regression scenarios above pass in `sterile` mode;
 - `compact-resume-next-action` passes by recovering state from artifacts and
   status commands;
 - behavior reports include per-run traces and deterministic grader failures;
 - maintainer verification can run a critical behavior suite for workflow changes.
 
-### Phase 7: Spec Governance And Drift Control
+### Phase 7: Global Route Governance And Spec Drift Control
 
-Build the owner-review and drift-control mechanisms from
-`spec-governance-roadmap.md`, then prove them with Phase 6 behavior scenarios.
+Build the root route protocol from `global-route-governance.md`, then build the
+owner-review and drift-control mechanisms from `spec-governance-roadmap.md`.
+Prove both layers with Phase 6 behavior scenarios before calling either stable.
 
 This phase solves:
 
+- `cs` automatic routing that only works in the original high-context thread;
+- workflows that become too heavy because every path is treated like a spec
+  change;
+- fast paths that accidentally bypass spec, decision, or finish gates;
 - brainstorm conclusions that lack enough human-review context;
 - long-lived specs that are agent-readable but human-unfriendly;
 - Q&A decisions that remain only in chat;
@@ -892,14 +938,20 @@ This phase solves:
 
 Exit criteria:
 
-- owner decision context, spec routing, clarification, requirement delta,
-  owner interview context, no-free-rewrite, rehabilitation, and analyze-pass
-  rules are documented;
+- every routed workflow declares default context level, escalation triggers,
+  owner-stop conditions, allowed artifacts, skip-record format, finish-time
+  checks, and harness scenario coverage;
+- light paths stay L0/L1 and risky paths escalate before mutating long-lived
+  facts;
+- owner decision context, spec routing, clarification, requirement delta, owner
+  judgment context, no-free-rewrite, rehabilitation, and analyze-pass rules are
+  documented;
 - affected `cs-*` skills point to the new rules and stop at the required owner
   checkpoints;
 - historical spec rehabilitation can classify old docs without rewriting them;
-- the behavior harness validation matrix in `spec-governance-roadmap.md` has
-  passing critical scenarios in `sterile` mode before the phase is called stable.
+- the behavior harness validation matrices in `global-route-governance.md` and
+  `spec-governance-roadmap.md` have passing critical scenarios in `sterile`
+  mode before the phase is called stable.
 
 ## Global Acceptance Criteria
 
@@ -925,9 +977,9 @@ The harness is considered effective only when all of these are true:
   installed/diff-checked before being called done.
 - Core workflow changes are behavior-regressed with sterile or compacted actors
   before they are treated as stable.
-- Spec governance changes are not considered stable until the corresponding
-  behavior harness scenarios prove the original drift and human-review failures
-  are fixed.
+- Global route governance and spec governance changes are not considered stable
+  until the corresponding behavior harness scenarios prove the original routing,
+  overweight-process, drift, compaction, and human-review failures are fixed.
 
 ## Non-Goals
 

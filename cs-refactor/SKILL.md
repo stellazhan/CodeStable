@@ -159,7 +159,7 @@ summary: {本次要做的几条是什么，一句话}
 
 动代码前先按 shared-conventions 第 2.6 节确认执行拓扑：是否在主协调检出讨论、是否已在独立 worktree、分支 / worktree 路径、共享计划面、以及禁止触碰的 sibling worktree。若不在执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求当前 checkout 直接做时才可继续，并在 apply-notes 里写清楚 override。
 
-若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问；选 1 后继续，只有平台无 subagent 能力时选 2 才能继续。
+若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 review authorization judgment checkpoint 提供背景、术语、取舍、默认建议和非自动动作；用户授权 subagent 后继续，只有平台无 subagent 能力时 inline review 才能继续。
 
 ### 推进规则
 
@@ -198,7 +198,7 @@ refactor: {YYYY-MM-DD}-{slug}
 ### 全部完成后
 
 - 跑全量测试 + 类型检查 + lint
-- 按 shared-conventions 第 2.6 节触发独立 code review：默认用 `build-review-packet.py --stage quality`；如果 refactor 可能偏离 design 的行为边界，追加 `--stage spec`；如果涉及 schema / security / core runtime，追加 `--stage verification` 且必须传 fresh command output。必须使用可用的 subagent reviewer；若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问。只有平台确实没有 subagent 能力时才允许 fresh self-review fallback。把完整结果写入 `{slug}-implementation-review.md`；P0 / P1 先修到无阻塞，fallback 时在 review 文件和 apply-notes 摘要说明。没有这份 review 文件，不输出 apply 完成汇报
+- 按 shared-conventions 第 2.6 节触发独立 code review：默认用 `build-review-packet.py --stage quality`；如果 refactor 可能偏离 design 的行为边界，追加 `--stage spec`；如果涉及 schema / security / core runtime，追加 `--stage verification` 且必须传 fresh command output。必须使用可用的 subagent reviewer；若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 review authorization judgment checkpoint 提供背景、术语、取舍、默认建议和非自动动作。只有平台确实没有 subagent 能力时才允许 fresh self-review fallback。把完整结果写入 `{slug}-implementation-review.md`；P0 / P1 先修到无阻塞，fallback 时在 review 文件和 apply-notes 摘要说明。没有这份 review 文件，不输出 apply 完成汇报
 - 最后一次请用户整体目视确认（前端：打开主要页面点一圈）
 - 确认通过后收尾 commit，message 引用 refactor 目录
 

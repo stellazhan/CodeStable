@@ -11,13 +11,14 @@ from codestable_common import git_status, is_secret_like_path, redact_text, reso
 
 
 MAX_LIST_ITEMS = 20
-AUDIENCES = ("handoff", "human-reviewer", "owner-decision", "learner", "interviewee")
+AUDIENCES = ("handoff", "human-reviewer", "owner-decision", "owner-judgment", "learner", "interviewee")
 
 AUDIENCE_TITLES = {
     "en": {
         "handoff": "CodeStable Handoff Context",
         "human-reviewer": "CodeStable Human Reviewer Context",
         "owner-decision": "CodeStable Owner Decision Brief",
+        "owner-judgment": "CodeStable Owner Judgment Context",
         "learner": "CodeStable Learning Report",
         "interviewee": "CodeStable Interview Context",
     },
@@ -25,6 +26,7 @@ AUDIENCE_TITLES = {
         "handoff": "CodeStable 交接上下文",
         "human-reviewer": "CodeStable 人审上下文报告",
         "owner-decision": "CodeStable Owner 决策简报",
+        "owner-judgment": "CodeStable Owner 判断上下文",
         "learner": "CodeStable 学习报告",
         "interviewee": "CodeStable 访谈上下文",
     },
@@ -34,12 +36,14 @@ AUDIENCE_MISSIONS = {
     "en": {
         "human-reviewer": "Review the work using only this packet and the repository state it points to.",
         "owner-decision": "Decide whether the remaining risks and work are acceptable.",
+        "owner-judgment": "Make the requested judgment using the decision context, tradeoffs, and evidence in this packet.",
         "learner": "Understand what changed, why it changed, and how to verify it later.",
         "interviewee": "Prepare a concise, evidence-backed explanation of the work.",
     },
     "zh": {
         "human-reviewer": "请只基于这份报告和它指向的仓库现状做人审，不依赖隐藏聊天历史。",
         "owner-decision": "请判断剩余风险和后续事项是否可以接受，或需要继续收敛。",
+        "owner-judgment": "请基于这份上下文中的判断点、取舍和证据做出选择，不依赖隐藏聊天历史。",
         "learner": "用于理解这次工作为什么发生、改了什么、以后如何验证。",
         "interviewee": "用于准备一份有证据支撑的简洁讲述，不把细节埋在聊天记录里。",
     },
@@ -68,6 +72,14 @@ def labels(language: str) -> dict[str, str]:
             "files": "相关文件",
             "remaining": "剩余事项",
             "evidence": "验证证据",
+            "judgment_context": "判断上下文",
+            "judgment_needed": "需要判断",
+            "why_now": "为什么现在问",
+            "terms": "术语",
+            "options": "选项与取舍",
+            "default_recommendation": "默认建议",
+            "effects": "回答后的影响",
+            "non_automatic": "不会自动执行的动作",
             "none": "未记录。",
         }
     return {
@@ -81,6 +93,14 @@ def labels(language: str) -> dict[str, str]:
         "files": "Files",
         "remaining": "Remaining",
         "evidence": "Evidence",
+        "judgment_context": "Judgment Context",
+        "judgment_needed": "Judgment Needed",
+        "why_now": "Why Now",
+        "terms": "Terms",
+        "options": "Options And Tradeoffs",
+        "default_recommendation": "Default Recommendation",
+        "effects": "What Changes After The Answer",
+        "non_automatic": "Actions That Remain Non-Automatic",
         "none": "None recorded.",
     }
 
@@ -153,6 +173,13 @@ def build_audience_report(
     files: list[str],
     remaining: list[str],
     evidence: list[str],
+    judgment: list[str] | None = None,
+    why_now: list[str] | None = None,
+    terms: list[str] | None = None,
+    options: list[str] | None = None,
+    default_recommendation: list[str] | None = None,
+    effects: list[str] | None = None,
+    non_automatic: list[str] | None = None,
 ) -> str:
     root = root.resolve()
     unit_dir = resolve_unit(root, unit_value)
@@ -171,6 +198,34 @@ def build_audience_report(
     ]
     if mission:
         lines.extend(["", f"> {mission}"])
+    if audience == "owner-judgment":
+        lines.extend(
+            [
+                "",
+                f"## {text['judgment_context']}",
+                "",
+                f"### {text['judgment_needed']}",
+                *format_items(judgment or [], text["none"]),
+                "",
+                f"### {text['why_now']}",
+                *format_items(why_now or [], text["none"]),
+                "",
+                f"### {text['terms']}",
+                *format_items(terms or [], text["none"]),
+                "",
+                f"### {text['options']}",
+                *format_items(options or [], text["none"]),
+                "",
+                f"### {text['default_recommendation']}",
+                *format_items(default_recommendation or [], text["none"]),
+                "",
+                f"### {text['effects']}",
+                *format_items(effects or [], text["none"]),
+                "",
+                f"### {text['non_automatic']}",
+                *format_items(non_automatic or [], text["none"]),
+            ]
+        )
     lines.extend(
         [
             "",
@@ -217,6 +272,13 @@ def build_packet(
     remaining: list[str],
     evidence: list[str],
     language: str = "en",
+    judgment: list[str] | None = None,
+    why_now: list[str] | None = None,
+    terms: list[str] | None = None,
+    options: list[str] | None = None,
+    default_recommendation: list[str] | None = None,
+    effects: list[str] | None = None,
+    non_automatic: list[str] | None = None,
 ) -> str:
     if audience not in AUDIENCES:
         raise ValueError(f"unknown context audience: {audience}")
@@ -237,6 +299,13 @@ def build_packet(
         files,
         remaining,
         evidence,
+        judgment,
+        why_now,
+        terms,
+        options,
+        default_recommendation,
+        effects,
+        non_automatic,
     )
 
 
@@ -253,6 +322,13 @@ def main() -> int:
     parser.add_argument("--file", action="append", default=[], help="File to include; defaults to current changed files")
     parser.add_argument("--remaining", action="append", default=[], help="Remaining work item; repeat as needed")
     parser.add_argument("--evidence", action="append", default=[], help="Evidence line to include; repeat as needed")
+    parser.add_argument("--judgment", action="append", default=[], help="Owner judgment being requested; repeat as needed")
+    parser.add_argument("--why-now", action="append", default=[], help="Why the judgment is needed now; repeat as needed")
+    parser.add_argument("--term", action="append", default=[], help="Term definition for owner judgment context")
+    parser.add_argument("--option", action="append", default=[], help="Option and tradeoff for owner judgment context")
+    parser.add_argument("--default-recommendation", action="append", default=[], help="Recommended default and reason")
+    parser.add_argument("--effect", action="append", default=[], help="What changes after the owner answers")
+    parser.add_argument("--non-automatic", action="append", default=[], help="Action that remains non-automatic")
     args = parser.parse_args()
 
     try:
@@ -267,6 +343,13 @@ def main() -> int:
             args.remaining,
             args.evidence,
             args.language,
+            args.judgment,
+            args.why_now,
+            args.term,
+            args.option,
+            args.default_recommendation,
+            args.effect,
+            args.non_automatic,
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)

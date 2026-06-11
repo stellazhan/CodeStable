@@ -258,8 +258,24 @@ audience:
 - `handoff`：下一阶段 agent / reviewer 的轻量交接，固定英文六项结构，不支持 `--language zh`。
 - `human-reviewer`：给人审的完整 context 报告。
 - `owner-decision`：给 owner 拍板风险 / 后续事项的决策简报。
+- `owner-judgment`：给 owner 或 human checkpoint 做判断前的上下文，覆盖 route、授权、acceptance、finish / merge 等非访谈场景。
 - `learner`：学习报告，解释为什么改、改了什么、如何验证。
-- `interviewee`：访谈 / 复盘前的上下文提纲。
+- `interviewee`：真实访谈 / 复盘前的上下文提纲；不要把普通判断 checkpoint 都归到这个 audience。
+
+`owner-judgment` 还应传入判断专用上下文，strict check 会要求这些字段非空：
+
+```bash
+python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience owner-judgment --language zh --output /tmp/codestable-owner-judgment.md \
+  --judgment "是否授权 subagent review" \
+  --why-now "完成门槛要求 implementation review" \
+  --term "Subagent Review = 独立 reviewer agent 做只读审查" \
+  --option "Subagent Review：独立性更强；Inline Review：仅平台无 subagent 时可用" \
+  --default-recommendation "Subagent Review，因为当前平台支持 subagent" \
+  --effect "授权后可派 reviewer；拒绝后完成门槛阻塞" \
+  --non-automatic "不会自动 commit、merge、push 或接受 P0/P1 findings" \
+  --file "cs-onboard/reference/shared-conventions.md" \
+  --evidence "review packet generated"
+```
 
 handoff 固定输出：
 

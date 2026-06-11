@@ -25,7 +25,7 @@
 4. Human/subagent context packet：让上下文交接和人审报告完整但不污染默认回答。
 5. Finish inbox：让完成的 worktree 在任何分支都能提醒合并/刷新/清理。
 6. Agent behavior harness：用 sterile / compacted agent 重放场景，验证 CS 行为是否稳定复现。
-7. Spec governance：把文档偏移、人类可读、req delta、clarify 等机制纳入正式 workflow，并用 behavior harness 验证。
+7. Global route governance + spec governance：让所有 `cs` 可分流流程都有轻量默认、风险升级、owner-stop 和 harness 场景；再把文档偏移、人类可读、req delta、clarify 等 L3/L4 机制纳入正式 workflow。
 
 ### 需要 owner 拍板什么
 
@@ -191,8 +191,9 @@ It should collect either a compact handoff or an audience-specific report with:
 - remaining;
 - evidence.
 
-Audience report modes are `human-reviewer`, `owner-decision`, `learner`, and
-`interviewee`. They use a layered `Decision Brief` -> `Working Context` ->
+Audience report modes are `human-reviewer`, `owner-decision`,
+`owner-judgment`, `learner`, and `interviewee`. They use a layered
+`Decision Brief` -> `Working Context` ->
 `Evidence Appendix` structure so human-facing detail lives in an artifact rather
 than in the default chat reply.
 
@@ -324,12 +325,23 @@ Acceptance:
   subagent review evidence;
 - behavior regression failures can be promoted into new scenario YAML files.
 
-### 9. Spec Governance And Drift Control
+### 9. Global Route Governance And Spec Drift Control
 
-Add the workflow behavior defined in
+Add the root route behavior defined in
+`codestable-maintainer/references/global-route-governance.md`, then add the
+L3/L4 spec behavior defined in
 `codestable-maintainer/references/spec-governance-roadmap.md`:
 
+- route-time brief for `cs` and root routers;
+- flow-time contract for every `cs-*` skill: default level, escalation triggers,
+  owner-stop conditions, allowed artifacts, skip record, finish checks, and
+  behavior scenario;
+- light paths that stay L0/L1 unless real risk appears;
+- escalation before fast paths mutate long-lived facts, future-agent
+  instructions, capability boundaries, or finish/merge state;
 - owner decision context after brainstorm convergence;
+- owner judgment context before approval, route, review, authorization,
+  acceptance, finish, merge, or interview-style checkpoints;
 - spec router before design, roadmap, requirement, or acceptance work;
 - clarification gates with durable `## Clarifications` entries;
 - requirement deltas instead of whole-document rewrites;
@@ -339,13 +351,21 @@ Add the workflow behavior defined in
 
 Acceptance:
 
+- every routed workflow declares its context level, escalation triggers,
+  owner-stop conditions, allowed artifacts, skip-record format, finish checks,
+  and harness scenarios;
+- small local paths stay light and record short skips instead of producing
+  heavyweight governance artifacts;
+- risky paths escalate before mutating long-lived specs or future agent inputs;
 - owners review small decision contexts and deltas rather than regenerated
   long-lived specs;
+- human judgment checkpoints include enough terms, tradeoffs, evidence, and
+  consequences before the answer is collected;
 - old specs are classified before migration instead of silently cleaned up;
 - requirement updates are mechanically traceable to approved deltas or
   clarifications;
-- behavior harness scenarios prove the original drift, routing, compaction, and
-  human-review failures are fixed.
+- behavior harness scenarios prove the original routing, overweight-process,
+  drift, compaction, and human-review failures are fixed.
 
 ## Suggested Roadmap
 
@@ -396,13 +416,17 @@ Acceptance:
 - Extend `codestable-maintainer/tools/verify.py` so behavior regression becomes
   part of CodeStable workflow changes once the runner is stable.
 
-### Phase 7: Spec Governance And Drift Control
+### Phase 7: Global Route Governance And Spec Drift Control
 
-- Implement the roadmap in `references/spec-governance-roadmap.md`.
-- Update brainstorm, design, roadmap, req, and accept workflows with owner
-  context, router, clarification, delta, rehabilitation, and analyze-pass rules.
-- Add behavior scenarios for each governance failure mode before calling the
-  behavior stable.
+- Implement `references/global-route-governance.md`.
+- Implement the L3/L4 specialization in `references/spec-governance-roadmap.md`.
+- Update `cs`, all root routers, all `cs-*` skills, review authorization, and
+  finish/merge workflows with context levels, escalation triggers, owner-stop
+  conditions, allowed artifacts, skip records, finish checks, and harness
+  scenario coverage.
+- Add behavior scenarios for light paths, escalation paths, spec drift,
+  compaction recovery, and finish/merge readiness before calling the behavior
+  stable.
 
 ## Non-Goals
 

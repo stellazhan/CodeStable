@@ -1,10 +1,15 @@
 # Spec Governance And Drift Control Roadmap
 
+This roadmap is the L3/L4 spec-facing extension of
+`global-route-governance.md`. The global matrix owns route-time behavior for all
+`cs` and `cs-*` flows. This file owns the heavier rules for long-lived specs,
+requirement deltas, clarifications, analyze passes, and historical drift.
+
 ## Owner Brief（中文）
 
 ### 这解决什么
 
-这条路线让 CodeStable 的长期 spec 可以被人类纠偏，而不是只对 agent 有用。它给 brainstorm 收敛、spec routing、clarification、requirement delta、历史 spec 偏移、acceptance 一致性检查都加上 owner 可读的审阅入口。
+这条路线是全局分流治理矩阵的 L3/L4 专项：让 CodeStable 的长期 spec 可以被人类纠偏，而不是只对 agent 有用。它给 brainstorm 收敛后的正式落档、spec routing、clarification、requirement delta、历史 spec 偏移和 acceptance 一致性检查加上 owner 可读的上下文入口。
 
 目标结果是：当 agent 要修改或依赖长期 spec 时，owner 审的是一小段 decision、clarification 或 delta，而不是被迫通读一份重新生成的大文档。
 
@@ -20,7 +25,8 @@
 4. 能力边界变化时生成 requirement delta，并在 acceptance 阶段机械合并。
 5. 对长期 spec 加 no-free-rewrite 和 compaction-review 规则。
 6. 对已经偏移或旧格式的历史 spec 做 rehabilitation。
-7. 完成前运行只读 analyze pass，捕捉术语、覆盖、decision、architecture 漂移。
+7. 所有 spec 相关的人类判断 checkpoint 先给判断上下文，再收集拍板。
+8. 完成前运行只读 analyze pass，捕捉术语、覆盖、decision、architecture 漂移。
 
 ### 需要 owner 拍板什么
 
@@ -29,6 +35,7 @@
 - 历史 spec 和当前代码冲突时，是修代码、修文档，还是两边都要改。
 - 哪些旧 spec 应标记为 current、historical、superseded 或 drift-suspected。
 - AI 提议压缩文档时，是否保留了对人重要的细节。
+- 任何 judgment checkpoint 是否给足了背景、术语、取舍、后果和证据。
 
 ### 如何证明它有效
 
@@ -40,9 +47,9 @@ Make CodeStable long-lived specs human-correctable and agent-consumable without
 letting agents freely rewrite requirements or silently drift away from owner
 intent.
 
-The harness roadmap proves that clean agents reproduce workflow behavior. This
-roadmap defines the spec governance behavior that those agent regressions must
-prove.
+The global route governance matrix defines when a route must escalate into this
+roadmap. The harness roadmap proves that clean agents reproduce both the global
+route behavior and these spec-specific behaviors.
 
 ## Problems Covered
 
@@ -50,8 +57,10 @@ This roadmap covers the failures raised in the owner discussion:
 
 - brainstorm conclusions can be too short for the owner to understand, challenge,
   or approve;
-- owner interviews can be meaningless when CodeStable asks questions before
-  explaining the workflow context, terms, tradeoffs, and why the decision matters;
+- human judgment checkpoints can be meaningless when CodeStable asks for
+  approval, route choices, tradeoff decisions, review sign-off, subagent
+  authorization, merge/finish decisions, or interviews before explaining the
+  workflow context, terms, tradeoffs, evidence, and why the judgment matters;
 - feature specs and checklists can become useful to agents but hard for humans to
   review;
 - Q&A from clarify/grill conversations can evaporate in chat instead of becoming
@@ -70,6 +79,8 @@ This roadmap covers the failures raised in the owner discussion:
 
 - Long-lived specs are not freeform scratchpads. Agents modify them only through
   owner-visible deltas, clarifications, or explicit rehabilitation actions.
+- The global route matrix decides when a workflow is light enough to stay L0/L1
+  and when it must escalate into this L3/L4 spec governance path.
 - Human review targets changes and decisions, not whole regenerated specs.
 - Chat is not the record. Owner decisions must land in artifacts.
 - Code is production reality, but not always product intent. Conflicts between
@@ -104,13 +115,18 @@ Required sections:
 The agent stops for owner approval before formal spec changes unless the owner
 has already explicitly approved the same decision in the current turn.
 
-### 1.5 Owner Interview Context Gate
+### 1.5 Human Judgment Context Gate
 
-Before CodeStable interviews the owner about a workflow, roadmap, design, or
-governance decision, it must provide enough context for the owner to answer
-meaningfully.
+Before CodeStable asks the owner or a human reviewer to judge, approve, choose,
+authorize, defer, accept, merge, finish, or answer an interview-style question,
+it must provide enough context for the human to decide meaningfully.
 
-Required interview preface:
+This gate applies to interviews, approval prompts, review sign-offs, route
+choices, spec-change decisions, subagent authorization, finish/merge readiness,
+and any other CodeStable checkpoint where a human answer changes what happens
+next.
+
+Required judgment preface:
 
 - what decision is being made;
 - why this question is being asked now;
@@ -125,7 +141,9 @@ The agent must not ask shorthand questions such as "Do you accept sterile
 actor?" until it has explained what `sterile actor` means, why it matters, and
 what accepting it changes.
 
-For multi-question interviews, each section should follow this shape:
+For multi-question interviews, each section should follow this shape. For
+single approval or judgment checkpoints, compress the same fields into a short
+context brief and one direct question:
 
 ```text
 Context: {one short paragraph}
@@ -133,12 +151,12 @@ Term: {definition if needed}
 Why it matters: {risk or failure mode}
 Options: {2-4 options with tradeoffs}
 Default: {recommended option and reason}
-Question: {one direct owner decision}
+Question: {one direct owner or human judgment}
 ```
 
-If the owner says the interview lacks context, the interview must restart with a
-context brief before collecting answers. The failed interview should be treated
-as a behavior-harness regression seed.
+If the owner or reviewer says the checkpoint lacks context, CodeStable must
+restart with a context brief before collecting the answer. The failed checkpoint
+should be treated as a behavior-harness regression seed.
 
 ### 2. Spec Router Before Spec Work
 
@@ -268,83 +286,39 @@ Checks:
 The analyze pass reports findings and recommended owner actions. It does not
 change files by itself.
 
-## Human Context Requirements Matrix
+## Relationship To Global Route Governance
 
-Not every CodeStable route needs the same amount of owner-facing context. The
-rule is: if a step changes long-lived intent, future agent inputs, or owner
-decision boundaries, it needs explicit human context. If it only executes an
-approved plan or reports deterministic status, concise evidence is enough.
+The context levels, route matrix, route-time contract, flow-time contract,
+finish-time contract, skip rules, and route-level harness scenarios are defined
+in `global-route-governance.md`.
 
-### Context Levels
+This roadmap only owns the L3/L4 specialization:
 
-| Level | Use when | Required owner-facing material |
-|---|---|---|
-| L0: status/evidence only | Pure status, validation, or mechanical sync | command/result summary and next action |
-| L1: scope context | Local work that does not change long-lived intent | scope, evidence, explicit non-goals |
-| L2: owner decision context | Direction, tradeoff, or route must be chosen | decision brief, alternatives, risks, owner checklist |
-| L3: spec-change context | Long-lived spec or future agent input changes | spec router, clarifications, req delta, analyze findings |
-| L4: rehabilitation context | Existing specs are stale, conflicting, or old-style | inventory, drift findings, owner classification decisions |
+- how a route proves it has crossed from local work into long-lived spec change;
+- which spec artifacts are allowed to change;
+- how clarifications and requirement deltas are recorded;
+- how old or conflicting specs are rehabilitated;
+- how analyze findings block, warn, or become owner decisions.
 
-### Route Matrix
-
-| Route | Default level | Human context required |
-|---|---|---|
-| `cs` | L1 | Routing summary: why this route, what active work was noticed, and what the next skill will decide. |
-| `cs-onboard` | L2/L4 | Empty repo can stay L1. Existing docs require inventory, mapping, trusted/stale classification, and owner approval before migration. |
-| `cs-brainstorm` | L1 -> L2 | Freeform discussion stays light. When the owner accepts a direction or asks for the next step, produce owner decision context. |
-| `cs-roadmap` | L2/L3 | Chinese owner brief, scope/non-goals, phases, owner decisions, clarifications, and any spec deltas implied by the roadmap. |
-| `cs-feat` | L1 | Stage routing and whether this is design, fast-forward, implementation, or acceptance. Ambiguous route requires a short decision prompt. |
-| `cs-feat-design` | L2/L3 | Spec router, selected/excluded specs, clarifications, owner-readable design brief, and req-delta draft when capability boundaries change. |
-| `cs-feat-ff` | L1/L3 | Small local changes use scope plus ff-note. If capability boundaries change, upgrade to design or req-delta flow. |
-| `cs-feat-impl` | L0/L3 | Approved checklist execution needs only evidence. Any design/checklist/spec deviation requires spec-change review. |
-| `cs-feat-accept` | L3 | Analyze findings, req-delta apply summary, architecture/roadmap backwrite summary, and unresolved owner decisions. |
-| `cs-issue` | L1 | Issue route summary: report, analyze, or fix, plus next action. |
-| `cs-issue-report` | L1 | Reproduction, expected behavior, impact, environment, and evidence. |
-| `cs-issue-analyze` | L2 | Root cause, fix options, tradeoffs, risks, and recommendation. |
-| `cs-issue-fix` | L0/L3 | Follow approved analysis. If the bug exposes a wrong spec or capability boundary, produce spec-change review. |
-| `cs-refactor` | L2 | Behavior-preserving boundary, scope, risks, rollback/verification, and what is explicitly not changing. |
-| `cs-refactor-ff` | L1/L2 | Small refactors use light scope. Cross-module or risky refactors require refactor decision context. |
-| `cs-req` | L3 | Requirement draft/update/backfill always needs owner-readable context, routing metadata, and no-free-rewrite constraints. |
-| `cs-arch` | L1/L3 | Current-state code facts can use L1. Code/doc/intent conflicts need analyze findings and owner decision. |
-| `cs-audit` | L1/L2 | Findings summary and evidence. Choosing what to fix or defer requires triage decision context. |
-| `cs-explore` | L1/L2 | Question, evidence read, conclusion, and reuse value. If it becomes a decision or spec change, upgrade to L2/L3. |
-| `cs-decide` | L2/L3 | Decision brief, alternatives, tradeoffs, scope, reversal condition, and affected specs. |
-| `cs-learn` | L1 | Trigger, lesson, evidence, and future avoidance rule. |
-| `cs-trick` | L1/L2 | Applicability, non-applicability, example, and risk. Project-wide rules should upgrade to `cs-decide`. |
-| `cs-note` | L1 | Why the note belongs in always-loaded attention, target section, and expected lifetime. |
-| `cs-guide` | L1/L2 | Target reader, task scenario, source facts. User-visible behavior changes require owner review. |
-| `cs-libdoc` | L1 | Public surface source, signature, example, and evidence. Unclear semantics require clarification before writing docs. |
-
-### Escalation Rules
-
-Upgrade to L2/L3 when any route answers one of these questions:
-
-- Should we do this, defer it, or choose another direction?
-- Which long-lived spec is canonical for this work?
-- Does this change user-visible capability or boundary?
-- Does code disagree with requirement, roadmap, architecture, or decision docs?
-- Will this update influence future agents beyond this local task?
-- Is the agent proposing to compact, reorganize, or rewrite long-lived docs?
-
-Stay at L0/L1 when the route only:
-
-- executes an approved checklist;
-- runs tests, linters, validators, doctor, inbox, or commit planner;
-- applies an already approved delta mechanically;
-- reports status without changing owner intent or long-lived docs.
+The global matrix must stay the source of truth for whether a lightweight route
+can remain L0/L1. This file must not require heavy spec artifacts for small
+feature fast paths, local refactors, simple bug fixes, status checks, or docs
+updates that do not change capability boundaries or future agent behavior.
 
 ## Areas Requiring Further Detail
 
-The matrix above is one example of a principle that must become executable
-before implementation. The same roadmap still needs these details before the
-phase can be called stable:
+The global route matrix must become executable before this spec roadmap can be
+called stable. This roadmap still needs these L3/L4 details before the phase is
+implemented:
 
 - Artifact schemas: exact frontmatter and required sections for owner context,
   clarifications, req deltas, compaction reviews, inventory, and analyze reports.
-- Owner-stop semantics: which steps must stop for approval, which can continue
-  with a recorded default, and how current-turn approval is recognized.
-- Skip thresholds: concrete rules for when small UI tweaks, local refactors, or
-  bug fixes do not need requirement deltas or roadmap updates.
+- Owner-stop semantics for spec changes: which spec edits must stop for
+  approval, which can continue with a recorded default, and how current-turn
+  approval is recognized.
+- Skip thresholds for spec artifacts: concrete rules for when small UI tweaks,
+  local refactors, or bug fixes do not need requirement deltas or roadmap
+  updates.
 - Severity model: how analyze findings become blocking, warning, deferred
   backlog, or non-goal.
 - Canonical conflict policy: how to ask the owner when code, tests, acceptance,
@@ -361,6 +335,21 @@ phase can be called stable:
 
 ## Skill Integration Roadmap
 
+### SG0: Global Route Governance Dependency
+
+Implement the root protocol in `global-route-governance.md` before treating any
+spec-facing update as stable.
+
+Acceptance:
+
+- every routed `cs-*` workflow declares default context level, escalation
+  triggers, owner-stop conditions, allowed artifacts, skip-record format,
+  finish-time checks, and matching harness scenarios;
+- global route scenarios prove that small paths stay light and risky paths
+  escalate before the spec-specific rules below run;
+- this spec roadmap is only invoked when the global route matrix reaches L3 or
+  L4.
+
 ### SG1: Owner Decision Context
 
 Update `cs-brainstorm` so convergence into feature, roadmap, or requirement work
@@ -372,17 +361,20 @@ Acceptance:
 - once proceeding, an owner-readable decision artifact exists;
 - the default chat reply stays concise and points to the artifact.
 
-### SG2: Owner Interview Context
+### SG2: Spec Judgment Context
 
-Add interview preface rules to `cs-brainstorm`, `cs-roadmap`,
-`cs-feat-design`, `cs-req`, and `codestable-maintainer`.
+Add judgment preface rules to spec-changing paths in `cs-brainstorm`,
+`cs-roadmap`, `cs-feat-design`, `cs-feat-accept`, `cs-req`, `cs-decide`,
+`cs-onboard`, and `codestable-maintainer`.
 
 Acceptance:
 
-- interviews define non-obvious terms before asking about them;
-- each question states why it matters and what the answer changes;
-- owner can ask for more context and the agent restarts the interview instead of
-  continuing the original low-context flow.
+- any prompt that asks a human to choose, approve, authorize, accept, defer, or
+  sign off defines non-obvious terms before asking about them;
+- each checkpoint states why it matters, the options or expected answer shape,
+  the recommendation, and what the answer changes;
+- owner can ask for more context and the agent restarts the checkpoint instead
+  of continuing the original low-context flow.
 
 ### SG3: Spec Router
 
@@ -460,8 +452,9 @@ prove the rule in a sterile or compacted actor context.
 
 | Problem | Scenario | Expected proof |
 |---|---|---|
+| Global route governance is only described, not reproducible | `cs-route-brief-minimal`, `fast-path-stays-light`, `fast-path-escalates-on-boundary` | The global route scenarios pass before spec-specific scenarios are considered stable. |
 | Brainstorm result is too terse to approve | `brainstorm-owner-context` | Owner context artifact exists and the agent stops before formal spec changes. |
-| Interview questions lack context | `owner-interview-context` | The actor defines terms, explains why each decision matters, states option tradeoffs, and restarts if the owner asks for more context. |
+| Human judgment checkpoint lacks context | `owner-judgment-context` | The actor defines terms, explains why the judgment matters, states option tradeoffs, shows evidence, and restarts if the owner asks for more context. |
 | Agent chooses the wrong requirement | `feat-design-clarify` | Spec router lists selected and excluded docs, then asks clarification if ambiguous. |
 | Small UI tweak pollutes requirements | `small-ui-no-req-delta` | Requirement files remain unchanged; local feature artifact records the work. |
 | Capability boundary changes need durable owner review | `capability-boundary-req-delta` | A req delta is created and the long-lived requirement is not rewritten directly. |

@@ -48,7 +48,7 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 python3 .codestable/tools/codestable-doctor.py --root . --json
 ```
 
-若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 `Review options` 二选一问；选 1 后继续，只有平台无 subagent 能力时选 2 才能继续。
+若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 review authorization judgment checkpoint 提供背景、术语、取舍、默认建议和非自动动作；用户授权 subagent 后继续，只有平台无 subagent 能力时 inline review 才能继续。
 
 fastforward 通常动手后才生成 `{slug}-ff-note.md`，所以不提前造空 unit。写完 ff-note 和 review 证据后，对最终 unit 跑 commit gate：
 

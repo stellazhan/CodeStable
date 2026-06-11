@@ -251,6 +251,112 @@ def test_context_packet_builds_chinese_audience_report_with_layered_context(tmp_
     assert "[REDACTED]" in packet
 
 
+def test_context_packet_builds_chinese_owner_judgment_report(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    (repo / "docs").mkdir()
+    (repo / "docs/spec.md").write_text("# Spec\n", encoding="utf-8")
+
+    packet = context_packet.build_packet(
+        repo,
+        ".codestable/features/2026-06-03-demo",
+        "owner-judgment",
+        ["需要在 acceptance 前判断 spec delta 是否可以落档"],
+        ["不把 low-context yes 当成 owner approval"],
+        ["缺少取舍背景会让人审变成形式确认"],
+        ["docs/spec.md"],
+        ["等待 owner 判断是否继续实现"],
+        ["global-route-governance.md -> Route Matrix"],
+        "zh",
+        judgment=["判断 acceptance 前的 spec delta 是否可以落档"],
+        why_now=["下一步会影响长期 requirement，不能只靠聊天里的 yes"],
+        terms=["owner-judgment = 需要人类判断且会改变下一步动作的 checkpoint"],
+        options=["批准 delta 并进入 acceptance；或退回 clarification 补齐上下文"],
+        default_recommendation=["先补齐 delta context 再批准，因为这是长期 spec 变更"],
+        effects=["批准后会生成或应用 req delta；拒绝后回到 clarify / design"],
+        non_automatic=["不会自动 merge、push、归档旧 spec 或启动 subagent"],
+    )
+
+    assert "# CodeStable Owner 判断上下文" in packet
+    assert "请基于这份上下文中的判断点、取舍和证据做出选择" in packet
+    assert "## 判断上下文" in packet
+    assert "### 需要判断" in packet
+    assert "- 判断 acceptance 前的 spec delta 是否可以落档" in packet
+    assert "### 为什么现在问" in packet
+    assert "### 选项与取舍" in packet
+    assert "### 默认建议" in packet
+    assert "### 回答后的影响" in packet
+    assert "### 不会自动执行的动作" in packet
+    assert "## 决策简报" in packet
+    assert "## 工作上下文" in packet
+    assert "## 证据附录" in packet
+    assert "- 需要在 acceptance 前判断 spec delta 是否可以落档" in packet
+    assert "- 不把 low-context yes 当成 owner approval" in packet
+    assert "- docs/spec.md" in packet
+    assert "- global-route-governance.md -> Route Matrix" in packet
+
+
+def test_context_sufficiency_requires_owner_judgment_context_fields(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    packet_path = tmp_path / "owner-judgment.md"
+    packet_path.write_text(
+        context_packet.build_packet(
+            repo,
+            ".codestable/features/2026-06-03-demo",
+            "owner-judgment",
+            ["Use packets"],
+            ["Do not rely on chat history"],
+            ["Missing judgment context blocks approval"],
+            ["docs/spec.md"],
+            ["Finish review"],
+            ["pytest -> passed"],
+            "zh",
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is False
+    assert any(finding["code"] == "missing_judgment" for finding in payload["findings"])
+    assert any(finding["code"] == "missing_options" for finding in payload["findings"])
+    assert any(finding["code"] == "missing_non_automatic" for finding in payload["findings"])
+
+
+def test_context_sufficiency_accepts_complete_owner_judgment_context(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+    make_feature_unit(repo)
+    packet_path = tmp_path / "owner-judgment.md"
+    packet_path.write_text(
+        context_packet.build_packet(
+            repo,
+            ".codestable/features/2026-06-03-demo",
+            "owner-judgment",
+            ["Use packets"],
+            ["Do not rely on chat history"],
+            ["Missing judgment context blocks approval"],
+            ["docs/spec.md"],
+            ["Finish review"],
+            ["pytest -> passed"],
+            "zh",
+            judgment=["Approve subagent review for this implementation branch"],
+            why_now=["Review authorization changes who will inspect the code before completion"],
+            terms=["subagent review = a separate reviewer agent performs read-only implementation review"],
+            options=["Subagent review: stronger independence; Inline review: only when subagents are unavailable"],
+            default_recommendation=["Subagent review, because this platform has subagent support"],
+            effects=["After approval, CodeStable can dispatch the reviewer before completion"],
+            non_automatic=["Approval does not commit, merge, push, or accept P0/P1 review findings"],
+        ),
+        encoding="utf-8",
+    )
+
+    payload = context_sufficiency.check_packet(packet_path, strict=True)
+
+    assert payload["ok"] is True
+    assert payload["shape"] == "audience-report"
+
+
 def test_context_packet_rejects_chinese_handoff_shape(tmp_path: Path) -> None:
     repo = init_repo(tmp_path)
     make_feature_unit(repo)
