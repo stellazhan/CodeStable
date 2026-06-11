@@ -1,6 +1,6 @@
 ---
 name: cs-feat-accept
-description: feature 流程阶段 3——验收闭环：对照 design 核实现 + 回写 architecture / requirement / roadmap，最后产出 {slug}-acceptance.md。触发：用户说"功能写完了验收一下"、"做最后检查"、"准备 merge"、"出验收报告"。前置依赖 cs-feat-impl 完成。
+description: feature 流程阶段 3——验收闭环：对照 design 核实现 + 归并 architecture / requirement delta / roadmap 状态，最后产出 {slug}-acceptance.md。触发：用户说"功能写完了验收一下"、"做最后检查"、"准备 merge"、"出验收报告"。前置依赖 cs-feat-impl 完成。
 ---
 
 # cs-feat-accept
@@ -12,11 +12,11 @@ description: feature 流程阶段 3——验收闭环：对照 design 核实现 
 代码已经写完，但流程没结束。本阶段做四件事，缺一不可：
 
 1. **核对实现有没有偏离方案**——逐层对照 `{slug}-design.md`，发现偏差当场修，**不是在报告里"记一下"**就过去
-2. **把 feature 归并到整体架构**——对照方案第 4 节，实际去更新架构中心目录下的相关 doc
-3. **能力落档到 requirement**——draft req 对应的能力实现完成后升级为 current（保留愿景，追加变更日志）；从未写过 req 的能力 backfill
+2. **把 feature 归并到整体架构**——对照方案第 4 节，实际去更新架构中心目录下的相关 doc；若代码、design、架构现状或 owner intent 冲突，先生成 analyze finding 并停等 owner 判断
+3. **能力落档到 requirement**——只允许应用已批准的 requirement delta、追加 clarification、或记录明确 skip / no-change；发现缺 delta 或长期 spec 冲突时停下，不直接重写 requirement
 4. **完成状态回写到 roadmap**——方案 frontmatter 有 `roadmap` / `roadmap_item` 字段时**必须**改 items.yaml 对应条目为 `done` 并同步主文档
 
-漏掉任何一件的代价：架构 doc 过期下个 feature 读到错信息；req 和实际能力脱节；roadmap 规划层和实际进度脱节，下次推进会重复跑流程。
+漏掉任何一件的代价：架构 doc 过期下个 feature 读到错信息；req 和实际能力脱节；roadmap 规划层和实际进度脱节，下次推进会重复跑流程。反过来，没经过 delta / clarification / analyze 的长期 spec 直写也会制造漂移。
 
 **没产出报告 = 工作流未完成**。后人查"上次这个功能验收时确认了哪些行为"，没报告就只能翻 git diff 重新推断。
 
@@ -40,12 +40,28 @@ description: feature 流程阶段 3——验收闭环：对照 design 核实现 
 
 ---
 
+## Global Route Governance
+
+`cs-feat-accept` 默认是 L3：它可能写长期 architecture / requirement /
+roadmap 状态，并决定 feature 是否可进入 finish / merge。必须遵守全局 route
+governance：
+
+- requirement 不允许在 accept 阶段自由重写；
+- capability-boundary 变化必须先有 owner-approved requirement delta；
+- 没有 delta 但需要改 requirement 时，停止并生成 owner-judgment context；
+- code / design / requirement / architecture / decision 冲突时，先运行只读
+  analyze pass，记录 finding，再等 owner 判断；
+- 小范围无 requirement 影响的 feature 可以记录 skip，不生成 delta；
+- roadmap `status` 只做机械完成状态回写，不替 owner 改 scope。
+
+---
+
 ## 启动检查
 
 1. **代码确实实现到位**——git status / 最近提交看到本功能改动，否则退回 implement
 2. **方案 doc 完整**——frontmatter `doc_type=feature-design` / `feature` 一致 / `status=approved` / `summary` 非空 / `tags` ≥ 2；标准 design 第 0/1/2/3 节 + 第 4 节已填写
 3. **`{slug}-checklist.yaml`**——存在且 `feature` 一致；`steps` 全 `done`（有 `pending` 退回 implement）；`checks` 非空全 `pending`
-4. **上下文读全**——方案 doc 全文（重点：第 1 节明确不做、2.1 接口示例、2.2 流程级约束、2.3 挂载点、第 3 节场景）+ checklist + 第 4 节提到的所有架构 doc + 本次代码改动（git log / diff）
+4. **上下文读全**——方案 doc 全文（重点：第 1 节明确不做、2.1 接口示例、2.2 流程级约束、2.3 挂载点、第 3 节场景）+ checklist + 第 4 节提到的所有架构 doc + 本次代码改动（git log / diff）+ feature 目录下已有 `*-req-delta.md` / clarifications / analyze findings
 5. **断点恢复**——`{slug}-acceptance.md` 已存在且部分填好 → 从下一个未完成节继续，跳过 checks 中已 `passed` 的项；汇报"上次做到第 X 节，从第 Y 节继续"
 
 **Fastforward design 验收报告映射表**：
