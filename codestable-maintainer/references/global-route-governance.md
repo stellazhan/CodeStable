@@ -192,8 +192,8 @@ explicit non-goal. Core scenarios:
 | `fast-path-escalates-on-boundary` | A fast path that discovers capability-boundary change upgrades to L3 before spec mutation. |
 | `issue-fix-escalates-on-wrong-spec` | A bug fix can proceed locally, but wrong long-lived specs become analyze/delta owner review. |
 | `guide-user-contract-review` | User-visible guide or libdoc changes that alter public understanding require L2/L3 context. |
-| `finish-worktree-governance` | Finish checks learner/context report freshness, `covered_head`, inbox status, and merge readiness. |
-| `compact-route-recovery` | A compacted actor recovers route, context level, and next action from artifacts/tools instead of chat. |
+| `finish-inbox-stale-report` | Finish checks learner/context report freshness, `covered_head`, inbox status, stale-report, and merge readiness. |
+| `compact-resume-next-action` | A compacted actor recovers route, context level, and next action from artifacts/tools instead of chat. |
 
 Required graders:
 

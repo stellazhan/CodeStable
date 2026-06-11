@@ -116,7 +116,7 @@ def learner_report_text(
             f"base_ref: {base_ref}",
             f"covered_head: {head}",
             f"covered_diff: {base_ref}...{head}",
-            "status: ready-for-merge",
+            "status: ready-to-merge",
             "---",
             "",
             f"# {slug} 学习报告",

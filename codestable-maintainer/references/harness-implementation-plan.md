@@ -362,7 +362,7 @@ branch: codex/example
 base_ref: main
 covered_head: abc123
 covered_diff: main...abc123
-status: ready-for-merge
+status: ready-to-merge
 ```
 
 Required learner report sections:
