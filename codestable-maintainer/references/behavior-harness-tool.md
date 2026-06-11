@@ -169,3 +169,8 @@ fresh clone whenever workflow-affecting files change. A CodeStable workflow
 prompt or tool change is not stable until this suite passes in `sterile` mode,
 and live-agent stability remains a separate manual eval layer until the live
 adapter is reliable enough for scheduled runs.
+
+The current roadmap is complete at the deterministic verifier plus manual
+`live-codex` smoke layer. Scheduled live eval and true live compaction eval are
+Phase 2 work, not blockers for the current stable definition; see
+`live-eval-phase-2.md`.
