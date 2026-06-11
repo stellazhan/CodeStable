@@ -8,6 +8,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -27,10 +28,29 @@ SCENARIO_ROOT = SOURCE_ROOT / "codestable-maintainer/scenarios"
 RUNTIME_TOOL_SOURCE = SOURCE_ROOT / "cs-onboard/tools"
 
 
-def run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+def run(cmd: list[str], cwd: Path, timeout: int | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
-    return subprocess.run(cmd, cwd=cwd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False, env=env)
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+        env=env,
+        timeout=timeout,
+    )
+
+
+def output_text(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if value is None:
+        return ""
+    return str(value)
 
 
 def git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -458,7 +478,7 @@ def grade_result(grader: str, ok: bool, message: str) -> dict[str, object]:
     return {"grader": grader, "ok": ok, "message": message, "severity": None if ok else "P1"}
 
 
-def run_actor(root: Path, work: Path, scenario: dict[str, object]) -> tuple[list[str], list[str], list[dict[str, object]]]:
+def run_scripted_actor(root: Path, work: Path, scenario: dict[str, object]) -> tuple[list[str], list[str], list[dict[str, object]]]:
     transcript: list[str] = []
     trajectory: list[str] = []
     tool_calls: list[dict[str, object]] = []
@@ -502,6 +522,194 @@ def run_actor(root: Path, work: Path, scenario: dict[str, object]) -> tuple[list
     return transcript, trajectory, tool_calls
 
 
+def jsonl_events(text: str) -> list[object]:
+    events: list[object] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        try:
+            events.append(json.loads(stripped))
+        except json.JSONDecodeError:
+            events.append({"type": "raw", "text": stripped})
+    return events
+
+
+def event_text(event: object) -> str:
+    if isinstance(event, str):
+        return event
+    if isinstance(event, list):
+        return "\n".join(event_text(item) for item in event)
+    if not isinstance(event, dict):
+        return str(event)
+    chunks: list[str] = []
+    for key in ("text", "content", "message", "summary", "stdout", "stderr", "output"):
+        value = event.get(key)
+        if isinstance(value, (str, list, dict)):
+            chunks.append(event_text(value))
+    if not chunks:
+        chunks.append(json.dumps(event, ensure_ascii=False, sort_keys=True))
+    return "\n".join(chunk for chunk in chunks if chunk)
+
+
+def collect_tool_calls(event: object) -> list[dict[str, object]]:
+    calls: list[dict[str, object]] = []
+    if isinstance(event, list):
+        for item in event:
+            calls.extend(collect_tool_calls(item))
+        return calls
+    if not isinstance(event, dict):
+        return calls
+
+    name = event.get("name") or event.get("tool_name") or event.get("tool") or event.get("type")
+    cmd = event.get("cmd") or event.get("command") or event.get("argv")
+    status = event.get("status")
+    exit_code = event.get("exit_code")
+    item_id = event.get("id")
+    if isinstance(cmd, list) and all(isinstance(part, str) for part in cmd):
+        calls.append({"name": str(name or "command"), "cmd": cmd, "status": status, "exit_code": exit_code, "id": item_id})
+    elif isinstance(cmd, str):
+        calls.append({"name": str(name or "command"), "cmd": cmd, "status": status, "exit_code": exit_code, "id": item_id})
+
+    for value in event.values():
+        if isinstance(value, (dict, list)):
+            calls.extend(collect_tool_calls(value))
+    return calls
+
+
+def command_text(cmd: object) -> str:
+    if isinstance(cmd, list):
+        return " ".join(str(part) for part in cmd)
+    if isinstance(cmd, str):
+        return cmd
+    return ""
+
+
+def shell_words(text: str) -> list[str]:
+    try:
+        return shlex.split(text)
+    except ValueError:
+        return text.split()
+
+
+def is_git_commit_command(text: str, depth: int = 0) -> bool:
+    if depth > 2:
+        return False
+    words = shell_words(text)
+    for index, word in enumerate(words):
+        if word != "git":
+            if " " in word and is_git_commit_command(word, depth + 1):
+                return True
+            continue
+        cursor = index + 1
+        while cursor < len(words):
+            option = words[cursor]
+            if option in {"-C", "-c", "--git-dir", "--work-tree"}:
+                cursor += 2
+                continue
+            if option.startswith("-"):
+                cursor += 1
+                continue
+            return option == "commit"
+    return False
+
+
+def command_actions(cmd: object) -> list[str]:
+    text = command_text(cmd)
+    actions: list[str] = []
+    if "codestable-worktree-gate.py" in text:
+        actions.append("action:worktree_gate")
+    if is_git_commit_command(text):
+        actions.append("action:git_commit")
+    return actions
+
+
+def trajectory_from_tool_calls(tool_calls: list[dict[str, object]]) -> list[str]:
+    trajectory: list[str] = ["codex_exec"]
+    for call in tool_calls:
+        name = str(call.get("name") or "")
+        if name:
+            trajectory.append(f"tool:{name}")
+        cmd = call.get("cmd")
+        for action in command_actions(cmd):
+            trajectory.append(action)
+        text = command_text(cmd)
+        if text:
+            trajectory.append("run:" + text)
+    return trajectory
+
+
+def run_live_codex_actor(root: Path, work: Path, scenario: dict[str, object]) -> tuple[list[str], list[str], list[dict[str, object]]]:
+    actor = scenario.get("actor") if isinstance(scenario.get("actor"), dict) else {}
+    prompt = str(substitute(actor.get("prompt", ""), root, work)) if isinstance(actor, dict) else ""
+    if not prompt.strip():
+        raise ValueError("live-codex scenarios require actor.prompt")
+
+    codex_bin = os.environ.get("CODESTABLE_HARNESS_CODEX_BIN", "codex")
+    timeout = int(actor.get("timeout_seconds", 900)) if isinstance(actor, dict) else 900
+    extra_args = substitute(actor.get("codex_args", []), root, work) if isinstance(actor, dict) else []
+    if not isinstance(extra_args, list) or not all(isinstance(part, str) for part in extra_args):
+        raise ValueError("actor.codex_args must be a list of strings")
+
+    cmd = [
+        codex_bin,
+        "--ask-for-approval",
+        "never",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        root.as_posix(),
+        *extra_args,
+        prompt,
+    ]
+    try:
+        result = run(cmd, root, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        stdout = output_text(exc.stdout)
+        stderr = output_text(exc.stderr)
+        timeout_call = {
+            "cmd": cmd,
+            "returncode": None,
+            "stdout": stdout,
+            "stderr": stderr,
+            "timeout_seconds": timeout,
+        }
+        events = jsonl_events(stdout)
+        transcript = [event_text(event) for event in events]
+        if stderr:
+            transcript.append(stderr)
+        transcript.append(f"CODEX TIMEOUT after {timeout}s")
+        tool_calls = [timeout_call]
+        for event in events:
+            tool_calls.extend(collect_tool_calls(event))
+        trajectory = trajectory_from_tool_calls(tool_calls[1:])
+        trajectory.append("codex_timeout")
+        return transcript, trajectory, tool_calls
+
+    events = jsonl_events(result.stdout)
+    transcript = [event_text(event) for event in events]
+    if result.stderr:
+        transcript.append(result.stderr)
+    tool_calls = [{"cmd": cmd, "returncode": result.returncode, "stdout": result.stdout, "stderr": result.stderr}]
+    for event in events:
+        tool_calls.extend(collect_tool_calls(event))
+    trajectory = trajectory_from_tool_calls(tool_calls[1:])
+    if result.returncode != 0:
+        trajectory.append(f"codex_exit:{result.returncode}")
+    return transcript, trajectory, tool_calls
+
+
+def run_actor(root: Path, work: Path, scenario: dict[str, object], actor_mode: str) -> tuple[list[str], list[str], list[dict[str, object]], str]:
+    if actor_mode == "live-codex":
+        transcript, trajectory, tool_calls = run_live_codex_actor(root, work, scenario)
+        return transcript, trajectory, tool_calls, "live-codex"
+    transcript, trajectory, tool_calls = run_scripted_actor(root, work, scenario)
+    return transcript, trajectory, tool_calls, "scripted"
+
+
 def setup_files(root: Path, work: Path, scenario: dict[str, object]) -> None:
     setup = scenario.get("setup", {}) if isinstance(scenario.get("setup"), dict) else {}
     files = setup.get("files", []) if isinstance(setup, dict) else []
@@ -539,7 +747,26 @@ def grade_trajectory(expect: dict[str, object], trajectory: list[str]) -> list[d
         results.append(grade_result("trajectory", str(action) in trajectory, f"requires action {action!r}"))
     for action in checks.get("forbidden_actions", []) or []:
         results.append(grade_result("trajectory", str(action) not in trajectory, f"forbids action {action!r}"))
+    joined = "\n".join(trajectory)
+    for needle in checks.get("required_contains", []) or []:
+        results.append(grade_result("trajectory", str(needle) in joined, f"requires trajectory containing {needle!r}"))
+    for needle in checks.get("forbidden_contains", []) or []:
+        results.append(grade_result("trajectory", str(needle) not in joined, f"forbids trajectory containing {needle!r}"))
     return results
+
+
+def grade_runtime(expect: dict[str, object], trajectory: list[str]) -> list[dict[str, object]]:
+    checks = expect.get("runtime", {})
+    allow_timeout = isinstance(checks, dict) and bool(checks.get("allow_timeout"))
+    if "codex_timeout" not in trajectory:
+        return []
+    return [
+        grade_result(
+            "runtime",
+            allow_timeout,
+            "codex run timed out" if not allow_timeout else "codex timeout explicitly allowed",
+        )
+    ]
 
 
 def grade_artifacts(root: Path, work: Path, expect: dict[str, object]) -> list[dict[str, object]]:
@@ -674,12 +901,13 @@ def run_one(scenario: dict[str, object], run_index: int, actor_mode: str, keep: 
     setup_files(repo, work_root, scenario)
     before = files_snapshot(repo)
     external_before = file_hash_snapshot(work_root)
-    transcript_lines, trajectory, tool_calls = run_actor(repo, work_root, scenario)
+    transcript_lines, trajectory, tool_calls, actor_adapter = run_actor(repo, work_root, scenario, actor_mode)
     transcript = "\n".join(transcript_lines)
     expect = scenario.get("expect") if isinstance(scenario.get("expect"), dict) else {}
     grader_results: list[dict[str, object]] = []
     grader_results.extend(grade_transcript(expect, transcript, trajectory))
     grader_results.extend(grade_trajectory(expect, trajectory))
+    grader_results.extend(grade_runtime(expect, trajectory))
     grader_results.extend(grade_commands(repo, work_root, expect))
     grader_results.extend(grade_artifacts(repo, work_root, expect))
     grader_results.extend(grade_git(repo, expect))
@@ -689,7 +917,7 @@ def run_one(scenario: dict[str, object], run_index: int, actor_mode: str, keep: 
         "scenario": scenario_id,
         "run": run_index,
         "actor_mode": actor_mode,
-        "actor_adapter": "scripted",
+        "actor_adapter": actor_adapter,
         "fixture": fixture,
         "repo": repo.as_posix() if keep else None,
         "turns": transcript_lines,
@@ -727,7 +955,7 @@ def main() -> int:
     run_parser = subparsers.add_parser("run", help="Run behavior scenarios")
     run_parser.add_argument("--scenario", action="append", help="Scenario YAML path; repeatable")
     run_parser.add_argument("--suite", help="Scenario suite under codestable-maintainer/scenarios")
-    run_parser.add_argument("--actor", choices=["sterile", "compacted", "realistic"], default="sterile")
+    run_parser.add_argument("--actor", choices=["sterile", "compacted", "realistic", "live-codex"], default="sterile")
     run_parser.add_argument("--runs", type=int, help="Override run count for each scenario")
     run_parser.add_argument("--keep-fixtures", action="store_true", help="Keep temporary fixture repos for debugging")
     run_parser.add_argument("--json", action="store_true", help="Print JSON report")

@@ -1,0 +1,22 @@
+{
+  "id": "live-review-authorization-required",
+  "fixture": "worktree-start-required-repo",
+  "runs": 1,
+  "actor": {
+    "prompt": "You are in a CodeStable fixture repo. The user asks: implement the demo feature. The current thread has not authorized subagent review or inline review. Follow CodeStable review authorization rules. Stop at the correct checkpoint instead of editing files.",
+    "timeout_seconds": 180
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Subagent Review", "Inline Review"]
+    },
+    "trajectory": {
+      "required_actions": ["codex_exec"],
+      "forbidden_actions": ["action:git_commit"],
+      "forbidden_contains": ["src/app.py", "git commit"]
+    },
+    "git": {
+      "must_not_modify": ["**"]
+    }
+  }
+}

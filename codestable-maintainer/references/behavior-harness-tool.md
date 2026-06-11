@@ -9,6 +9,12 @@ This is still useful because every workflow rule can gain a small failing
 scenario before prompt or tool changes are called stable. Future live-agent
 adapters must keep the same result format and graders.
 
+The runner also has an explicit `live-codex` adapter for manual live-agent
+trajectory checks. It shells out to `codex exec --json --ephemeral` inside the
+fixture repository, captures JSONL events as trace text, and best-effort
+extracts tool command trajectories. Live runs are intentionally not part of the
+default verifier because they are model- and environment-dependent.
+
 ## Run
 
 ```bash
@@ -30,6 +36,21 @@ python3 codestable-maintainer/tools/agent-behavior-harness.py run \
 Passing `--scenario` suppresses the default critical suite unless another
 scenario is also passed.
 
+Run the live Codex smoke suite explicitly:
+
+```bash
+python3 codestable-maintainer/tools/agent-behavior-harness.py run \
+  --suite live \
+  --actor live-codex \
+  --keep-fixtures \
+  --json
+```
+
+Set `CODESTABLE_HARNESS_CODEX_BIN=/path/to/codex` to test a specific Codex CLI
+binary. Live scenarios should focus on high-risk agent decisions such as
+whether the agent ran worktree gates, stopped for review authorization, or
+avoided installed-copy edits.
+
 ## Scenario Shape
 
 Scenarios live under `codestable-maintainer/scenarios/<suite>/`. They are YAML
@@ -46,6 +67,11 @@ Important fields:
   `owner_stop`, `write`, and `run`.
 - `expect.transcript`: required text, forbidden text, and owner stops.
 - `expect.trajectory`: required and forbidden workflow actions.
+  `required_contains` and `forbidden_contains` allow substring checks across
+  live-agent tool trajectories.
+- `expect.runtime`: runtime-level checks. Live Codex timeouts fail by default;
+  use `allow_timeout: true` only for parser/diagnostic scenarios that
+  intentionally test partial timeout traces.
 - `expect.artifacts`: existing/created files and content checks.
 - `expect.git`: allowed or forbidden dirty path globs.
 - `expect.commands`: command exit, stdout/stderr, and JSON assertions,
@@ -56,6 +82,16 @@ Important fields:
 Path strings may use `{root}` for the fixture repo, `{work}` for the scenario
 temporary root, and `{source}` for the CodeStable source checkout containing
 the harness.
+
+Live scenarios live under `codestable-maintainer/scenarios/live/`. Their
+`actor.prompt` is sent to `codex exec`; optional `actor.timeout_seconds` and
+`actor.codex_args` customize the live run.
+
+Live trajectory extraction also emits coarse normalized actions when possible,
+including `action:worktree_gate` for `codestable-worktree-gate.py` invocations
+and `action:git_commit` for common `git ... commit` command forms. Keep raw
+substring checks for diagnostics, but prefer normalized actions for high-risk
+forbidden behavior.
 
 ## Critical Coverage
 
@@ -94,4 +130,5 @@ The current critical suite covers:
 `codestable-maintainer/tools/verify.py` runs the critical scripted suite from a
 fresh clone whenever workflow-affecting files change. A CodeStable workflow
 prompt or tool change is not stable until this suite passes in `sterile` mode,
-and live-agent stability remains a separate future adapter layer.
+and live-agent stability remains a separate manual eval layer until the live
+adapter is reliable enough for scheduled runs.

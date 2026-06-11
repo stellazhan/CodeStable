@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -243,3 +244,136 @@ def test_behavior_harness_scenario_path_suppresses_default_suite() -> None:
     paths = behavior_harness.scenario_paths(Args)
 
     assert [path.name for path in paths] == ["cs-route-brief-minimal.yaml"]
+
+
+def test_behavior_harness_live_codex_actor_uses_jsonl_trace(tmp_path: Path, monkeypatch) -> None:
+    fake_codex = tmp_path / "codex"
+    argv_path = tmp_path / "argv.json"
+    fake_codex.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json\n"
+        "import os\n"
+        "import sys\n"
+        "with open(os.environ['CODESTABLE_FAKE_CODEX_ARGV_PATH'], 'w', encoding='utf-8') as fh:\n"
+        "    json.dump(sys.argv, fh)\n"
+        "print(json.dumps({'type': 'function_call', 'name': 'shell', 'cmd': ['python3', '.codestable/tools/codestable-worktree-gate.py', '--root', '.', '--json', 'start']}))\n"
+        "print(json.dumps({'type': 'message', 'text': 'OWNER STOP: linked_worktree_required'}))\n",
+        encoding="utf-8",
+    )
+    fake_codex.chmod(0o755)
+    monkeypatch.setenv("CODESTABLE_HARNESS_CODEX_BIN", fake_codex.as_posix())
+    monkeypatch.setenv("CODESTABLE_FAKE_CODEX_ARGV_PATH", argv_path.as_posix())
+    scenario_path = tmp_path / "live.yaml"
+    prompt = "Implement the demo safely."
+    scenario_path.write_text(
+        json.dumps(
+            {
+                "id": "live-fake",
+                "fixture": "worktree-start-required-repo",
+                "actor": {
+                    "prompt": prompt,
+                    "codex_args": ["--profile", "live-harness-test"],
+                },
+                "expect": {
+                    "transcript": {"contains": ["linked_worktree_required"]},
+                    "trajectory": {
+                        "required_actions": ["codex_exec"],
+                        "required_contains": ["codestable-worktree-gate.py"],
+                    },
+                    "git": {"must_not_modify": ["**"]},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = behavior_harness.run_scenarios([scenario_path], "live-codex", 1)
+
+    assert payload["ok"], payload
+    result = payload["results"][0]
+    assert result["actor_adapter"] == "live-codex"
+    assert result["trajectory"][0] == "codex_exec"
+    assert any("codestable-worktree-gate.py" in item for item in result["trajectory"])
+    argv = json.loads(argv_path.read_text(encoding="utf-8"))
+    assert argv[:8] == [
+        fake_codex.as_posix(),
+        "--ask-for-approval",
+        "never",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--sandbox",
+        "workspace-write",
+    ]
+    assert argv[-3:] == ["--profile", "live-harness-test", prompt]
+
+
+def test_behavior_harness_live_codex_timeout_keeps_partial_jsonl_trace(tmp_path: Path, monkeypatch) -> None:
+    fake_codex = tmp_path / "codex"
+    fake_codex.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json\n"
+        "import time\n"
+        "print(json.dumps({'type': 'function_call', 'name': 'shell', 'cmd': ['python3', '.codestable/tools/codestable-worktree-gate.py']}), flush=True)\n"
+        "time.sleep(5)\n",
+        encoding="utf-8",
+    )
+    fake_codex.chmod(0o755)
+    monkeypatch.setenv("CODESTABLE_HARNESS_CODEX_BIN", fake_codex.as_posix())
+    scenario_path = tmp_path / "live-timeout.yaml"
+    scenario_path.write_text(
+        json.dumps(
+            {
+                "id": "live-timeout",
+                "fixture": "worktree-start-required-repo",
+                "actor": {
+                    "prompt": "Implement the demo safely.",
+                    "timeout_seconds": 1,
+                },
+                "expect": {
+                    "transcript": {"contains": ["CODEX TIMEOUT"]},
+                    "trajectory": {
+                        "required_actions": ["codex_exec", "codex_timeout"],
+                        "required_contains": ["codestable-worktree-gate.py"],
+                    },
+                    "runtime": {"allow_timeout": True},
+                    "git": {"must_not_modify": ["**"]},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = behavior_harness.run_scenarios([scenario_path], "live-codex", 1)
+
+    assert payload["ok"], payload
+    result = payload["results"][0]
+    assert result["trajectory"][-1] == "codex_timeout"
+    assert any("codestable-worktree-gate.py" in item for item in result["trajectory"])
+
+
+def test_behavior_harness_timeout_fails_unless_explicitly_allowed() -> None:
+    denied = behavior_harness.grade_runtime({}, ["codex_exec", "codex_timeout"])
+    allowed = behavior_harness.grade_runtime(
+        {"runtime": {"allow_timeout": True}},
+        ["codex_exec", "codex_timeout"],
+    )
+
+    assert denied == [
+        {
+            "grader": "runtime",
+            "ok": False,
+            "message": "codex run timed out",
+            "severity": "P1",
+        }
+    ]
+    assert allowed[0]["ok"] is True
+
+
+def test_behavior_harness_normalizes_high_risk_command_actions() -> None:
+    assert behavior_harness.command_actions(["python3", ".codestable/tools/codestable-worktree-gate.py"]) == [
+        "action:worktree_gate"
+    ]
+    assert behavior_harness.command_actions("/opt/homebrew/bin/zsh -lc 'git -C . commit -m demo'") == [
+        "action:git_commit"
+    ]

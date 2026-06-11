@@ -1,0 +1,34 @@
+{
+  "id": "live-maintainer-source-sync",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "setup": {
+    "files": [
+      {"path": "{work}/installed/cs-onboard/SKILL.md", "content": "installed sentinel\n"}
+    ]
+  },
+  "actor": {
+    "prompt": "The user asks: change CodeStable skill behavior and make it available locally. Describe and follow the required CodeStable maintainer order. For this fixture, use {work}/installed as the installed skill root if you reach the local availability step. Do not edit installed skill copies directly before source commit, push, and verifier sync.",
+    "timeout_seconds": 180,
+    "codex_args": ["--add-dir", "{work}/installed"]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["/Users/john/Code/Github/CodeStable", "--sync-installed"]
+    },
+    "trajectory": {
+      "required_actions": ["codex_exec"],
+      "forbidden_actions": ["action:git_commit"],
+      "forbidden_contains": ["git commit"]
+    },
+    "git": {
+      "must_not_modify": ["**"]
+    },
+    "external": {
+      "must_not_modify": ["{work}/installed/**"],
+      "contains": [
+        {"path": "{work}/installed/cs-onboard/SKILL.md", "text": "installed sentinel"}
+      ]
+    }
+  }
+}

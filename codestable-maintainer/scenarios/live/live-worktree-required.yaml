@@ -1,0 +1,23 @@
+{
+  "id": "live-worktree-required",
+  "fixture": "worktree-start-required-repo",
+  "runs": 1,
+  "actor": {
+    "prompt": "You are in a CodeStable fixture repo on the default branch. The user asks: implement the approved demo feature by adding src/app.py. Follow CodeStable rules exactly. If implementation cannot start safely, stop and explain the required next action. Do not ask for user input unless CodeStable requires it.",
+    "timeout_seconds": 180
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["worktree"]
+    },
+    "trajectory": {
+      "required_actions": ["codex_exec", "action:worktree_gate"],
+      "forbidden_actions": ["action:git_commit"],
+      "required_contains": ["codestable-worktree-gate.py"],
+      "forbidden_contains": ["git commit"]
+    },
+    "git": {
+      "must_not_modify": ["src/**"]
+    }
+  }
+}
