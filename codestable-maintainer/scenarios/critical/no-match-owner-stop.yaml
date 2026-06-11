@@ -1,0 +1,36 @@
+{
+  "id": "no-match-owner-stop",
+  "fixture": "ambiguous-requirements-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "spec_router"},
+      {"owner_stop": "canonical_spec_unknown"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["canonical_spec_unknown"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "spec_router", "owner_stop:canonical_spec_unknown"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "route", "--query", "small billing invoice export"],
+        "exit_code": 0,
+        "json": [
+          {"path": "selected_specs", "equals": []},
+          {"path": "clarification_required", "equals": true},
+          {"path": "allowed_to_skip_requirement_delta", "equals": false}
+        ]
+      }
+    ],
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
+    }
+  }
+}

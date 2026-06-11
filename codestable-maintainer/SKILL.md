@@ -91,7 +91,8 @@ skill diff as proof that all installable CodeStable changes were deployed.
 For CodeStable harness roadmap or design work, read
 `references/harness-improvement-plan.md` first, then
 `references/harness-implementation-plan.md` when the task asks what to build
-next. For global `cs` routing, owner-review context, owner-judgment context,
+next. For the implemented behavior runner, read
+`references/behavior-harness-tool.md`. For global `cs` routing, owner-review context, owner-judgment context,
 context levels, owner-stop/skip rules, finish-time checks, or harness coverage
 across routed workflows, also read `references/global-route-governance.md`. For
 spec drift, requirement delta, clarification, or human-readable spec governance

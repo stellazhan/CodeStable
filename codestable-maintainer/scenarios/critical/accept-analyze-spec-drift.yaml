@@ -1,0 +1,32 @@
+{
+  "id": "accept-analyze-spec-drift",
+  "fixture": "drifted-specs-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "analyze_pass"},
+      {"owner_stop": "spec_drift"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["spec_drift"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention", "analyze_pass", "owner_stop:spec_drift"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-spec-governance.py", "--root", ".", "--json", "analyze", "--unit", ".codestable/features/2026-06-10-source-query-coverage"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "findings", "min_len": 2}
+        ]
+      }
+    ]
+  }
+}
