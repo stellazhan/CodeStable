@@ -1,0 +1,25 @@
+{
+  "id": "cs-route-brief-minimal",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"say": "Route: cs-feat-design\nContext: L1\nReason: user asks for a small feature design.\nEscalation: capability boundary or spec drift raises this to L3.\nNext: switch to cs-feat-design."}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Route:", "Context: L1", "Escalation:"],
+      "forbidden": ["Requirement Delta"]
+    },
+    "trajectory": {
+      "required_actions": ["read_attention"],
+      "forbidden_actions": ["rewrite_requirement", "commit", "merge"]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
+    }
+  }
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
 import sys
 from datetime import date
@@ -729,7 +730,7 @@ def test_search_yaml_json_serializes_yaml_date_values(capsys) -> None:
     assert '"date": "2026-06-05"' in capsys.readouterr().out
 
 
-def make_codestable_source_repo(tmp_path: Path) -> tuple[Path, Path, Path]:
+def make_codestable_source_repo(tmp_path: Path, runner_code: str | None = None) -> tuple[Path, Path, Path]:
     remote = tmp_path / "remote.git"
     subprocess.run(["git", "init", "--bare", remote.as_posix()], check=True, stdout=subprocess.PIPE)
     repo = tmp_path / "source"
@@ -744,6 +745,14 @@ def make_codestable_source_repo(tmp_path: Path) -> tuple[Path, Path, Path]:
     (repo / "codestable-maintainer").mkdir()
     (repo / "codestable-maintainer/SKILL.md").write_text(
         "---\nname: codestable-maintainer\ndescription: test\n---\n",
+        encoding="utf-8",
+    )
+    (repo / "codestable-maintainer/tools").mkdir()
+    (repo / "codestable-maintainer/tools/agent-behavior-harness.py").write_text(
+        runner_code
+        or "import json, pathlib, sys\n"
+        "pathlib.Path('behavior-argv.json').write_text(json.dumps(sys.argv[1:]), encoding='utf-8')\n"
+        "print(json.dumps({'ok': True, 'scenario_count': 0, 'run_count': 0, 'results': []}))\n",
         encoding="utf-8",
     )
     run(repo, "add", ".")
@@ -799,3 +808,22 @@ def test_maintainer_verify_syncs_and_diff_checks_changed_skill(tmp_path: Path) -
     assert passed["ok"] is True
     assert passed["installable_units"] == ["cs-onboard"]
     assert (installed / "cs-onboard/SKILL.md").exists()
+    argv = json.loads((Path(passed["fresh_clone"]) / "behavior-argv.json").read_text(encoding="utf-8"))
+    assert argv == ["run", "--suite", "critical", "--actor", "sterile", "--json"]
+
+
+def test_maintainer_verify_fails_when_behavior_harness_fails(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(
+        tmp_path,
+        "import sys\nprint('behavior failed')\nsys.exit(2)\n",
+    )
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: changed\n---\n", encoding="utf-8")
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "change skill")
+    run(repo, "push", "-u", "origin", "codex/demo")
+
+    payload = maintainer_verify.verify(repo, "codex/demo", "origin", tmp_path / "installed", validator.as_posix(), True)
+
+    assert payload["ok"] is False
+    assert any("Behavior harness critical suite failed" in finding["message"] for finding in payload["findings"])

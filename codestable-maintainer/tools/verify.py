@@ -184,6 +184,42 @@ def run_tests_if_needed(clone: Path, paths: list[str]) -> Finding | None:
     return None
 
 
+def run_behavior_suite_if_needed(clone: Path, paths: list[str]) -> Finding | None:
+    prefixes = (
+        "cs/",
+        "cs-",
+        "using-codestable/",
+        "cs-onboard/reference/",
+        "cs-onboard/tools/",
+        "codestable-maintainer/SKILL.md",
+        "codestable-maintainer/references/",
+        "codestable-maintainer/scenarios/",
+        "codestable-maintainer/tools/agent-behavior-harness.py",
+    )
+    needs_behavior = any(path.startswith(prefixes) for path in paths)
+    if not needs_behavior:
+        return None
+    runner = clone / "codestable-maintainer/tools/agent-behavior-harness.py"
+    if not runner.exists():
+        return Finding("P1", "Behavior harness runner is missing.", runner.relative_to(clone).as_posix())
+    result = run(
+        [
+            "python3",
+            runner.relative_to(clone).as_posix(),
+            "run",
+            "--suite",
+            "critical",
+            "--actor",
+            "sterile",
+            "--json",
+        ],
+        clone,
+    )
+    if result.returncode != 0:
+        return Finding("P1", f"Behavior harness critical suite failed: {result.stdout}{result.stderr}")
+    return None
+
+
 def dirs_match(left: Path, right: Path) -> bool:
     if not right.exists():
         return False
@@ -260,6 +296,9 @@ def verify(
         test_finding = run_tests_if_needed(clone, paths)
         if test_finding:
             findings.append(test_finding)
+        behavior_finding = run_behavior_suite_if_needed(clone, paths)
+        if behavior_finding:
+            findings.append(behavior_finding)
         for skill in skills:
             source = clone / skill
             dest = installed_root / skill

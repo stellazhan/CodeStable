@@ -1,0 +1,69 @@
+{
+  "id": "owner-judgment-context",
+  "fixture": "owner-judgment-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {
+        "run": [
+          "python3",
+          ".codestable/tools/build-context-packet.py",
+          "--root",
+          ".",
+          "--unit",
+          ".codestable/features/2026-06-10-demo",
+          "--audience",
+          "owner-judgment",
+          "--language",
+          "zh",
+          "--output",
+          ".codestable/owner-judgment.md",
+          "--decided",
+          "Use owner judgment before acceptance",
+          "--rejected",
+          "Do not rely on low-context yes",
+          "--risk",
+          "Missing context makes approval meaningless",
+          "--file",
+          ".codestable/features/2026-06-10-demo/demo-design.md",
+          "--remaining",
+          "Wait for owner answer",
+          "--evidence",
+          "scenario fixture",
+          "--judgment",
+          "是否批准 requirement delta",
+          "--why-now",
+          "下一步会改变长期 requirement",
+          "--term",
+          "owner judgment = 会改变下一步动作的人类判断",
+          "--option",
+          "批准 delta；或退回 clarification",
+          "--default-recommendation",
+          "先补齐 delta context",
+          "--effect",
+          "批准后可以进入 acceptance",
+          "--non-automatic",
+          "不会自动 commit、merge、push"
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "artifacts": {
+      "must_create": [".codestable/owner-judgment.md"],
+      "contains": [
+        {"path": ".codestable/owner-judgment.md", "text": "CodeStable Owner 判断上下文"}
+      ]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/owner-judgment.md", "--strict", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ok", "equals": true}
+        ]
+      }
+    ]
+  }
+}

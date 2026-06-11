@@ -1,0 +1,26 @@
+{
+  "id": "backlog-visible",
+  "fixture": "backlog-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "scan_backlog"}
+    ]
+  },
+  "expect": {
+    "trajectory": {
+      "required_actions": ["scan_backlog"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-backlog.py", "--root", ".", "--json"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "blocking_count", "equals": 1}
+        ]
+      }
+    ]
+  }
+}

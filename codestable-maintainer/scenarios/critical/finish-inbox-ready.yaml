@@ -1,0 +1,26 @@
+{
+  "id": "finish-inbox-ready",
+  "fixture": "finished-worktree-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_inbox"}
+    ]
+  },
+  "expect": {
+    "trajectory": {
+      "required_actions": ["read_inbox"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-inbox.py", "--root", ".", "--json"],
+        "exit_code": 0,
+        "json": [
+          {"path": "ready_to_merge", "min_len": 1},
+          {"path": "ready_to_merge.0.status", "equals": "ready-to-merge"}
+        ]
+      }
+    ]
+  }
+}
