@@ -8,7 +8,7 @@
 
 **An AI coding workflow for serious software engineering**
 
-Tired of OpenSpec's flimsiness, Oh-My-OpenAgent's over-engineering, and Superpowers' fragmentation — I built a lightweight, **human-in-the-loop** AI harness from scratch.
+Tired of OpenSpec's flimsiness, Oh-My-OpenAgent's over-engineering, and Superpowers' fragmentation: CodeStable is a lightweight, practical, **human-in-the-loop** lifecycle harness for software work.
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
@@ -26,318 +26,190 @@ Tired of OpenSpec's flimsiness, Oh-My-OpenAgent's over-engineering, and Superpow
 npx skills add https://github.com/julianjiang-X/CodeStable
 ```
 
-One command to start working:
+Onboard a repository first:
 
 ```bash
 /cs-onboard
 ```
 
-For daily use, when you don't know which skill fits, call the root entry:
+For daily use, when you are not sure which skill fits, call the root entry:
 
 ```bash
 /cs
 ```
 
-`cs` reads your intent and tells you which `cs-xxx` to run.
-
-If your agent supports automatic skill triggering, `using-codestable` checks for `.codestable/attention.md` in onboarded repositories and routes lifecycle tasks to `cs` by default. Features, bugs, refactors, architecture, requirements, roadmap work, audits, docs, decisions, learnings, code exploration, and workflow continuation no longer require typing `/cs` every time.
+If your agent supports automatic skill triggering, `using-codestable` checks for `.codestable/attention.md` in onboarded repositories and routes lifecycle tasks to `cs` by default: features, bugs, refactors, architecture, requirements, roadmap work, audits, docs, decisions, learnings, and code exploration.
 
 ---
 
-## Why
+## What CodeStable Solves
 
-I was building a new harness agent ([MA](https://github.com/liuzhengdongfortest/MA)) — vibe-coding at first, just writing designs and requirements while AI wrote the code. It carried most features, until Codex repeatedly failed on a problem I thought was simple, making the same mistake in the same place. That's when I knew the project needed a workflow to keep moving.
-
-I surveyed OpenSpec, SuperPowers, Oh-My-OpenAgent — none felt right:
-
-- **OpenSpec** — too thin, no compounding, specs too abstract for humans to read
-- **SuperPowers** — no process discipline, you never know which one to use
-- **Oh-My-OpenAgent** — too heavy, philosophically treats "human intervention = failure"
-
-CodeStable's goal is **to solve real software implementation and coding problems for serious engineering** — not to coin a new term or chase trends.
-
----
-
-## The core difference: what gets orchestrated
-
-Mainstream AI coding frameworks — Superpowers, CCW, Oh-My-OpenAgent — are all doing **the same thing**:
-
-> **Orchestrating agents better.** Get them to team up, collaborate, brainstorm, run pipelines, hand off automatically. The entity at the center is always the **Agent**.
-
-CodeStable goes the **other way**:
-
-> **What gets orchestrated isn't agents — it's the lifecycle of the software itself.** The entities at the center are **the elements that make up software**: every requirement, every architectural decision, every feature, every bug, every constraint left in history.
+Most AI coding frameworks orchestrate agents: roles, teams, handoffs, review loops, and autonomous pipelines. CodeStable orchestrates the lifecycle of the software itself: requirements, architecture, roadmaps, features, issues, decisions, and accumulated knowledge.
 
 <table>
-<tr><th></th><th>Agent-orchestration camp</th><th>CodeStable</th></tr>
+<tr><th></th><th>Agent orchestration</th><th>CodeStable</th></tr>
 <tr><td><b>Core entity</b></td><td>Agent / Role / Team</td><td>Requirement / Architecture / Feature / Issue / Decision</td></tr>
-<tr><td><b>Main question</b></td><td>How do agents divide work, hand off, coordinate?</td><td>How do requirements, constraints, decisions get recorded, retrieved, reused?</td></tr>
-<tr><td><b>Where state lives</b></td><td>Agent sessions / message buses / queues</td><td>The <code>codestable/</code> file tree in your project (readable by both humans and AI)</td></tr>
-<tr><td><b>Pain it solves</b></td><td>One agent isn't enough; need coordination to scale</td><td>Software complexity overflows context; tacit knowledge gets lost; requirements drift</td></tr>
-<tr><td><b>Role of humans</b></td><td>The less the better — full automation is the ideal</td><td>Human-in-the-loop — the programmer owns the whole; AI is an efficient executor</td></tr>
+<tr><td><b>Main question</b></td><td>How agents collaborate</td><td>How constraints, history, and decisions are recorded, retrieved, and reused</td></tr>
+<tr><td><b>Where state lives</b></td><td>Agent sessions / queues / buses</td><td>The project's <code>.codestable/</code> file tree</td></tr>
+<tr><td><b>Human role</b></td><td>Less intervention is better</td><td>Human in the loop; the programmer owns the whole, AI executes efficiently</td></tr>
 </table>
 
 ![](./asset/CodeStableVSAgent.png)
 
-**Neither direction is wrong.**
-
-If your task is "run an end-to-end automated pipeline with AI" or "have multiple agents debate a plan," the agent-orchestration camp fits better.
-
-If your task is "maintain serious software that iterates over years" or "make sure a requirement written today can still be accurately recalled three months later" — then CodeStable's software-element-centric model fits better.
-
-I built CodeStable because I believe **the chaos of software engineering isn't really about agents not being strong enough — it's about elements not being organized**. No matter how strong the agent, it can't save a project that's lost its requirements, architecture, and history.
+CodeStable's bet is simple: in serious software work, chaos often comes not from weak agents but from poorly organized software elements. A stronger agent cannot save a project that has lost its requirements, architecture, and history.
 
 ---
 
-## Design: 6 entities + 3 flows
-
-CodeStable models real coding work as **6 entities** and **3 flows**.
+## Core Model
 
 ### 6 entities
 
-| Entity | Slug | What it does |
-|------|------|--------|
-| **Requirement** | requirements | Original user stories, the discussion and trade-offs at the time. The escape hatch — when code rots, you can throw it all out and let AI regenerate from these |
-| **Architecture** | architecture | What the system's orchestration layer looks like to deliver the requirements. Concise, unified, **for humans to read** — not for AI to talk to itself |
-| **Roadmap** | roadmap | "I want a permission system" — too big to throw at AI as a feature; cut it into a roadmap and advance step by step |
-| **Feature** | feature | The actual engineering execution. Human and AI collaborate, jointly responsible for design / implementation / acceptance |
-| **Issue** | issue | The bug list after release. AI and human solve it together |
-| **Compound** | compound | The compounding-engineering knowledge base — pitfalls, good practices, technical decisions |
+| Entity | Directory | Responsibility |
+|---|---|---|
+| Requirement | `.codestable/requirements/` | Capability intent: what users need, what the system provides, where boundaries are |
+| Architecture | `.codestable/architecture/` | Current system map only; no future plans |
+| Roadmap | `.codestable/roadmap/` | High-level plan, interface contracts, and executable feature list for large needs |
+| Feature | `.codestable/features/` | Design to implementation to acceptance loop |
+| Issue | `.codestable/issues/` | Report to root-cause analysis to fix-note loop |
+| Knowledge | `.codestable/compound/` | Unified sink for learning / trick / decision / explore records |
 
-### 3 flows
+### 3 main flows
 
-| Flow | Key skill chain | Notes |
-|------|------------|------|
-| **Feature delivery** | `cs-feat` → `cs-feat-design` → `cs-feat-impl` → `cs-feat-accept` | Think it through → integrated design → step-by-step coding → acceptance. Whatever order suits you |
-| **Issue fixing** | `cs-issue-report` → `cs-issue-analyze` → `cs-issue-fix` | Tell AI what's wrong → AI finds the root cause → AI fixes precisely |
-| **Refactoring** | `cs-refactor` (beta) | Architectural rot doesn't happen overnight. AI assists, but **humans refactor**. Still iterating — feedback welcome |
+| Flow | Skill chain | Notes |
+|---|---|---|
+| Feature delivery | `cs-feat` -> `cs-feat-design` -> `cs-feat-impl` -> `cs-feat-accept` | Think, design, implement by checklist, verify against design |
+| Issue fixing | `cs-issue` -> `cs-issue-report` -> `cs-issue-analyze` -> `cs-issue-fix` | Record symptoms, find the root cause, then fix precisely |
+| Refactoring | `cs-refactor` / `cs-refactor-ff` | Behavior stays the same; structure changes; full flow is scan / design / apply |
+
+`cs-brainstorm` handles fuzzy ideas, `cs-roadmap` handles needs too large for one feature, and `cs-audit` proactively finds risks without fixing them directly.
 
 ---
 
-## Skill catalog
+## Skill Catalog
 
 <table>
 <tr><th>Group</th><th>Skill</th><th>Purpose</th></tr>
-<tr><td><b>Auto entry</b></td><td><code>using-codestable</code></td><td>In onboarded repositories, automatically routes software lifecycle tasks to <code>cs</code></td></tr>
-<tr><td><b>Root entry</b></td><td><code>cs</code></td><td>Unified entry — introduces the system and routes open-ended intents to the right cs-* skill. Call it when you don't know which one fits</td></tr>
-<tr><td><b>Onboard</b></td><td><code>cs-onboard</code></td><td>Bring CodeStable into a new repo or one with scattered docs</td></tr>
-<tr><td rowspan="2"><b>Requirement & architecture</b></td><td><code>cs-req</code></td><td>Curate / accumulate raw requirement docs</td></tr>
-<tr><td><code>cs-arch</code></td><td>Draft or update architecture docs under <code>codestable/architecture/</code></td></tr>
-<tr><td><b>Roadmap</b></td><td><code>cs-roadmap</code></td><td>Up-front planning for a big chunk of work: high-level design + interface contracts + sub-feature breakdown</td></tr>
-<tr><td><b>Discussion entry</b></td><td><code>cs-brainstorm</code></td><td>Triage when ideas are still fuzzy: route to design / continue in a feature / hand off to roadmap</td></tr>
-<tr><td rowspan="5"><b>Feature flow</b></td><td><code>cs-feat</code></td><td>Sub-flow entry for new features</td></tr>
-<tr><td><code>cs-feat-design</code></td><td>Draft <code>{slug}-design.md</code> as the single input for what follows</td></tr>
-<tr><td><code>cs-feat-impl</code></td><td>Code in the order the design lays out</td></tr>
-<tr><td><code>cs-feat-accept</code></td><td>Verify implementation against the design layer by layer; close the loop</td></tr>
-<tr><td><code>cs-feat-ff</code></td><td>Ultra-light lane: no design, no phases, AI just does it</td></tr>
-<tr><td rowspan="4"><b>Issue flow</b></td><td><code>cs-issue</code></td><td>Sub-flow entry for issue fixing</td></tr>
-<tr><td><code>cs-issue-report</code></td><td>Turn the problem in your head into a reproducible, traceable report</td></tr>
-<tr><td><code>cs-issue-analyze</code></td><td>Find root cause, assess fix risk, propose options</td></tr>
-<tr><td><code>cs-issue-fix</code></td><td>Targeted fix + verification + write fix-note</td></tr>
-<tr><td rowspan="2"><b>Refactor flow</b></td><td><code>cs-refactor</code></td><td>(beta) Main refactor flow</td></tr>
-<tr><td><code>cs-refactor-ff</code></td><td>(beta) Light refactor lane</td></tr>
-<tr><td rowspan="3"><b>Knowledge sink</b></td><td><code>cs-learn</code></td><td>Sink pitfalls / good practices into learning docs</td></tr>
-<tr><td><code>cs-trick</code></td><td>Curate reusable patterns / library usage as prescriptive references</td></tr>
-<tr><td><code>cs-decide</code></td><td>Record settled tech choices, architectural decisions, long-term constraints as permanent docs</td></tr>
-<tr><td rowspan="2"><b>Explore & docs</b></td><td><code>cs-explore</code></td><td>Targeted code exploration; sink "ask → read → conclude" into evidence</td></tr>
-<tr><td><code>cs-guide</code> / <code>cs-libdoc</code></td><td>Outward-facing developer guides / library reference docs</td></tr>
-<tr><td><b>Maintenance</b></td><td><code>codestable-maintainer</code></td><td>Maintain CodeStable source, harness plans, pushed-branch fresh clone verification, and installed-copy diff checks</td></tr>
+<tr><td><b>Auto entry</b></td><td><code>using-codestable</code></td><td>Routes lifecycle tasks to <code>cs</code> in onboarded repositories</td></tr>
+<tr><td><b>Root entry</b></td><td><code>cs</code></td><td>Introduces the system and routes open-ended intents to the right cs sub-skill</td></tr>
+<tr><td><b>Onboard</b></td><td><code>cs-onboard</code></td><td>Create or migrate the CodeStable skeleton for a repository</td></tr>
+<tr><td rowspan="2"><b>Requirements & architecture</b></td><td><code>cs-req</code></td><td>Maintain capability-intent docs with draft / current / outdated states</td></tr>
+<tr><td><code>cs-arch</code></td><td>Maintain the current architecture map; no future planning</td></tr>
+<tr><td rowspan="2"><b>Planning & discussion</b></td><td><code>cs-roadmap</code></td><td>Produce high-level design, interface contracts, and sub-feature lists for large needs</td></tr>
+<tr><td><code>cs-brainstorm</code></td><td>Discuss and triage fuzzy ideas into design, lightweight feature work, or roadmap</td></tr>
+<tr><td rowspan="5"><b>Feature flow</b></td><td><code>cs-feat</code></td><td>Feature sub-flow entry; routes instead of running stages itself</td></tr>
+<tr><td><code>cs-feat-design</code></td><td>Draft <code>{slug}-design.md</code> and <code>{slug}-checklist.yaml</code></td></tr>
+<tr><td><code>cs-feat-impl</code></td><td>Implement by checklist; return to design when reality falls outside the plan</td></tr>
+<tr><td><code>cs-feat-accept</code></td><td>Verify implementation and sync architecture / requirement deltas / roadmap status</td></tr>
+<tr><td><code>cs-feat-ff</code></td><td>Fast lane for small needs: no full design, but still leaves a traceable note</td></tr>
+<tr><td rowspan="4"><b>Issue flow</b></td><td><code>cs-issue</code></td><td>Bug-fixing sub-flow entry</td></tr>
+<tr><td><code>cs-issue-report</code></td><td>Record symptoms, reproduction, and impact without guessing root cause</td></tr>
+<tr><td><code>cs-issue-analyze</code></td><td>Read code, identify root cause, and offer 2-3 owner-reviewed fix options</td></tr>
+<tr><td><code>cs-issue-fix</code></td><td>Apply the approved fix, verify it, and write the fix-note</td></tr>
+<tr><td rowspan="2"><b>Refactor flow</b></td><td><code>cs-refactor</code></td><td>Full structure / performance / readability optimization flow</td></tr>
+<tr><td><code>cs-refactor-ff</code></td><td>Fast lane for small, behavior-preserving improvements</td></tr>
+<tr><td rowspan="2"><b>Audit & exploration</b></td><td><code>cs-audit</code></td><td>Scan for bug risks, security issues, performance problems, maintainability debt, and architecture drift</td></tr>
+<tr><td><code>cs-explore</code></td><td>Turn targeted code exploration into reusable evidence</td></tr>
+<tr><td rowspan="4"><b>Knowledge sink</b></td><td><code>cs-learn</code></td><td>Capture pitfalls and good practices</td></tr>
+<tr><td><code>cs-trick</code></td><td>Capture reusable patterns, library usage, and techniques</td></tr>
+<tr><td><code>cs-decide</code></td><td>Record settled technical choices, architecture decisions, and long-term constraints</td></tr>
+<tr><td><code>cs-note</code></td><td>Append short, stable, always-loaded project notes to <code>.codestable/attention.md</code></td></tr>
+<tr><td rowspan="2"><b>External docs</b></td><td><code>cs-guide</code></td><td>Write developer and user guides, defaulting to <code>docs/dev/</code> and <code>docs/user/</code></td></tr>
+<tr><td><code>cs-libdoc</code></td><td>Write per-entry API / component / command reference docs, defaulting to <code>docs/api/</code></td></tr>
+<tr><td><b>Browser</b></td><td><code>browser-bridge</code></td><td>Use a Chrome extension for real browser control, DOM extraction, and component evidence</td></tr>
+<tr><td><b>Maintenance</b></td><td><code>codestable-maintainer</code></td><td>Maintain CodeStable source, harnesses, fresh-clone verifier, and installed-copy sync</td></tr>
 </table>
 
 ---
 
-## Workflow at a glance
+## Runtime Structure
 
-CodeStable's skills aren't a single linear pipeline — they're **layered + event-driven**:
+After `/cs-onboard`, the project root contains `.codestable/`. It is the only shared workspace that CodeStable sub-skills read and write at runtime.
 
-```
-═══════════════════════════════════════════════════════════════════════
- Root entry · routing                              (callable any time)
-───────────────────────────────────────────────────────────────────────
-   cs ──▶ Introduce the system / route open-ended intent to a sub-skill
-          (does nothing itself — only triages and points)
-═══════════════════════════════════════════════════════════════════════
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        (not onboarded)  (onboarded)    (just want to learn)
-         go to phase 0   jump to L1~4 / cross-cut    quick read
-              │
-              ▼
-═══════════════════════════════════════════════════════════════════════
- Phase 0 · Onboard                            (runs once per project)
-───────────────────────────────────────────────────────────────────────
-   cs-onboard ──▶ Generate codestable/ skeleton + release reference/, tools/
-═══════════════════════════════════════════════════════════════════════
-                              │
-                              ▼
-═══════════════════════════════════════════════════════════════════════
- Layer 1 · Long-lived archive ("what the system looks like now")
-───────────────────────────────────────────────────────────────────────
-   cs-req   ──▶ codestable/requirements/{slug}.md
-   cs-arch  ──▶ codestable/architecture/ARCHITECTURE.md
-                                       └─ {type}-{slug}.md (subsystems)
-═══════════════════════════════════════════════════════════════════════
-                              │
-                              ▼
-═══════════════════════════════════════════════════════════════════════
- Layer 2 · Planning ("how we plan to deliver this big thing next")
-───────────────────────────────────────────────────────────────────────
-   cs-roadmap ──▶ codestable/roadmap/{slug}/
-                  Turn "I want X" into a complete up-front plan:
-                    ① High-level design — module / component split
-                    ② Architectural detail — interface contracts
-                    ③ Sub-features      — broken into executable units
-                  ② is a hard input for feature-design
-                  (Small needs skip this layer and go straight to L3)
-═══════════════════════════════════════════════════════════════════════
-                              │
-                              ▼
-═══════════════════════════════════════════════════════════════════════
- Discussion entry (optional · enter when fuzzy, route after triage)
-───────────────────────────────────────────────────────────────────────
-                          ┌── case 1 clear enough ──▶ cs-feat-design
-   cs-brainstorm ────────▶┼── case 2 small + decided ─▶ feature flow
-                          └── case 3 big with one word ─▶ cs-roadmap
-═══════════════════════════════════════════════════════════════════════
-                              │
-                              ▼
-═══════════════════════════════════════════════════════════════════════
- Layer 3 · Execution flows (pick one per event type)
-───────────────────────────────────────────────────────────────────────
-
-  ▸ Event: new capability                                  ┌──────────┐
-       cs-feat-design ──▶ cs-feat-impl ──▶ cs-feat-accept  │ features │
-       cs-feat-ff     ──(light lane, skips design/accept)─▶│ /YYYY-…/ │
-                                                            └──────────┘
-
-  ▸ Event: fix a defect                                     ┌──────────┐
-       cs-issue-report ──▶ cs-issue-analyze ──▶ cs-issue-fix│  issues  │
-                                                            │ /YYYY-…/ │
-                                                            └──────────┘
-
-  ▸ Event: code rot (beta)                                  ┌──────────┐
-       cs-refactor / cs-refactor-ff                         │refactors │
-                                                            │ /YYYY-…/ │
-                                                            └──────────┘
-═══════════════════════════════════════════════════════════════════════
-                              │
-                ▼ trigger any time something is worth recording ▼
-═══════════════════════════════════════════════════════════════════════
- Cross-cut · Knowledge sink (compounding engineering)
-───────────────────────────────────────────────────────────────────────
-   cs-learn   ──▶ ┐
-   cs-trick   ──▶ ├─▶ codestable/compound/YYYY-MM-DD-{doc_type}-{slug}.md
-   cs-decide  ──▶ │     doc_type ∈ { learning, trick, decision, explore }
-   cs-explore ──▶ ┘
-                   ↑
-          Next cs-arch / cs-feat-design / cs-issue-analyze
-          reads back compound/ so experience is reused
-═══════════════════════════════════════════════════════════════════════
-```
-
-**How to read this diagram:**
-
-- **Vertical = layers**, not strict time order — Layer 1 is refreshed repeatedly, Layer 2 is only entered for big needs
-- **Layer 3 is event-driven**: new need → feature flow, bug → issue flow, rot → refactor flow
-- **Cross-cut is the flywheel**: any flow can trigger a sink when something is worth keeping; the next round of work reads it back. This is the physical implementation of CodeStable's "compounding"
-
----
-
-## Runtime structure
-
-After `/cs-onboard`, a `codestable/` directory appears at your project root — the aggregate root for all CodeStable artifacts and the **only** workspace each skill reads/writes at runtime.
-
-```
+```text
 your-project/
-├── codestable/
-│   ├── requirements/                     # Requirement entities ("why this capability exists")
-│   │   └── {slug}.md                     # One file per capability, flat (no grouping)
-│   │
-│   ├── architecture/                     # Architecture entities ("what structure delivers it")
-│   │   ├── ARCHITECTURE.md               # Architecture entry point / index
-│   │   └── {type}-{slug}.md              # Subsystem architecture doc (auto-grouped at ≥6 of same type)
-│   │
-│   ├── roadmap/                          # Roadmaps ("how we plan to walk next")
-│   │   └── {slug}/
-│   │       ├── {slug}-roadmap.md         # Main doc: background / breakdown / sequencing
-│   │       ├── {slug}-items.yaml         # Machine-readable sub-feature list, acceptance writes status back
-│   │       └── drafts/                   # Optional: drafts / research
-│   │
-│   ├── features/                         # Feature flow aggregate root
-│   │   └── YYYY-MM-DD-{slug}/            # One directory per feature
-│   │       ├── {slug}-brainstorm.md      # Optional (cs-brainstorm output)
-│   │       ├── {slug}-design.md          # Design (cs-feat-design)
-│   │       ├── {slug}-checklist.yaml     # Progress checklist (impl runs it, accept writes back)
-│   │       └── {slug}-acceptance.md      # Acceptance report (cs-feat-accept)
-│   │
-│   ├── issues/                           # Issue flow aggregate root
-│   │   └── YYYY-MM-DD-{slug}/
-│   │       ├── {slug}-report.md          # Issue report
-│   │       ├── {slug}-analysis.md        # Root-cause analysis (only when non-obvious)
-│   │       └── {slug}-fix-note.md        # Fix record
-│   │
-│   ├── refactors/                        # Refactor flow aggregate root (beta)
-│   │   └── YYYY-MM-DD-{slug}/
-│   │       ├── {slug}-scan.md
-│   │       ├── {slug}-refactor-design.md
-│   │       ├── {slug}-checklist.yaml
-│   │       └── {slug}-apply-notes.md
-│   │
-│   ├── compound/                         # Knowledge sink (compounding engineering), unified directory
-│   │   └── YYYY-MM-DD-{doc_type}-{slug}.md
-│   │       # doc_type ∈ {learning, trick, decision, explore}
-│   │
-│   ├── tools/                            # Cross-workflow shared scripts (released by onboard)
-│   └── reference/                        # Shared reference docs (released by onboard)
-│       ├── shared-conventions.md         # Cross-skill conventions / paths / metadata
-│       ├── system-overview.md            # CodeStable system overview + scenario routing
-│       └── ...
-│
-└── AGENTS.md                             # At project root, not under codestable/
+├── .codestable/
+│   ├── attention.md                 # Required read before every CodeStable skill
+│   ├── requirements/                # Capability intent, including VISION.md
+│   ├── architecture/                # Current system map
+│   ├── roadmap/                     # Large-need plans and sub-feature lists
+│   ├── features/                    # Feature design / checklist / review / acceptance
+│   ├── issues/                      # Report / analysis / review / fix-note
+│   ├── refactors/                   # Scan / design / checklist / review / apply-notes
+│   ├── compound/                    # Learning / trick / decision / explore
+│   ├── brainstorm/                  # Temporary spike area for brainstorm
+│   ├── tools/                       # Shared scripts released by onboard
+│   └── reference/                   # Shared conventions released by onboard
+└── docs/                            # Default output for cs-guide / cs-libdoc
 ```
 
-**Key points:**
+Hard constraints:
 
-- All artifacts aggregate under `codestable/`, so "how did we handle that feature / bug last time" is three seconds away
-- `requirements/` and `architecture/` are **long-lived archives** (current state only); `roadmap/` is the **planning layer** (what's next) — deliberately separated
-- `features/` `issues/` `refactors/` use `YYYY-MM-DD-{slug}/` to bundle all related specs in one directory, no crossing
-- `compound/` is the **single** knowledge sink directory — learning / trick / decision / explore are distinguished by the `doc_type` field, not by sub-directories. Easier to search
-- `reference/` is copied in by `cs-onboard` from the skill package; to change shared conventions, edit the templates under `cs-onboard/reference/` — new projects pick up the new version on onboard
-
-### Hard constraint
-
-> A skill is an independent install unit. At runtime, **each skill can only see files inside its own package**. References like `B-skill/reference/xxx.md` written in skill A's SKILL.md are **simply unreachable** at runtime.
->
-> Cross-skill shared references must go through the "working project" layer: `cs-onboard` copies them from the skill package to the project's `codestable/reference/`, and other skills read them via the project-relative path.
-
-To change shared conventions, edit the templates under `cs-onboard/reference/`; new projects pick them up at onboard time.
+- Sub-skills only use `.codestable/attention.md` as the project attention entry. `AGENTS.md` / `CLAUDE.md` are not CodeStable state sources.
+- Shared conventions are not referenced across skill package directories. `cs-onboard` copies `reference/` and `tools/` into the working project's `.codestable/`.
+- `requirements/` and `architecture/` are long-lived archives; `roadmap/` is the planning layer; `features/`, `issues/`, and `refactors/` are event records; `compound/` is the single knowledge sink.
+- Old `codestable/` / `easysdd/` directories are historical compatibility entry points. Current sub-skills read `.codestable/`.
 
 ---
 
-## Design philosophy
+## Current Tool Layer
 
-CodeStable takes the **opposite** philosophy from OMO:
+`cs-onboard` releases deterministic tools into `.codestable/tools/` to guard boundaries where agents tend to drift:
 
-- OMO says: any human intervention is a failure signal
-- CodeStable says: **the programmer is in the loop of software coding** — you may not understand the black-box implementation, but you must own the whole, and dive in when needed
+| Tool | Purpose |
+|---|---|
+| `codestable-doctor.py` | Summarize repository state, worktree state, review / backlog / inbox risks |
+| `codestable-worktree-gate.py` | Check correct worktree usage at start / commit / quarantine |
+| `validate-implementation-review.py` | Confirm implementation changes have review evidence |
+| `build-review-packet.py` | Build review inputs for implementation / spec / quality review |
+| `build-context-packet.py` | Build handoff, human-reviewer, and owner-judgment context packets |
+| `check-context-sufficiency.py` | Reject empty or insufficient context packets |
+| `codestable-finish-worktree.py` | Produce learning and merge-readiness records when worktree work finishes |
+| `codestable-worktree-inbox.py` | Surface ready / stale / blocked work branches from main |
+| `plan-commits.py` | Plan grouped commits by CodeStable unit and file ownership |
+| `codestable-backlog.py` | Scan unresolved follow-ups, human-review items, P2s, and attention candidates |
+| `codestable-spec-governance.py` | Route specs, generate deltas / clarifications, inventory drift, and check acceptance |
+| `search-yaml.py` / `validate-yaml.py` | Search and validate frontmatter / YAML artifacts |
 
-Software architecture must be **evolvable**, **observable**, **controllable**.
+---
 
-This may matter less as AI gets stronger, but **right now this makes programmers comfortable in reality** — and that's the value.
+## Maintainer And Harness
 
-CodeStable is modeled for real-world development scenarios, aiming to handle common dev problems through a closed-loop system. **Most existing frameworks model around AI, not around humans.** I think their authors have strong AI-driving skills but aren't seriously building software — they lack the basic ability to organize requirements and design, and they lack respect for code implementation.
+CodeStable itself is maintained through `codestable-maintainer`. The source repository is `/Users/john/Code/Github/CodeStable`; installed copies are deployment artifacts and must not be edited first.
+
+After pushing a branch, run the verifier for fresh-clone checks, skill validation, installed-copy sync, and diff-check:
+
+```bash
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+```
+
+Behavior regression coverage lives in the maintainer harness:
+
+```bash
+python3 codestable-maintainer/tools/agent-behavior-harness.py run --suite critical --actor sterile
+```
+
+Current stability boundary:
+
+- The `critical` suite is deterministic behavior regression coverage for routing, worktrees, review packets, backlog, spec governance, compact resume, and other high-risk behavior.
+- The `live` suite can run a manually triggered real Codex smoke through `--actor live-codex`.
+- Scheduled live eval, budget guards, compaction canaries, and a result dashboard are still Phase 2. See `codestable-maintainer/references/live-eval-phase-2.md`.
+
+---
+
+## Design Philosophy
+
+CodeStable takes the opposite stance from OMO: OMO treats human intervention as a failure signal; CodeStable treats the programmer as the in-loop owner of software coding. AI can execute efficiently, but capability boundaries, architecture evolution, acceptance criteria, and trade-offs still need owner judgment.
+
+Software architecture must remain evolvable, observable, and controllable. CodeStable does not chase full automation fantasies; it keeps real projects recoverable when context grows, requirements drift, and multiple humans or agents hand work off.
 
 ---
 
 ## Roadmap
 
-CodeStable adapts to model capability. If a future model nails a module reliably, that module gets removed.
+- [ ] `cs-refactor` is still beta and needs more hardening.
+- [ ] Live eval Phase 2: scheduled live smoke, compaction canary, budget guard, and result dashboard.
 
-- [ ] Refactor flow needs hardening (`cs-refactor` is still beta)
-- [ ] …
-
-Issues welcome — share your real-world dev pain and refactoring experience.
+Issues are welcome. Share real development pain and refactoring experience.
 
 ---
 
