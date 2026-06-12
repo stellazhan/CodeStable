@@ -23,7 +23,7 @@
 ## 安装
 
 ```bash
-npx skills add https://github.com/julianjiang-X/CodeStable
+npx skills add https://github.com/stellazhan/CodeStable
 ```
 
 只需要一键，开始工作：
