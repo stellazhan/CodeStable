@@ -22,7 +22,7 @@ CodeStable 把这几类场景各配一套子技能，产物放进统一的目录
 
 这些流程都先建立可恢复的上下文，再让 AI 动手；goal 场景把状态放进 `state.yaml`，feature / issue / refactor 则用各自 spec 或 analysis。这样能控制术语冲突、范围失控、改完不留存档这三种 AI 默认会出的问题。
 
-默认执行拓扑：在主协调检出（通常是 `main`）讨论需求、写 plan/spec/checklist；真正改代码时为每个 feature / issue / refactor 创建独立 worktree 和独立 `codex/...` 分支。不同 worktree 不互读未合并代码，只通过 `.codestable/` 下已同步的 plan/spec/roadmap/compound 文档互通意图。每个 worktree 写完一批可验收代码后，输出实现完成汇报前必须用 subagent 做独立 code review，并把证据写入同一目录的 `{slug}-implementation-review.md`；运行 finish gate 生成中文学习报告和 merge readiness 后，推荐把这些产物作为功能分支最后一个小提交；只有用户明确授权后才合并回 `main`。
+默认执行拓扑：在主协调检出（通常是 `main`）讨论需求、写 plan/spec/checklist；真正改代码时为每个 feature / issue / refactor 创建独立 worktree 和独立 `codex/...` 分支，不在主协调检出里 `git switch/checkout`。不同 worktree 不互读未合并代码，只通过 `.codestable/` 下已同步的 plan/spec/roadmap/compound 文档互通意图。每个 worktree 写完一批可验收代码后，输出实现完成汇报前必须用 subagent 做独立 code review，并把证据写入同一目录的 `{slug}-implementation-review.md`；运行 finish gate 生成中文学习报告和 merge readiness 后，推荐把这些产物作为功能分支最后一个小提交；只有用户明确授权后才合并回 `main`。
 
 **沉淀**——把做事过程产生的知识存下来,下次遇到同类问题直接复用:
 

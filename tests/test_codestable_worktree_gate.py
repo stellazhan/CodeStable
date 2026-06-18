@@ -239,6 +239,10 @@ def test_runtime_tool_paths_are_documented() -> None:
     assert "python3 .codestable/tools/codestable-worktree-gate.py --root . --json start" in tools_doc
     assert "python3 .codestable/tools/codestable-finish-worktree.py --root ." in tools_doc
     assert "python3 .codestable/tools/codestable-worktree-inbox.py --root . --json" in tools_doc
+    hook_doc = (Path(__file__).resolve().parents[1] / "cs-onboard/reference/branch-guard-hooks.md").read_text(
+        encoding="utf-8"
+    )
+    assert "codestable-ai-branch-guard.py" in hook_doc
 
 
 def test_missing_unit_cli_returns_json_finding(tmp_path: Path) -> None:

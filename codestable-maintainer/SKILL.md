@@ -25,8 +25,9 @@ validator, harness tool, or README, switch to the source repo before editing.
 
 1. Inspect source repo status and remotes:
    `git status --short --branch` and `git remote -v`.
-2. Create or switch to a focused `codex/...` branch unless the user explicitly
-   requires another branch.
+2. Create or use a focused linked worktree on a `codex/...` branch unless the
+   user explicitly requires another branch. Do not `git switch` / `git checkout`
+   the stable source checkout for AI development.
 3. Edit only source repo files. Do not patch `/Users/qiyuanzhan/.agents/skills/*` or
    `/Users/qiyuanzhan/.codex/skills/*` until after the source change is committed and
    verified.
