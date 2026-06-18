@@ -1,0 +1,58 @@
+{
+  "id": "goal-code-edits-use-execution-gate",
+  "fixture": "worktree-start-required-repo",
+  "runs": 1,
+  "setup": {
+    "files": [
+      {
+        "path": ".codestable/goals/fix-demo/state.yaml",
+        "content": "schema_version: 1\ngoal: fix-demo\nstatus: active\nobjective: Fix the demo app without changing public behavior.\nstart_point: The demo app has a failing local check.\nacceptance:\n  - Fresh verification passes.\nnon_goals:\n  - Do not merge or deploy.\nbudget:\n  kind: iterations\n  limit: 2\ncurrent_iteration: 0\nnext_action: Start the execution gate before code edits.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-18\n"
+      }
+    ]
+  },
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "read_goal_state"},
+      {"action": "read_execution_conventions"},
+      {"action": "worktree_start_gate"},
+      {"owner_stop": "linked_worktree_required"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "must_stop_for": ["linked_worktree_required"]
+    },
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_goal_state",
+        "read_execution_conventions",
+        "worktree_start_gate",
+        "owner_stop:linked_worktree_required"
+      ],
+      "forbidden_actions": ["write:src/app.py", "commit", "merge"]
+    },
+    "commands": [
+      {
+        "cmd": ["python3", ".codestable/tools/codestable-worktree-gate.py", "--root", ".", "--json", "start", "--unit", ".codestable/features/2026-06-10-demo"],
+        "exit_code": 1,
+        "json": [
+          {"path": "ok", "equals": false},
+          {"path": "linked_worktree", "equals": false},
+          {"path": "findings.0.message", "contains": "linked execution worktree"}
+        ]
+      }
+    ],
+    "artifacts": {
+      "must_exist": [".codestable/goals/fix-demo/state.yaml"],
+      "contains": [
+        {"path": ".codestable/goals/fix-demo/state.yaml", "text": "next_action: Start the execution gate before code edits."}
+      ]
+    },
+    "git": {
+      "must_not_modify": ["src/**"]
+    }
+  }
+}

@@ -12,7 +12,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/status-beta-F59E0B?style=flat-square" alt="Status"/>
-  <img src="https://img.shields.io/badge/skills-28-6366F1?style=flat-square" alt="Skills"/>
+  <img src="https://img.shields.io/badge/skills-29-6366F1?style=flat-square" alt="Skills"/>
   <img src="https://img.shields.io/badge/license-MIT-10B981?style=flat-square" alt="License"/>
 </p>
 
@@ -38,7 +38,7 @@ npx skills add https://github.com/stellazhan/CodeStable
 /cs
 ```
 
-如果 agent 支持自动 skill 触发，`using-codestable` 会在已接入仓库中检查 `.codestable/attention.md`，并把 feature、bug、refactor、architecture、requirements、roadmap、audit、docs、decision、learning、explore 等生命周期任务默认路由到 `cs`。
+如果 agent 支持自动 skill 触发，`using-codestable` 会在已接入仓库中检查 `.codestable/attention.md`，并把 goal、feature、bug、refactor、architecture、requirements、roadmap、audit、docs、decision、learning、explore 等生命周期任务默认路由到 `cs`。
 
 ---
 
@@ -62,22 +62,24 @@ CodeStable 的判断是：严肃软件工程的混乱，很多时候不是 agent
 
 ## 核心模型
 
-### 6 个实体
+### 7 个实体
 
 | 实体 | 目录 | 职责 |
 |---|---|---|
 | 需求 | `.codestable/requirements/` | 记录能力愿景：用户需要什么、系统提供什么、边界在哪 |
 | 架构 | `.codestable/architecture/` | 只记系统现状，不写未来计划 |
 | 路线图 | `.codestable/roadmap/` | 把大需求拆成概设、接口契约和可执行 feature 清单 |
+| 目标 | `.codestable/goals/` | 限定起点和终点，AI 自主迭代并写中英文报告 |
 | 特性 | `.codestable/features/` | 从 design 到 implementation 到 acceptance 的闭环 |
 | 问题 | `.codestable/issues/` | 从 report 到 root-cause analysis 到 fix-note 的闭环 |
 | 知识 | `.codestable/compound/` | learning / trick / decision / explore 的统一沉淀库 |
 
-### 3 个主流程
+### 4 个主流程
 
 | 流程 | 技能链 | 说明 |
 |---|---|---|
 | 特性引入 | `cs-feat` -> `cs-feat-design` -> `cs-feat-impl` -> `cs-feat-accept` | 想清楚、写方案、按清单实现、对照验收 |
+| 目标达成 | `cs-goal` | 先 grill 对齐，再自主实现、验证、迭代，直到完成或阻塞 |
 | 问题修改 | `cs-issue` -> `cs-issue-report` -> `cs-issue-analyze` -> `cs-issue-fix` | 先记录现象，再找根因，最后定点修复 |
 | 代码重构 | `cs-refactor` / `cs-refactor-ff` | 行为不变、结构变；完整流程分 scan / design / apply |
 
@@ -94,7 +96,8 @@ CodeStable 的判断是：严肃软件工程的混乱，很多时候不是 agent
 <tr><td><b>接入</b></td><td><code>cs-onboard</code></td><td>为新仓库或已有零散文档的仓库创建 / 迁移 CodeStable 骨架</td></tr>
 <tr><td rowspan="2"><b>需求 & 架构</b></td><td><code>cs-req</code></td><td>维护能力愿景文档，支持 draft / current / outdated</td></tr>
 <tr><td><code>cs-arch</code></td><td>维护只记现状的架构地图，不承载未来规划</td></tr>
-<tr><td rowspan="2"><b>规划 & 讨论</b></td><td><code>cs-roadmap</code></td><td>为大需求生成概设、接口契约和子 feature 清单</td></tr>
+<tr><td rowspan="3"><b>规划 & 讨论</b></td><td><code>cs-goal</code></td><td>限定起点/终点的目标达成：轻量 grill、自主迭代、中英文报告</td></tr>
+<tr><td><code>cs-roadmap</code></td><td>为大需求生成概设、接口契约和子 feature 清单</td></tr>
 <tr><td><code>cs-brainstorm</code></td><td>想法模糊时先讨论和分诊：直接 design、轻量 feature、或 roadmap</td></tr>
 <tr><td rowspan="5"><b>特性流程</b></td><td><code>cs-feat</code></td><td>新功能子流程入口，只路由不代跑阶段</td></tr>
 <tr><td><code>cs-feat-design</code></td><td>起草 <code>{slug}-design.md</code> 和 <code>{slug}-checklist.yaml</code></td></tr>
@@ -132,6 +135,7 @@ your-project/
 │   ├── requirements/                # 能力愿景，含 VISION.md
 │   ├── architecture/                # 只记现状的系统地图
 │   ├── roadmap/                     # 大需求规划和子 feature 清单
+│   ├── goals/                       # bounded goal 状态和双语 iteration 报告
 │   ├── features/                    # feature design / checklist / review / acceptance
 │   ├── issues/                      # report / analysis / review / fix-note
 │   ├── refactors/                   # scan / design / checklist / review / apply-notes
@@ -146,7 +150,7 @@ your-project/
 
 - 子技能只读 `.codestable/attention.md` 作为项目注意事项入口，不兼容 `AGENTS.md` / `CLAUDE.md` 作为 CodeStable 状态源。
 - 共享口径不放在某个 skill 包里互相引用；`cs-onboard` 会把 `reference/` 和 `tools/` 复制到工作项目的 `.codestable/` 下。
-- `requirements/` 和 `architecture/` 是长效档案；`roadmap/` 是规划层；`features/`、`issues/`、`refactors/` 是事件执行记录；`compound/` 是唯一知识沉淀目录。
+- `requirements/` 和 `architecture/` 是长效档案；`roadmap/` 是规划层；`goals/` 是自主迭代目标；`features/`、`issues/`、`refactors/` 是事件执行记录；`compound/` 是唯一知识沉淀目录。
 - 旧版 `codestable/` / `easysdd/` 目录属于历史兼容入口，当前子技能只认 `.codestable/`。
 
 ---

@@ -7,7 +7,7 @@
     "script": [
       {"action": "read_attention"},
       {"action": "present_review_options"},
-      {"run": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/shared-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner-judgment checkpoint' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use for this work?' in text}; print(json.dumps(payload, sort_keys=True))"]},
+      {"run": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner judgment context' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"]},
       {"say": "Review options\n1. Subagent Review (Recommended)\n2. Inline Review\nNo code changes start until the current thread records the chosen path."},
       {"owner_stop": "review_authorization"}
     ]
@@ -23,7 +23,7 @@
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/shared-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner-judgment checkpoint' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use for this work?' in text}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner judgment context' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
           {"path": "requires_owner_judgment", "equals": true},
