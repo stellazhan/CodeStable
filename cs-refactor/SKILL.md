@@ -157,7 +157,7 @@ summary: {本次要做的几条是什么，一句话}
 
 ## 阶段 3：apply
 
-动代码前先按 shared-conventions 第 2.6 节确认执行拓扑：是否在主协调检出讨论、是否已在独立 worktree、分支 / worktree 路径、共享计划面、以及禁止触碰的 sibling worktree。若不在执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求当前 checkout 直接做时才可继续，并在 apply-notes 里写清楚 override。
+动代码前先按 shared-conventions 第 2.6 节确认执行拓扑：是否在主协调检出讨论、是否已在独立 worktree、分支 / worktree 路径、共享计划面、以及禁止触碰的 sibling worktree。若不在执行 worktree，用 `git worktree add -b codex/{slug} .codex/worktrees/{slug}` 创建 / 使用 linked execution worktree；不要在主协调检出里 `git switch/checkout`。用户明确要求当前 checkout 直接做时才可继续，并在 apply-notes 里写清楚 override。
 
 若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 review authorization judgment checkpoint 提供背景、术语、取舍、默认建议和非自动动作；用户授权 subagent 后继续，只有平台无 subagent 能力时 inline review 才能继续。
 

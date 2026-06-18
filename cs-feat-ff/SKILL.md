@@ -40,7 +40,7 @@ Glob `.codestable/` 发现可用目录和文档，按需取用：
 
 1. **这块代码以前有人栽过跟头吗？** → 搜 `compound/` 的 learning
 2. **这块代码有没有已经拍板的写法约束？** → 搜 `compound/` 的 decision + 看 `architecture/` 相关子系统
-3. **这次是否需要独立 worktree？** → 默认按 shared-conventions 第 2.6 节走 worktree；用户明确说直接改当前 checkout 时可以继续，但汇报要写清楚
+3. **这次是否需要独立 worktree？** → 默认按 shared-conventions 第 2.6 节走 worktree；需要执行分支时创建 / 使用 linked worktree，不在主协调检出里 `git switch/checkout`；用户明确说直接改当前 checkout 时可以继续，但汇报要写清楚
 
 动手前至少运行一次 doctor，确认没有已有 worktree / review / follow-up 阻塞：
 

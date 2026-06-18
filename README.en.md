@@ -158,6 +158,7 @@ Hard constraints:
 | Tool | Purpose |
 |---|---|
 | `codestable-doctor.py` | Summarize repository state, worktree state, review / backlog / inbox risks |
+| `codestable-ai-branch-guard.py` | Run as an agent hook to block AI branch switches in the coordinator checkout and implementation work on `main` / `master` |
 | `codestable-worktree-gate.py` | Check correct worktree usage at start / commit / quarantine |
 | `validate-implementation-review.py` | Confirm implementation changes have review evidence |
 | `build-review-packet.py` | Build review inputs for implementation / spec / quality review |

@@ -71,7 +71,7 @@ frontmatter：`doc_type=feature-design` / `feature` 一致 / `status=approved` /
 
 ### 4. 确认执行拓扑
 
-动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否已在独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。若当前不是执行 worktree，先创建 / 切换到 `.codex/worktrees/{slug}` 和 `codex/{slug}` 分支；用户明确要求在当前 checkout 直接做时才可继续，并在汇报里写清楚 override。
+动代码前按 shared-conventions 第 2.6 节确认：当前是否主协调检出、是否已在独立 worktree、分支 / worktree 路径是什么、共享计划面是否已可读。若当前不是执行 worktree，用 `git worktree add -b codex/{slug} .codex/worktrees/{slug}` 创建 / 使用 linked execution worktree；不要在主协调检出里 `git switch/checkout`。用户明确要求在当前 checkout 直接做时才可继续，并在汇报里写清楚 override。
 
 若当前对话还没有明确 subagent / delegation 授权，先按 shared-conventions 第 2.6 节的 review authorization judgment checkpoint 提供背景、术语、取舍、默认建议和非自动动作；用户授权 subagent 后继续，只有平台无 subagent 能力时 inline review 才能继续。
 

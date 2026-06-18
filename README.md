@@ -158,6 +158,7 @@ your-project/
 | 工具 | 作用 |
 |---|---|
 | `codestable-doctor.py` | 汇总当前仓库状态、worktree 状态、review / backlog / inbox 风险 |
+| `codestable-ai-branch-guard.py` | 作为 agent hook 阻止 AI 切换主检出分支或在 `main` / `master` 上实现 |
 | `codestable-worktree-gate.py` | 在 start / commit / quarantine 三个节点检查是否在正确 worktree 内 |
 | `validate-implementation-review.py` | 确认实现类变更有 implementation review 证据 |
 | `build-review-packet.py` | 为 implementation / spec / quality review 生成可审查输入包 |
