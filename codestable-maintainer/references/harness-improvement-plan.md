@@ -271,7 +271,7 @@ codestable-maintainer verify --branch <branch>
 
 Minimum manual sequence:
 
-1. edit `/Users/john/Code/Github/CodeStable`;
+1. edit `/Users/qiyuanzhan/code/CodeStable`;
 2. run local tests and skill validation;
 3. commit and push branch;
 4. fresh clone pushed branch;

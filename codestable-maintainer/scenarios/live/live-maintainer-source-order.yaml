@@ -8,7 +8,7 @@
   },
   "expect": {
     "transcript": {
-      "contains": ["/Users/john/Code/Github/CodeStable", "--sync-installed"]
+      "contains": ["/Users/qiyuanzhan/code/CodeStable", "--sync-installed"]
     },
     "trajectory": {
       "required_actions": ["codex_exec"],

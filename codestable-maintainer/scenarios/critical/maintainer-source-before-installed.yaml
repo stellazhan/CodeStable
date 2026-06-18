@@ -13,12 +13,12 @@
       {"action": "inspect_source_repo"},
       {"action": "plan_source_push_verify_sync"},
       {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); installed=Path(r'{work}/installed/cs-onboard/SKILL.md'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); payload={'source_repo': all((source/path).exists() for path in ['README.md', 'cs-onboard/SKILL.md', 'codestable-maintainer/SKILL.md']), 'verify_sync_flag': '--sync-installed' in verify, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"]},
-      {"say": "Source repo: /Users/john/Code/Github/CodeStable\nInstalled copies are deployment artifacts; do not edit /Users/john/.agents/skills first.\nRequired closeout: commit, push, then run codestable-maintainer/tools/verify.py --sync-installed."}
+      {"say": "Source repo: /Users/qiyuanzhan/code/CodeStable\nInstalled copies are deployment artifacts; do not edit /Users/qiyuanzhan/.agents/skills first.\nRequired closeout: commit, push, then run codestable-maintainer/tools/verify.py --sync-installed."}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["/Users/john/Code/Github/CodeStable", "do not edit /Users/john/.agents/skills first", "verify.py --sync-installed"]
+      "contains": ["/Users/qiyuanzhan/code/CodeStable", "do not edit /Users/qiyuanzhan/.agents/skills first", "verify.py --sync-installed"]
     },
     "trajectory": {
       "required_actions": ["inspect_source_repo", "plan_source_push_verify_sync"],

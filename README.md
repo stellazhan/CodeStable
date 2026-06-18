@@ -174,12 +174,12 @@ your-project/
 
 ## Maintainer 与 Harness
 
-CodeStable 自身变更走 `codestable-maintainer`。源仓是 `/Users/john/Code/Github/CodeStable`，installed copies 只是部署产物，不能先改 installed copy。
+CodeStable 自身变更走 `codestable-maintainer`。源仓是 `/Users/qiyuanzhan/code/CodeStable`，installed copies 只是部署产物，不能先改 installed copy。
 
 分支变更推送后，用 verifier 做 fresh clone、技能校验、installed copy 同步和 diff-check：
 
 ```bash
-python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 
 行为回归由 maintainer harness 覆盖：

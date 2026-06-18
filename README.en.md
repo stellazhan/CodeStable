@@ -174,12 +174,12 @@ Hard constraints:
 
 ## Maintainer And Harness
 
-CodeStable itself is maintained through `codestable-maintainer`. The source repository is `/Users/john/Code/Github/CodeStable`; installed copies are deployment artifacts and must not be edited first.
+CodeStable itself is maintained through `codestable-maintainer`. The source repository is `/Users/qiyuanzhan/code/CodeStable`; installed copies are deployment artifacts and must not be edited first.
 
 After pushing a branch, run the verifier for fresh-clone checks, skill validation, installed-copy sync, and diff-check:
 
 ```bash
-python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 
 Behavior regression coverage lives in the maintainer harness:
