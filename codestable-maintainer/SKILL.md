@@ -11,10 +11,10 @@ local CodeStable repository.
 
 ## Source Of Truth
 
-- Source repo: `/Users/john/Code/Github/CodeStable`
+- Source repo: `/Users/qiyuanzhan/code/CodeStable`
 - Installed skill roots commonly used on this machine:
-  - `/Users/john/.agents/skills`
-  - `/Users/john/.codex/skills`
+  - `/Users/qiyuanzhan/.agents/skills`
+  - `/Users/qiyuanzhan/.codex/skills`
 - Fresh-clone verification root: create a temporary directory under `/tmp` or
   the system temp directory.
 
@@ -27,8 +27,8 @@ validator, harness tool, or README, switch to the source repo before editing.
    `git status --short --branch` and `git remote -v`.
 2. Create or switch to a focused `codex/...` branch unless the user explicitly
    requires another branch.
-3. Edit only source repo files. Do not patch `/Users/john/.agents/skills/*` or
-   `/Users/john/.codex/skills/*` until after the source change is committed and
+3. Edit only source repo files. Do not patch `/Users/qiyuanzhan/.agents/skills/*` or
+   `/Users/qiyuanzhan/.codex/skills/*` until after the source change is committed and
    verified.
 4. If the change creates or updates a skill, use the active skill-creator
    workflow when it is available. In all cases, validate frontmatter, keep
@@ -36,7 +36,7 @@ validator, harness tool, or README, switch to the source repo before editing.
    useful.
 5. Run relevant local validation:
    - Discover the active skill-creator validator with
-     `find /Users/john/.codex /Users/john/.agents -name quick_validate.py -print`
+     `find /Users/qiyuanzhan/.codex /Users/qiyuanzhan/.agents -name quick_validate.py -print`
      and run `uvx --with PyYAML python <quick_validate.py> <skill-dir>` for
      changed skills.
    - `pytest` or focused tests for changed harness scripts when tests exist.
@@ -47,7 +47,7 @@ validator, harness tool, or README, switch to the source repo before editing.
 7. Commit source changes with a Conventional Commit message.
 8. Push the branch to a remote.
 9. Run the maintainer verifier from the source checkout:
-   `python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json`.
+   `python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json`.
    This command fresh-clones the pushed branch, validates changed skills, runs
    harness tests when needed, syncs changed installed skill directories from the
    clone, and diff-checks installed copies.
@@ -63,7 +63,7 @@ validator, harness tool, or README, switch to the source repo before editing.
 Prefer the maintainer verifier:
 
 ```bash
-python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 
 Use the manual branch-aware clone flow only when the verifier itself is broken:
@@ -72,7 +72,7 @@ Use the manual branch-aware clone flow only when the verifier itself is broken:
 tmpdir="$(mktemp -d)"
 git clone --branch <branch> --single-branch <remote-url> "$tmpdir/CodeStable"
 cd "$tmpdir/CodeStable"
-validator="$(find /Users/john/.codex /Users/john/.agents -name quick_validate.py -print -quit)"
+validator="$(find /Users/qiyuanzhan/.codex /Users/qiyuanzhan/.agents -name quick_validate.py -print -quit)"
 uvx --with PyYAML python "$validator" <skill-dir>
 ```
 
@@ -81,7 +81,7 @@ compare each fresh clone skill directory to its installed directory:
 
 ```bash
 for skill_dir in <changed-skill-dir> ...; do
-  diff -ru "$tmpdir/CodeStable/$skill_dir" "/Users/john/.agents/skills/$skill_dir"
+  diff -ru "$tmpdir/CodeStable/$skill_dir" "/Users/qiyuanzhan/.agents/skills/$skill_dir"
 done
 ```
 
