@@ -25,10 +25,12 @@ Before acting:
 
 1. Read `.codestable/attention.md`.
 2. Read `.codestable/reference/system-overview.md` if present.
-3. Read `.codestable/reference/goal-conventions.md` if present; otherwise read
-   this skill's `reference.md`.
-4. Inspect `.codestable/goals/` for an active matching goal.
-5. Search `.codestable/compound/` and relevant feature / issue / refactor docs
+3. Read this skill's `reference.md`.
+4. Read `.codestable/reference/goal-conventions.md` if present.
+5. Before code edits, review, commit, finish, or merge work, read
+   `.codestable/reference/execution-conventions.md` if present.
+6. Inspect `.codestable/goals/` for an active matching goal.
+7. Search `.codestable/compound/` and relevant feature / issue / refactor docs
    when the goal names an existing area.
 
 If `.codestable/` is missing, route to `cs-onboard`.
@@ -126,10 +128,15 @@ Loop while `state: active`:
 2. Implement using existing CodeStable constraints, including worktree, review,
    spec-governance, and commit rules when they apply.
 3. Verify with fresh commands or evidence.
-4. Update `state.yaml`.
-5. Write exactly one bilingual report pair for the completed iteration:
-   `iterations/001.zh.md` and `iterations/001.en.md`.
-6. Continue autonomously unless an owner-stop condition fires.
+4. Before changing `state.yaml.current_iteration`, derive the next zero-padded
+   iteration number from
+   `state.yaml.current_iteration` and existing `iterations/{nnn}.*.md` files;
+   never overwrite a prior report.
+5. Update `state.yaml` for the completed attempt, leaving
+   `current_iteration: {n}`.
+6. Write exactly one bilingual report pair for that completed iteration:
+   `iterations/{nnn}.zh.md` and `iterations/{nnn}.en.md`.
+7. Continue autonomously unless an owner-stop condition fires.
 
 Do not write reports after every command. Reports are iteration summaries.
 

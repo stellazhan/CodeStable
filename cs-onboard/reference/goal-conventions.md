@@ -52,6 +52,21 @@ Required `state.yaml` fields:
 - `owner_stop`
 - `updated_at`
 
+`current_iteration` means the last completed iteration, not the next
+in-progress attempt.
+
+## Iteration Numbering
+
+Before changing `current_iteration`, compute the next `{nnn}` as:
+
+```text
+max(state.yaml.current_iteration, highest existing iterations/{nnn}.*.md) + 1
+```
+
+Write both `iterations/{nnn}.zh.md` and `iterations/{nnn}.en.md`, then leave
+`state.yaml.current_iteration` equal to that completed number. Never overwrite
+an existing iteration file.
+
 ## Reporting
 
 Each completed iteration writes two equivalent files:

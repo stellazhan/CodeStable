@@ -46,6 +46,21 @@ Recovery priority:
 2. latest iteration frontmatter
 3. Markdown body
 
+## Next Iteration Number
+
+`state.yaml.current_iteration` means the last completed iteration, not the next
+in-progress attempt.
+
+Before changing `current_iteration`, compute the next `{nnn}` as:
+
+```text
+max(state.yaml.current_iteration, highest existing iterations/{nnn}.*.md) + 1
+```
+
+Format it with three digits, then write both language files and leave
+`state.yaml.current_iteration` equal to that completed number. Never overwrite
+an existing iteration file.
+
 ## goal.zh.md Template
 
 ```markdown
@@ -164,8 +179,8 @@ action. Translate meaning, not word order.
 - If nothing changed, say so and explain what was learned.
 - Keep historical failed attempts in iteration reports; do not rewrite them into
   success.
-- Update `state.yaml` before or with the iteration pair so resume sees the same
-  next action that humans read.
+- Update `state.yaml` with the iteration pair so resume sees the same
+  completed iteration, next action, and status that humans read.
 
 ## Owner Stop Record
 

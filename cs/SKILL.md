@@ -50,7 +50,7 @@ CodeStable 把开发活动建模成一组**核心实体 + 4 个流程**，所有
 └── compound/        知识沉淀（learning / trick / decision / explore）
 ```
 
-**三条流程**：
+**四条流程**：
 
 - **新增能力**：`cs-feat-design` → `cs-feat-impl` → `cs-feat-accept`（想法模糊先 `cs-brainstorm` 分诊）
 - **修 bug**：`cs-issue-report` → `cs-issue-analyze` → `cs-issue-fix`
@@ -195,7 +195,7 @@ Context level 只用于说明轻重，不在 `cs` 阶段生成重型产物：
 
 1. 一句话：CodeStable 是面向严肃工程的 AI 编码工作流，编排软件生命周期而不是 Agent
 2. 核心实体 + 4 流程的速读图
-3. 问用户"你现在最想从哪儿开始？"，给三个引子：
+3. 问用户"你现在最想从哪儿开始？"，给四个引子：
    - "我有个新功能想做" → cs-feat
    - "我有个明确目标想让 AI 自主达成" → cs-goal
    - "代码里有个 bug" → cs-issue

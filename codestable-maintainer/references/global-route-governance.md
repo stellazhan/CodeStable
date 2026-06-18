@@ -190,6 +190,7 @@ explicit non-goal. Core scenarios:
 |---|---|
 | `cs-route-brief-minimal` | A short prompt routes to the correct skill, emits L1 context, and does not create heavy artifacts. |
 | `goal-autonomous-iteration-docs` | Bounded goal creates machine state, bilingual goal docs, bilingual iteration docs, and does not ask owner for routine technical choices. |
+| `goal-code-edits-use-execution-gate` | Goal-wrapped code edits read execution conventions, run the worktree start gate, and stop before code changes when a linked worktree is required. |
 | `route-choice-owner-context` | Ambiguous prompt produces options, tradeoffs, recommendation, and owner stop. |
 | `fast-path-stays-light` | Small UI/docs/refactor work records a skip and leaves long-lived specs unchanged. |
 | `fast-path-escalates-on-boundary` | A fast path that discovers capability-boundary change upgrades to L3 before spec mutation. |
