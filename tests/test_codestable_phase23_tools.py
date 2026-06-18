@@ -862,6 +862,39 @@ def test_maintainer_verify_syncs_and_diff_checks_changed_skill(tmp_path: Path) -
     assert argv == ["run", "--suite", "critical", "--actor", "sterile", "--json"]
 
 
+def test_maintainer_verify_blocks_real_installed_sync_from_feature_branch(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(tmp_path)
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "cs-onboard/SKILL.md").write_text("---\nname: cs-onboard\ndescription: changed\n---\n", encoding="utf-8")
+    run(repo, "add", ".")
+    run(repo, "commit", "-m", "change skill")
+    run(repo, "push", "-u", "origin", "codex/demo")
+
+    payload = maintainer_verify.verify(
+        repo,
+        "codex/demo",
+        "origin",
+        Path.home() / ".agents/skills",
+        validator.as_posix(),
+        True,
+    )
+
+    assert payload["ok"] is False
+    assert any("Real installed skill roots may only be synced" in finding["message"] for finding in payload["findings"])
+
+
+def test_maintainer_verify_main_syncs_all_main_skill_dirs(tmp_path: Path) -> None:
+    repo, _remote, validator = make_codestable_source_repo(tmp_path)
+    installed = tmp_path / "installed"
+
+    payload = maintainer_verify.verify(repo, "main", "origin", installed, validator.as_posix(), True)
+
+    assert payload["ok"] is True
+    assert payload["installable_units"] == ["codestable-maintainer", "cs-onboard"]
+    assert (installed / "codestable-maintainer/SKILL.md").exists()
+    assert (installed / "cs-onboard/SKILL.md").exists()
+
+
 def test_maintainer_verify_installed_compare_and_sync_ignore_runtime_caches(tmp_path: Path) -> None:
     source = tmp_path / "source"
     dest = tmp_path / "installed"

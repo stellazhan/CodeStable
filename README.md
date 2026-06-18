@@ -116,7 +116,7 @@ CodeStable 的判断是：严肃软件工程的混乱，很多时候不是 agent
 <tr><td rowspan="2"><b>外部文档</b></td><td><code>cs-guide</code></td><td>写开发者指南 / 用户指南，默认输出到 <code>docs/dev/</code> 和 <code>docs/user/</code></td></tr>
 <tr><td><code>cs-libdoc</code></td><td>给公开 API、组件、命令写逐条目参考文档，默认输出到 <code>docs/api/</code></td></tr>
 <tr><td><b>浏览器</b></td><td><code>browser-bridge</code></td><td>通过 Chrome 扩展做真实浏览器操作、DOM 抽取和组件证据采集</td></tr>
-<tr><td><b>维护</b></td><td><code>codestable-maintainer</code></td><td>维护 CodeStable 源仓、harness、fresh clone verifier 和 installed copy sync</td></tr>
+<tr><td><b>维护</b></td><td><code>codestable-maintainer</code></td><td>维护 CodeStable 源仓、harness、fresh clone verifier 和 main-only installed copy sync</td></tr>
 </table>
 
 ---
@@ -174,12 +174,19 @@ your-project/
 
 ## Maintainer 与 Harness
 
-CodeStable 自身变更走 `codestable-maintainer`。源仓是 `/Users/john/Code/Github/CodeStable`，installed copies 只是部署产物，不能先改 installed copy。
+CodeStable 自身变更走 `codestable-maintainer`。源仓是 `/Users/qiyuanzhan/code/CodeStable`，installed copies 只是部署产物，不能先改 installed copy。
 
-分支变更推送后，用 verifier 做 fresh clone、技能校验、installed copy 同步和 diff-check：
+分支变更推送后，用 verifier 做 fresh clone、技能校验、临时 installed copy 同步和 diff-check：
 
 ```bash
-python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+tmp_installed="$(mktemp -d)/skills"
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root "$tmp_installed" --sync-installed --json
+```
+
+真实 `/Users/qiyuanzhan/.agents/skills` 只从远端 `main` 更新。分支合入并推送到 `origin/main` 后再运行：
+
+```bash
+python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 
 行为回归由 maintainer harness 覆盖：

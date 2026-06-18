@@ -116,7 +116,7 @@ CodeStable's bet is simple: in serious software work, chaos often comes not from
 <tr><td rowspan="2"><b>External docs</b></td><td><code>cs-guide</code></td><td>Write developer and user guides, defaulting to <code>docs/dev/</code> and <code>docs/user/</code></td></tr>
 <tr><td><code>cs-libdoc</code></td><td>Write per-entry API / component / command reference docs, defaulting to <code>docs/api/</code></td></tr>
 <tr><td><b>Browser</b></td><td><code>browser-bridge</code></td><td>Use a Chrome extension for real browser control, DOM extraction, and component evidence</td></tr>
-<tr><td><b>Maintenance</b></td><td><code>codestable-maintainer</code></td><td>Maintain CodeStable source, harnesses, fresh-clone verifier, and installed-copy sync</td></tr>
+<tr><td><b>Maintenance</b></td><td><code>codestable-maintainer</code></td><td>Maintain CodeStable source, harnesses, fresh-clone verifier, and main-only installed-copy sync</td></tr>
 </table>
 
 ---
@@ -174,12 +174,19 @@ Hard constraints:
 
 ## Maintainer And Harness
 
-CodeStable itself is maintained through `codestable-maintainer`. The source repository is `/Users/john/Code/Github/CodeStable`; installed copies are deployment artifacts and must not be edited first.
+CodeStable itself is maintained through `codestable-maintainer`. The source repository is `/Users/qiyuanzhan/code/CodeStable`; installed copies are deployment artifacts and must not be edited first.
 
-After pushing a branch, run the verifier for fresh-clone checks, skill validation, installed-copy sync, and diff-check:
+After pushing a branch, run the verifier for fresh-clone checks, skill validation, temporary installed-copy sync, and diff-check:
 
 ```bash
-python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root /Users/john/.agents/skills --sync-installed --json
+tmp_installed="$(mktemp -d)/skills"
+python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root "$tmp_installed" --sync-installed --json
+```
+
+The real `/Users/qiyuanzhan/.agents/skills` root is updated only from remote `main`. After merging and pushing `origin/main`, run:
+
+```bash
+python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 
 Behavior regression coverage lives in the maintainer harness:
