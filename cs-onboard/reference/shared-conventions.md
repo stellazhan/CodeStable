@@ -22,6 +22,12 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │       ├── {slug}-roadmap.md   主文档：背景 / 范围 / 模块拆分 / 接口契约 / 子 feature 清单 / 排期
 │       ├── {slug}-items.yaml   机器可读子 feature 清单，acceptance 回写状态
 │       └── drafts/             可选
+├── goals/                 限定起点/终点的自主迭代目标（cs-goal 产出）
+│   └── {slug}/
+│       ├── state.yaml
+│       ├── goal.zh.md
+│       ├── goal.en.md
+│       └── iterations/
 ├── features/              feature spec 聚合根
 │   └── YYYY-MM-DD-{slug}/  每个 feature 一个目录
 │       ├── {slug}-brainstorm.md  （可选，case 2 时产出）
@@ -57,6 +63,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 
 - 需求文档：`requirements/{slug}.md`（能力愿景，不带日期前缀，扁平不分组）；中心索引 `requirements/VISION.md`
 - roadmap：`roadmap/{slug}/`（不带日期前缀，平铺不嵌套）
+- goal：`goals/{slug}/`（不带日期前缀；状态模型和双语报告见 `.codestable/reference/goal-conventions.md`）
 - feature / issue / refactor 目录：带日期前缀 `YYYY-MM-DD-{slug}`
 - 沉淀类：`compound/YYYY-MM-DD-{doc_type}-{slug}.md`，日期用**归档当天**
 - 架构 doc：`architecture/{type}-{slug}.md`（长效，不带日期前缀）；总入口固定 `ARCHITECTURE.md`
@@ -154,187 +161,11 @@ planned  → dropped      （cs-roadmap update 模式，用户决定不做时改
 
 ## 2.6 main 协调 + worktree 执行
 
-CodeStable 默认把"讨论 / 计划"和"改代码"拆开：
-
-- **主协调检出**：用户讨论需求、写 design / analysis / roadmap / checklist 的地方，通常是 `main` 分支所在主 checkout。
-- **执行 worktree**：真正改代码的地方。每个 feature / issue / refactor 用独立 git worktree 和独立 `codex/...` 分支，除非用户明确要求直接在当前 checkout 做。
-
-### 最短正确用法
-
-用户不需要记住每个工具名。日常只要用这几句口令驱动：
-
-1. **开始工作**：`用 CodeStable 做 {目标}` 或 `cs {目标}`。AI 先判断走 feature / issue / refactor / explore，不确定就先分诊。
-2. **进入实现**：`开 worktree 实现`。AI 在 execution worktree 上动代码，并先跑 start gate。
-3. **允许 review**：`允许 subagent`。AI 完成实现批次后必须发 reviewer，并把 review 证据写进同一 unit。
-4. **提交实现**：`提交这批实现`。AI 跑测试、commit planner、commit gate，并把代码 / docs / tests 按逻辑提交到功能分支。
-5. **完成 worktree**：`finish worktree`。AI 跑 finish gate，生成中文学习报告、context check、merge readiness，并登记本地 merge reminder。
-6. **固化 finish 产物**：finish gate 通过后，把它生成的 3 个产物作为功能分支最后一个小提交，通常用 `docs: add {slug} finish report`。这一步不合并 main，只让学习报告随功能分支一起被 review / merge。
-7. **合并回主线**：用户明确说 `合并这个 worktree 到 main` 后，AI 才切回主线、merge / push，并在合并后检查 inbox 是否变成 `merged`。
-
-如果只想知道有没有漏合并，任何同仓库 checkout 里说 `检查 worktree inbox` 或跑 doctor 即可。
-
-### 计划互通面
-
-worktree 之间不要读取彼此未合并的代码 diff；共享信息只通过计划文档传递：
-
-- `.codestable/features/**`、`.codestable/issues/**`、`.codestable/refactors/**`
-- `.codestable/roadmap/**`
-- `.codestable/compound/**` 中已确认的 decision / explore / trick / learning
-- 必要时由用户指定的临时协调文档
-
-如果一个执行 worktree 发现计划需要调整，先把**计划变更**同步回主协调检出或明确提交到共享分支，再让其他 worktree 读取；不要要求其他 agent 直接去 sibling worktree 读未合并代码。
-
-### 创建执行 worktree 前
-
-动代码前先确认：
-
-1. 当前是否在主协调检出讨论 / 写计划；如果不是，说明风险并按用户偏好继续。
-2. spec / checklist / analysis 已在共享计划面可读。
-3. worktree 路径、分支名、执行范围、禁止触碰的 sibling worktree 已说清楚。
-4. worktree 从当前目标基线创建；不要从另一个功能 worktree 派生，除非用户明确要堆叠开发。
-
-实现单元开始前先运行 worktree start gate；子技能应调用项目运行时路径，不调用 CodeStable 源仓库路径：
-
-```bash
-python3 .codestable/tools/codestable-worktree-gate.py --root . --json start --unit .codestable/features/YYYY-MM-DD-{slug}
-```
-
-gate 通过后会记录 Git 私有 baseline；这个 baseline 用于后续发现"工作树已经干净，但默认分支在 baseline 后被提交了实现代码"的情况。
-
-推荐命名：
-
-- 分支：`codex/{slug}`
-- 路径：项目内 `.codex/worktrees/{slug}`，或用户已有的 worktree 根目录
-
-### worktree 内执行规则
-
-- 只读共享计划面和本 worktree 的代码；不要把 sibling worktree 的代码当事实来源。
-- 如果需要知道其他 worktree 的意图，读它已同步到共享计划面的 design / analysis / roadmap / note。
-- 如果发现计划冲突，停下来在主协调检出更新计划或请用户裁决，不靠私下读代码猜。
-- worktree 环境缺少本地 env / secrets 时，按项目注意事项补齐或明确标为环境 blocker，不把缺失环境误判成代码失败。
-
-### 批次完成后的独立 code review
-
-每个执行 worktree 写完一批可验收代码后，**输出实现完成汇报之前**必须触发一次独立 code review；review 是实现完成门槛，不等到 commit 才补。
-
-1. 必须使用可用的 subagent / reviewer agent。进入实现 / 修复 / 重构执行前，若当前对话还没有明确的 subagent / delegation 授权，先走 owner-judgment checkpoint；不要只给低上下文二选一。
-
-```text
-Context: CodeStable 的完成门槛要求独立 implementation review；这个授权会决定是否能在本轮完成前派出 reviewer。
-Term: Subagent Review = 由独立 reviewer agent 基于 review packet 做只读审查，不修改代码。
-Why it matters: 如果没有独立 review，P0/P1 问题可能在完成汇报后才暴露；如果平台没有 subagent 能力，才允许 fresh self-review fallback。
-Options:
-1. Subagent Review (recommended) - dispatch a reviewer subagent before completion.
-2. Inline Review - only valid if this platform has no subagent support.
-Default: Subagent Review, because it is the normal CodeStable completion gate when available.
-Non-automatic: This does not commit, merge, push, accept P0/P1 findings, or approve unrelated delegated work.
-Question: Which review authorization should CodeStable use for this work?
-```
-
-用户选择 Subagent Review 或明确说 subagent / delegation 后，本次 implementation review 可直接触发 subagent；不要等到 review gate 才首次询问。用户选择 Inline Review 且平台实际有 subagent 能力时，说明 CodeStable 完成门槛会被阻塞并停等确认。review 前先按风险层级用 review packet 工具生成最小必要输入，再发给 reviewer：
-
-```bash
-python3 .codestable/tools/build-review-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --stage quality --output /tmp/codestable-review.md --validation "{验证命令} -> {结果}"
-```
-
-packet 应包含目标 spec / analysis、`git diff --stat`、相关 diff、验证命令和结果；不要把 `.env`、token、secret 或本地凭证贴进 review 输入。
-
-风险层级默认值：
-
-- tiny doc / typo：owner 自查即可。
-- small local code：一次 subagent quality review，使用 `--stage quality`。
-- normal feature / fix：quality review + owner 验证证据；需求容易走偏时补一次 `--stage spec`。
-- schema / security / core runtime：必须分别生成 `--stage spec`、`--stage quality`、`--stage verification`，verification stage 必须带 fresh command output，不接受记忆里的“已跑过”。
-- large multi-module：采用分阶段执行；每个阶段交接前生成 handoff context，再让下一阶段 agent / reviewer 读取。
-
-多阶段 handoff 用固定轻量格式，不把完整聊天历史塞给下一阶段：
-
-```bash
-python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience handoff --output /tmp/codestable-handoff.md --decided "{已决定}" --remaining "{下一步}"
-```
-
-handoff 必须包含 `Decided` / `Rejected` / `Risks` / `Files` / `Remaining` / `Evidence` 六项；没有内容也写 `None recorded.`，避免隐性上下文丢失。
-handoff 是固定英文结构；需要中文内容时改用下面的受众报告，不要给 handoff 传 `--language zh`。
-
-当接收方是人审、owner 决策、owner 判断、学习报告或访谈复盘时，改用受众报告，不把结论埋在聊天记录里：
-
-```bash
-python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience human-reviewer --language zh --output /tmp/codestable-human-review.md --decided "{已决定}" --remaining "{下一步}" --evidence "{验证证据}"
-```
-
-可选 audience：`human-reviewer` / `owner-decision` / `owner-judgment` / `learner` / `interviewee`。这些报告固定输出 `Decision Brief` / `Working Context` / `Evidence Appendix` 三层；中文报告用 `--language zh`。`owner-judgment` 用于 route、授权、acceptance、finish / merge 等需要人判断但不是访谈的 checkpoint。
-
-发给 subagent / human reviewer / owner 前先跑 sufficiency gate，避免缺 files / evidence 或漏脱敏：
-
-```bash
-python3 .codestable/tools/check-context-sufficiency.py --file /tmp/codestable-human-review.md --strict --json
-```
-
-2. reviewer 只审查不改代码，输出按严重度排序的 findings；重点看范围漂移、方案偏离、缺测试、隐性行为变化、并发 / 幂等 / crash-resume 风险。
-3. P0 / P1 必须修到 reviewer 无阻塞；P2 由用户或 owner 决定修、记后续 issue，或明确接受风险。
-4. 只有当前平台确实没有 subagent 能力时，执行 owner 才能做 fresh self-review fallback，并明确写"当前环境没有 subagent 能力，已用本线程复核替代"。不能因为任务小、时间紧、或觉得 reviewer 多余而跳过 subagent。
-5. review 结果落到同一 feature / issue / refactor 目录的 `{slug}-implementation-review.md`；最终汇报、fix-note、apply-notes 可摘要引用，但不能替代这份证据文件。
-
-review 文件必须包含单独一行 `reviewer: subagent`，这样 validator 才能确认不是 self-review 解释文本误命中。只有 fallback 时才写 `reviewer: self`，并配合环境变量 `CODESTABLE_ALLOW_SELF_REVIEW_FALLBACK=1`。
-
-review 不是 acceptance 的替代品；它只保证代码批次质量，acceptance 仍按 design / checklist 做闭环。`cs-onboard` 释放的 `.codestable/tools/validate-implementation-review.py` 可作为 Stop hook 门禁：有实现代码变更时必须在 linked worktree 内执行（除非显式 override），已完成的 feature / issue / refactor 必须有 implementation-review 文件。
-
-execution worktree 准备 finish / merge 前必须跑 finish gate，生成中文学习报告并登记 merge reminder：
-
-```bash
-python3 .codestable/tools/codestable-finish-worktree.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --json --validation "{验证命令} -> {结果}"
-```
-
-finish gate 会写 `{slug}-learning-report.md`、`{slug}-learning-context-check.json`、`{slug}-merge-readiness.json`，并在 Git common-dir 下写本地 inbox 记录。只要 branch 尚未 merge，任何同 repo branch / worktree 运行 doctor 都能看到提醒；如果 branch 在报告后又有新 commit，状态会变成 `stale-report`，必须重跑 finish gate。
-finish gate 运行前必须没有未提交的普通变更；只允许它自己上次生成的
-learning/context/readiness 产物处于未提交状态并被刷新。这样 `covered_head`
-始终对应已提交的工作内容，不会漏掉 dirty implementation。
-
-finish gate 通过后，推荐立即把这三个 finish 产物作为最后一个小提交提交到当前功能分支：
-
-```bash
-git add .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-report.md \
-  .codestable/features/YYYY-MM-DD-{slug}/{slug}-learning-context-check.json \
-  .codestable/features/YYYY-MM-DD-{slug}/{slug}-merge-readiness.json
-git commit -m "docs: add {slug} finish report"
-```
-
-这个提交只固化学习报告 / readiness，不等于合并主线；只有用户明确授权"合并到 main"后才执行 merge / push。finish 产物提交后不需要因为这个提交本身重跑 finish gate；inbox 会把只包含 finish 产物的后续 commit 仍视为同一次 ready-to-merge。
-
-提交或最终汇报前运行 commit gate：
-
-```bash
-python3 .codestable/tools/codestable-worktree-gate.py --root . --json commit --unit .codestable/features/YYYY-MM-DD-{slug}
-```
-
-日常恢复上下文或最终汇报前可运行 doctor：
-
-```bash
-python3 .codestable/tools/codestable-doctor.py --root . --json
-```
-
-若只想看未关闭的人审和 follow-up，可运行：
-
-```bash
-python3 .codestable/tools/codestable-backlog.py --root . --json
-```
-
-若只想看待合并 worktree，可运行：
-
-```bash
-python3 .codestable/tools/codestable-worktree-inbox.py --root . --json
-```
-
-owner 已确认暂缓合并时，用 inbox 的 snooze 本地降噪；未到期的 snooze 不会触发
-doctor 的 ready-to-merge 提醒，但新 commit 仍会让记录变成 `stale-report`：
-
-```bash
-python3 .codestable/tools/codestable-worktree-inbox.py --root . --snooze codex_slug --until 2026-06-12T00:00:00Z --json
-```
-
-### 复杂实现的 subagent 执行选择
-
-review 强制用 subagent；实现是否用 subagent 取决于复杂度。动手前如果发现这次实现跨 3 个以上子系统、需要并行拆片、涉及高风险迁移 / 并发 / runtime contract，或单线程上下文承载明显吃紧，先停下来问用户是否切换为 subagent-driven implementation。用户同意后按最佳实践拆成互不重叠的写入范围：每个 worker 只负责自己的文件 / 模块，主线程保留集成、验证和最终 review。
+执行拓扑、worktree gate、implementation review、finish gate、context
+packet 和 subagent 执行选择已拆到
+`.codestable/reference/execution-conventions.md`。子技能只在本文件记录目录
+和生命周期共享口径；涉及实际改代码、review、commit、finish 或 merge 前，
+必须读取 execution conventions。
 
 ## 3. 阶段收尾推荐
 

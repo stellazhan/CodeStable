@@ -46,6 +46,7 @@ CRITICAL_SCENARIO_IDS = {
     "finish-inbox-ready",
     "finish-inbox-stale-report",
     "guide-user-contract-review",
+    "goal-autonomous-iteration-docs",
     "handoff-context-packet",
     "implementation-review-required",
     "issue-fix-escalates-on-wrong-spec",

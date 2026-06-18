@@ -28,6 +28,7 @@ SKILL_DIRS = {
     "cs-feat-design",
     "cs-feat-ff",
     "cs-feat-impl",
+    "cs-goal",
     "cs-guide",
     "cs-issue",
     "cs-issue-analyze",

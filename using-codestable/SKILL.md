@@ -30,6 +30,7 @@ If the platform has explicit skill invocation, invoke `cs`. If it does not, foll
 Route through `cs` when the user asks about:
 
 - New features, changed behavior, or product capability work
+- Bounded start/end goals, acceptance-result work, or autonomous AI iteration requests
 - Bugs, regressions, broken commands, bad docs, or unexpected behavior
 - Refactors, cleanup, performance, maintainability, or structure changes
 - Requirements, architecture, roadmap, planning, design, or acceptance

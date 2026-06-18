@@ -67,6 +67,7 @@ brainstorm 是讨论层独立入口，会分诊：case 1（清楚 → 直接 des
 
 | 当前状态 | 触发哪个子技能 |
 |---|---|
+| 用户给出起点 + 终点 / 验收结果，并希望 AI 自主实现、自我迭代或每轮报告 | `cs-goal` |
 | 想法模糊，说不清真问题 / 边界 / 不做什么 | `cs-brainstorm` |
 | 想法清晰（知道做什么 / 为谁 / 怎么算成功） | `cs-feat-design` |
 | 用户说"开一个新需求 / 起草稿 / 新建 feature"想自己写半成品 | `cs-feat-design` 的"初始化模式"（建目录 + 空 intent，让用户填完再回） |
@@ -102,6 +103,7 @@ brainstorm 是讨论层独立入口，会分诊：case 1（清楚 → 直接 des
 
 - feature：从来没有的东西要加进来（新功能 / 新能力）
 - issue：本来应该好的东西坏了（bug / 异常 / 文档错误）
+- goal：用户定义起点和验收终点，让 AI 自主迭代直到完成或阻塞；goal 可包住 feature / issue / refactor，但状态归 `.codestable/goals/`
 
 灰色地带：feature 实现时发现的 bug 记成新 issue，不在 feature PR 顺手修。
 

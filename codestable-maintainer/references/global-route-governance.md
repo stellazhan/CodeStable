@@ -27,6 +27,7 @@ Behavior harness 必须测试这套矩阵本身，而不是只测试某个 roadm
 - 轻量任务保持轻量，不生成不必要的 requirement delta。
 - 模糊任务给 route choice 和 owner context。
 - fast path 一旦发现 capability boundary 或 spec drift，升级到 L3。
+- goal path 默认自主迭代，但验收冲突、spec/public contract 变化或重复 blocker 会 owner-stop。
 - implementation / fix / refactor 过程中发现长期文档错误时，停止直接改 spec。
 - finish worktree 检查 learner/context report、`covered_head` 和 inbox 状态。
 - clean / compacted actor 能从 artifacts 和 tools 恢复同样的 next action。
@@ -132,6 +133,7 @@ accept risk, or defer unresolved findings must upgrade to L2 or higher.
 |---|---|---|
 | `cs` | L1 | Explain route, nearby exclusions when ambiguous, context level, and escalation trigger. |
 | `cs-onboard` | L2/L4 | Empty repos can stay L1. Existing docs require inventory, mapping, trusted/stale classification, and owner approval before migration. |
+| `cs-goal` | L1/L2 | Grill bounded start/end goals, create `state.yaml` plus bilingual goal/iteration docs, and autonomously iterate. Acceptance conflicts, spec/public-contract changes, repeated blockers, budget exhaustion, or risk acceptance trigger owner-stop. |
 | `cs-brainstorm` | L1 -> L2 | Freeform discussion stays light. When the owner accepts a direction or asks for the next step, produce owner decision context. |
 | `cs-roadmap` | L2/L3 | Owner brief, scope/non-goals, phases, owner decisions, clarifications, and any spec deltas implied by the roadmap. |
 | `cs-feat` | L1 | Stage routing and whether this is design, fast-forward, implementation, or acceptance. Ambiguous route requires a route-choice brief. |
@@ -187,6 +189,7 @@ explicit non-goal. Core scenarios:
 | Scenario | Expected proof |
 |---|---|
 | `cs-route-brief-minimal` | A short prompt routes to the correct skill, emits L1 context, and does not create heavy artifacts. |
+| `goal-autonomous-iteration-docs` | Bounded goal creates machine state, bilingual goal docs, bilingual iteration docs, and does not ask owner for routine technical choices. |
 | `route-choice-owner-context` | Ambiguous prompt produces options, tradeoffs, recommendation, and owner stop. |
 | `fast-path-stays-light` | Small UI/docs/refactor work records a skip and leaves long-lived specs unchanged. |
 | `fast-path-escalates-on-boundary` | A fast path that discovers capability-boundary change upgrades to L3 before spec mutation. |

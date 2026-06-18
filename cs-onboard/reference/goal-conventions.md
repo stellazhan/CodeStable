@@ -1,0 +1,80 @@
+# Goal Conventions
+
+This file is copied by `cs-onboard` to
+`.codestable/reference/goal-conventions.md`. It defines the shared runtime shape
+for `cs-goal`.
+
+## Purpose
+
+Goals are bounded start/end work units. The owner defines the outcome and
+acceptance signal; AI grills briefly, implements, verifies, self-iterates, and
+writes bilingual reports.
+
+Use goals when the request says "reach this result", "run until accepted",
+"self-iterate", "AI implements autonomously", or "grill me first".
+
+## Directory
+
+```text
+.codestable/goals/{slug}/
+├── state.yaml
+├── goal.zh.md
+├── goal.en.md
+└── iterations/
+    ├── 001.zh.md
+    └── 001.en.md
+```
+
+`state.yaml` is the machine source of truth. Markdown is human-readable context.
+Recovery priority is `state.yaml` > latest iteration frontmatter > Markdown
+body.
+
+## State Model
+
+```text
+active | complete | blocked
+```
+
+Required `state.yaml` fields:
+
+- `schema_version`
+- `goal`
+- `status`
+- `objective`
+- `start_point`
+- `acceptance`
+- `non_goals`
+- `budget`
+- `current_iteration`
+- `next_action`
+- `blocker_signature`
+- `blocker_count`
+- `owner_stop`
+- `updated_at`
+
+## Reporting
+
+Each completed iteration writes two equivalent files:
+
+- `iterations/{nnn}.zh.md`
+- `iterations/{nnn}.en.md`
+
+Reports are not command logs. One iteration equals a coherent implementation and
+verification attempt. Both languages must include the same understanding,
+implementation approach, changes, verification evidence, problems, next attempt,
+and state update.
+
+## Strict Owner Stops
+
+Stop only when:
+
+- acceptance criteria conflict;
+- objective / start / terminal condition has major ambiguity;
+- continuing changes long-lived specs, public contract, or capability boundary
+  beyond the recorded goal;
+- the same blocker repeats for three consecutive iterations;
+- budget is exhausted or nearly exhausted;
+- risk acceptance, secrets, destructive action, external purchase, merge, or
+  deployment approval is required.
+
+Routine technical choices and ordinary failed attempts stay AI-owned.

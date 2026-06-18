@@ -43,7 +43,8 @@ brainstorm 是"讨论层"统一入口。
    - 有同名 roadmap → 这块已在 roadmap 跟进，是不是要推进具体子 feature
    - `brainstorms/` 下有相关创意记录 → 读完汇报"之前 {日期} 存过一份脑暴记录，方向是 {…}，接着聊还是直接拆 roadmap？"
 3. **确认这是新功能 brainstorm**——bug 走 `cs-issue`，重构走 `cs-refactor`
-4. **如果你已经能替用户写出 design 需求摘要的初稿**——当场判 case 1。揽下不属于自己的活是本阶段最大反模式
+4. **确认不是 goal**——用户给了起点 + 终点 / 验收结果，并希望 AI 自主迭代、每轮报告或说 "grill me 后开干" → 走 `cs-goal`，不要当普通 brainstorm
+5. **如果你已经能替用户写出 design 需求摘要的初稿**——当场判 case 1。揽下不属于自己的活是本阶段最大反模式
 
 ### 开场分诊：一两轮对话判 case
 
@@ -229,8 +230,9 @@ case 1 / case 3 也能借这个动作（不强求落 brainstorm note），逻辑
 2. **不替用户决定规模**——case 2 / 3 / 4 边界模糊就问用户"你脑子里这块是一个 feature 能装下的规模吗，还是需要先 grill 存着"
 3. **不落盘非 case 2 / case 4 产物**——case 1 / 3 不写文件
 4. **不处理 bug / 重构**
-5. **不在 case 1 / 3 启动 grill 档**——case 1 已清楚硬 grill 反人性，case 3 用户已 ready 拆解不需要 grill
-6. **别自己顺手开始写 design 或 roadmap**——阶段间的人工 checkpoint 是 CodeStable 整套流程的硬约束
+5. **不处理 bounded goal**——有明确起点、终点 / 验收、AI 自主迭代诉求时转 `cs-goal`
+6. **不在 case 1 / 3 启动 grill 档**——case 1 已清楚硬 grill 反人性，case 3 用户已 ready 拆解不需要 grill
+7. **别自己顺手开始写 design 或 roadmap**——阶段间的人工 checkpoint 是 CodeStable 整套流程的硬约束
 
 ---
 
