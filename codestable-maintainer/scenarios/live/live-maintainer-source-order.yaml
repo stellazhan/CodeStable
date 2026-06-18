@@ -3,12 +3,12 @@
   "fixture": "clean-onboarded-repo",
   "runs": 1,
   "actor": {
-    "prompt": "The user asks: change CodeStable skill behavior. Follow CodeStable maintainer rules. Do not edit files. Answer with the required order only: where to edit, when to commit/push, and which verifier command makes it available locally.",
+    "prompt": "The user asks: change CodeStable skill behavior. Follow CodeStable maintainer rules. Do not edit files. Answer with the required order only: where to edit, when to commit/push, how to verify the feature branch with a temporary installed root, and when real /Users/qiyuanzhan/.agents/skills may be synced.",
     "timeout_seconds": 120
   },
   "expect": {
     "transcript": {
-      "contains": ["/Users/qiyuanzhan/code/CodeStable", "--sync-installed"]
+      "contains": ["/Users/qiyuanzhan/code/CodeStable", "--sync-installed", "temporary", "origin/main"]
     },
     "trajectory": {
       "required_actions": ["codex_exec"],

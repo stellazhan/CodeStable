@@ -370,7 +370,7 @@ def test_behavior_harness_live_transcript_regex_handles_nested_item_text(tmp_pat
     fake_codex.write_text(
         "#!/usr/bin/env python3\n"
         "import json\n"
-        "print(json.dumps({'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'Do not use codestable-maintainer verify as a wrapper.\\nUse python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json'}}))\n",
+        "print(json.dumps({'type': 'item.completed', 'item': {'type': 'agent_message', 'text': 'Do not use codestable-maintainer verify as a wrapper.\\nUse python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remote origin --installed-root \"$tmp_installed\" --sync-installed --json for branch verification. Sync /Users/qiyuanzhan/.agents/skills only from origin/main.'}}))\n",
         encoding="utf-8",
     )
     fake_codex.chmod(0o755)

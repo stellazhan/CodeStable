@@ -144,6 +144,19 @@ def changed_skill_dirs(paths: list[str]) -> list[str]:
     return sorted(skills)
 
 
+def existing_skill_dirs(root: Path) -> list[str]:
+    return sorted(skill for skill in SKILL_DIRS if (root / skill / "SKILL.md").exists())
+
+
+def is_real_installed_root(path: Path) -> bool:
+    resolved = path.expanduser().resolve()
+    candidates = [
+        Path.home() / ".agents/skills",
+        Path.home() / ".codex/skills",
+    ]
+    return any(resolved == candidate.expanduser().resolve() for candidate in candidates)
+
+
 def changed_noninstalled(paths: list[str], skills: list[str]) -> list[dict[str, str]]:
     skill_roots = set(skills)
     result = []
@@ -256,6 +269,7 @@ def verify(
     if dirty:
         findings.append(Finding("P1", "Source checkout has uncommitted changes; commit and push before verification.", "\n".join(dirty)))
 
+    default_branch = remote_default(repo, remote)
     remote_head = remote_ref(repo, remote, branch)
     local_head = git_head(repo)
     if not remote_head:
@@ -263,10 +277,19 @@ def verify(
     elif remote_head != local_head:
         findings.append(Finding("P1", "Local HEAD does not match remote branch HEAD.", f"{local_head} != {remote_head}"))
 
+    if sync_installed and is_real_installed_root(installed_root) and branch != default_branch:
+        findings.append(
+            Finding(
+                "P1",
+                "Real installed skill roots may only be synced from the remote default branch. Use a temporary installed root for feature-branch verification.",
+                f"{branch} != {default_branch}",
+            )
+        )
+
     remote_url = git(repo, "remote", "get-url", remote).stdout.strip()
     entries = changed_file_entries(repo, remote, branch)
     paths = [entry.path for entry in entries]
-    skills = changed_skill_dirs(paths)
+    skills = existing_skill_dirs(repo) if sync_installed and branch == default_branch else changed_skill_dirs(paths)
     noninstalled = changed_noninstalled(paths, skills)
     clone_path: str | None = None
 
