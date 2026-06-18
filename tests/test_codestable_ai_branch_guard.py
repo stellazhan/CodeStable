@@ -148,6 +148,16 @@ def test_cli_blocks_hook_json_with_status_two(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["reason"] == "branch_switch_command"
 
 
+def test_installed_git_hook_allows_when_guard_script_is_missing(tmp_path: Path) -> None:
+    repo = init_repo(tmp_path)
+
+    [hook] = guard.install_git_hooks(repo, force=False)[:1]
+    hook_text = hook.read_text(encoding="utf-8")
+
+    assert "CodeStable AI branch guard unavailable; allowing Git hook." in hook_text
+    assert "exit 0" in hook_text
+
+
 def test_codex_hook_definition_invokes_branch_guard() -> None:
     hook_path = Path(__file__).resolve().parents[1] / "cs-onboard/hooks/hooks.codex.json"
     payload = json.loads(hook_path.read_text(encoding="utf-8"))

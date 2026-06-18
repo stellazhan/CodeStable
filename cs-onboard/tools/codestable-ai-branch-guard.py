@@ -302,6 +302,10 @@ def install_git_hooks(root: Path, force: bool) -> list[Path]:
             "if [ ! -f \"$SCRIPT\" ]; then\n"
             f"  SCRIPT=\"{fallback.as_posix()}\"\n"
             "fi\n"
+            "if [ ! -f \"$SCRIPT\" ]; then\n"
+            "  echo \"CodeStable AI branch guard unavailable; allowing Git hook.\" >&2\n"
+            "  exit 0\n"
+            "fi\n"
             f"exec python3 \"$SCRIPT\" --root \"$ROOT\" --git-hook {hook_name}\n",
             encoding="utf-8",
         )
