@@ -5,65 +5,32 @@
   "actor": {
     "context": "sterile",
     "script": [
+      {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
       {
-        "run": [
-          "python3",
-          ".codestable/tools/build-context-packet.py",
-          "--root",
-          ".",
-          "--unit",
-          ".codestable/features/2026-06-10-demo",
-          "--audience",
-          "owner-judgment",
-          "--language",
-          "zh",
-          "--output",
-          ".codestable/owner-judgment.md",
-          "--decided",
-          "Use owner judgment before acceptance",
-          "--rejected",
-          "Do not rely on low-context yes",
-          "--risk",
-          "Missing context makes approval meaningless",
-          "--file",
-          ".codestable/features/2026-06-10-demo/demo-design.md",
-          "--remaining",
-          "Wait for owner answer",
-          "--evidence",
-          "scenario fixture",
-          "--judgment",
-          "是否批准 requirement delta",
-          "--why-now",
-          "下一步会改变长期 requirement",
-          "--term",
-          "owner judgment = 会改变下一步动作的人类判断",
-          "--option",
-          "批准 delta；或退回 clarification",
-          "--default-recommendation",
-          "先补齐 delta context",
-          "--effect",
-          "批准后可以进入 acceptance",
-          "--non-automatic",
-          "不会自动 commit、merge、push"
-        ]
+        "write": {
+          "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: risk\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nDecide whether to approve the requirement delta before acceptance.\n\n## Why Now\nThe next step changes a long-lived requirement and affects future agents.\n\n## Context\nOwner judgment is required because low-context approval would make the requirement delta meaningless.\n\n## Options\n1. Approve the delta and continue to acceptance.\n2. Return to clarification before changing the requirement.\n\n## Recommendation\nClarify the delta context before approval.\n\n## Risks And Tradeoffs\nApproving too early may lock in the wrong capability boundary; clarifying first delays acceptance but preserves intent.\n\n## Non-Automatic Actions\nThis does not commit, merge, push, deploy, or accept risk automatically.\n\n## After You Answer\nUpdate this report status and continue with the selected path.\n"
+        }
       }
     ]
   },
   "expect": {
-    "artifacts": {
-      "must_create": [".codestable/owner-judgment.md"],
-      "contains": [
-        {"path": ".codestable/owner-judgment.md", "text": "CodeStable Owner 判断上下文"}
-      ]
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "write:.codestable/features/2026-06-10-demo/approval-report.md"
+      ],
+      "forbidden_actions": ["commit", "merge"]
     },
-    "commands": [
-      {
-        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/owner-judgment.md", "--strict", "--json"],
-        "exit_code": 0,
-        "json": [
-          {"path": "ok", "equals": true}
-        ]
-      }
-    ]
+    "artifacts": {
+      "must_create": [".codestable/features/2026-06-10-demo/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Decision Needed"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Recommendation"}
+      ]
+    }
   }
 }

@@ -27,10 +27,11 @@ Before acting:
 2. Read `.codestable/reference/system-overview.md` if present.
 3. Read this skill's `reference.md`.
 4. Read `.codestable/reference/goal-conventions.md` if present.
-5. Before code edits, review, commit, finish, or merge work, read
+5. Read `.codestable/reference/approval-conventions.md` if present.
+6. Before code edits, review, commit, finish, or merge work, read
    `.codestable/reference/execution-conventions.md` if present.
-6. Inspect `.codestable/goals/` for an active matching goal.
-7. Search `.codestable/compound/` and relevant feature / issue / refactor docs
+7. Inspect `.codestable/goals/` for an active matching goal.
+8. Search `.codestable/compound/` and relevant feature / issue / refactor docs
    when the goal names an existing area.
 
 If `.codestable/` is missing, route to `cs-onboard`.
@@ -83,6 +84,11 @@ Always grill before creating a new goal. Keep it short and owner-level.
 Ask at most 3-5 focused questions. Each round uses one question plus 2-4
 meaningfully different choices. Avoid asking for implementation details unless
 the answer changes the goal boundary.
+
+If a grill answer requires owner approval of scope, route, budget, risk, or
+stopping policy and the options need explanation, first write
+`.codestable/goals/{slug}/approval-report.md`. A simple clarifying question can
+stay in chat; a decision checkpoint needs the report.
 
 Collect only:
 
@@ -140,8 +146,6 @@ Loop while `state: active`:
 
 Do not write reports after every command. Reports are iteration summaries.
 
----
-
 ## Strict Owner Stops
 
 Stop and ask the owner only when:
@@ -168,10 +172,13 @@ recorded in the final iteration.
 Mark `blocked` only after the same blocker has repeated for at least three
 consecutive iterations or the owner-stop rule says the AI cannot safely proceed.
 Record `blocker_signature`, `blocker_count`, evidence, and the owner decision
-needed.
+needed. Before asking the owner to decide, write `approval-report.md` in the goal
+directory unless the latest iteration pair already contains the full decision
+context, options, recommendation, tradeoffs, evidence, consequence, and next
+action.
 
-If budget ends before acceptance, stop with owner context instead of pretending
-completion.
+If budget ends before acceptance, stop with approval context instead of
+pretending completion.
 
 ---
 

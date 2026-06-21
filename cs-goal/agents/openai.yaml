@@ -1,4 +1,4 @@
 interface:
   display_name: "CodeStable Goal"
   short_description: "Run bounded goals through grill, autonomous iterations, and bilingual reports."
-  default_prompt: "Use cs-goal for a bounded start/end objective. Grill lightly, create goal artifacts, iterate autonomously, and write bilingual iteration reports."
+  default_prompt: "Use cs-goal for a bounded start/end objective. Grill lightly, create goal artifacts, iterate autonomously, write bilingual iteration reports, and create approval-report.md when an owner decision is required."

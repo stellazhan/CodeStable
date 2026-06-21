@@ -1,0 +1,51 @@
+{
+  "id": "approval-report-pending-not-overwritten",
+  "fixture": "owner-judgment-repo",
+  "runs": 1,
+  "setup": {
+    "files": [
+      {
+        "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+        "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: route-choice\ncreated_at: 2026-06-17\n---\n\n# Approval Report\n\n## Decision Needed\nChoose whether to proceed to design.\n\n## Options\n1. Proceed to design.\n2. Continue brainstorm.\n\n## After You Answer\nUpdate this report status before creating another approval.\n"
+      }
+    ]
+  },
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
+      {"action": "read_existing_approval_report"},
+      {"say": "Existing approval-report.md is still pending, so I will not overwrite it with a new approval checkpoint."},
+      {"owner_stop": "existing_approval_pending"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["still pending", "will not overwrite"],
+      "must_stop_for": ["existing_approval_pending"]
+    },
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "read_existing_approval_report",
+        "owner_stop:existing_approval_pending"
+      ],
+      "forbidden_actions": [
+        "write:.codestable/features/2026-06-10-demo/approval-report.md",
+        "commit",
+        "merge"
+      ]
+    },
+    "artifacts": {
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "status: pending"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "Choose whether to proceed to design."}
+      ]
+    },
+    "git": {
+      "must_not_modify": ["src/**"]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "approval-report-reuse-history",
+  "fixture": "owner-judgment-repo",
+  "runs": 1,
+  "setup": {
+    "files": [
+      {
+        "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+        "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: approved\nreason: route-choice\ncreated_at: 2026-06-17\nselected_option: proceed-to-design\nanswered_at: 2026-06-17\n---\n\n# Approval Report\n\n## Decision Needed\nApprove the previous route choice.\n\n## After You Answer\nProceed to design.\n"
+      }
+    ]
+  },
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
+      {"action": "read_existing_approval_report"},
+      {
+        "write": {
+          "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: review-authorization\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision History\n\n- 2026-06-17: approved `proceed-to-design` for the route-choice checkpoint.\n\n## Decision Needed\nChoose the implementation review authorization.\n\n## Why Now\nThe implementation completion gate requires a review path.\n\n## Context\nA prior route-choice approval exists, so the new approval reuses this file without deleting history.\n\n## Options\n1. Subagent Review.\n2. Inline Review.\n\n## Recommendation\nUse Subagent Review when available.\n\n## Risks And Tradeoffs\nOverwriting the old approval would lose owner history; skipping review weakens completion evidence.\n\n## Non-Automatic Actions\nThis does not commit, merge, deploy, or accept findings.\n\n## After You Answer\nRecord the selected review path and continue.\n"
+        }
+      },
+      {"say": "Reused approval-report.md and preserved the previous decision in Decision History."},
+      {"owner_stop": "review_authorization"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["Reused approval-report.md", "Decision History"],
+      "must_stop_for": ["review_authorization"]
+    },
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "read_existing_approval_report",
+        "write:.codestable/features/2026-06-10-demo/approval-report.md",
+        "owner_stop:review_authorization"
+      ],
+      "forbidden_actions": ["commit", "merge"]
+    },
+    "artifacts": {
+      "must_create": [".codestable/features/2026-06-10-demo/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Decision History"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "2026-06-17"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "proceed-to-design"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "review-authorization"}
+      ]
+    },
+    "git": {
+      "must_not_modify": ["src/**"]
+    }
+  }
+}

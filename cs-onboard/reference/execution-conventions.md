@@ -76,10 +76,11 @@ Every execution worktree must trigger independent review before reporting a
 completed implementation batch. Review is a completion gate, not a commit-time
 afterthought.
 
-If the current conversation has no subagent / delegation authorization, ask with
-owner judgment context before implementation review:
+If the current conversation has no subagent / delegation authorization, write
+`approval-report.md` in the relevant unit before implementation review. The
+report must include these approval context fields:
 
-```text
+```markdown
 Context: CodeStable requires independent implementation review before completion.
 Term: Subagent Review = a separate reviewer agent performs read-only review.
 Why it matters: P0/P1 issues may otherwise surface after completion.

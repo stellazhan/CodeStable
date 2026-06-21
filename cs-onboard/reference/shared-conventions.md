@@ -21,18 +21,21 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │   └── {slug}/            一个大需求一个子目录（cs-roadmap 产出）
 │       ├── {slug}-roadmap.md   主文档：背景 / 范围 / 模块拆分 / 接口契约 / 子 feature 清单 / 排期
 │       ├── {slug}-items.yaml   机器可读子 feature 清单，acceptance 回写状态
+│       ├── approval-report.md  （需要 owner 审批但无阶段报告时）
 │       └── drafts/             可选
 ├── goals/                 限定起点/终点的自主迭代目标（cs-goal 产出）
 │   └── {slug}/
 │       ├── state.yaml
 │       ├── goal.zh.md
 │       ├── goal.en.md
+│       ├── approval-report.md  （需要 owner 审批但最近迭代报告未承载上下文时）
 │       └── iterations/
 ├── features/              feature spec 聚合根
 │   └── YYYY-MM-DD-{slug}/  每个 feature 一个目录
 │       ├── {slug}-brainstorm.md  （可选，case 2 时产出）
 │       ├── {slug}-design.md      （标准流程）
 │       ├── {slug}-checklist.yaml （标准流程）
+│       ├── approval-report.md    （需要 owner 审批但无阶段报告时）
 │       ├── {slug}-implementation-review.md （实现完成门禁）
 │       ├── {slug}-acceptance.md  （标准流程）
 │       └── {slug}-ff-note.md     （fastforward 通道唯一产物，与上面四份互斥）
@@ -40,6 +43,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │   └── YYYY-MM-DD-{slug}/
 │       ├── {slug}-report.md
 │       ├── {slug}-analysis.md   （根因不显然才有）
+│       ├── approval-report.md   （需要 owner 审批但无阶段报告时）
 │       ├── {slug}-implementation-review.md
 │       └── {slug}-fix-note.md
 ├── refactors/             refactor spec 聚合根
@@ -47,6 +51,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │       ├── {slug}-scan.md
 │       ├── {slug}-refactor-design.md
 │       ├── {slug}-checklist.yaml
+│       ├── approval-report.md
 │       ├── {slug}-implementation-review.md
 │       └── {slug}-apply-notes.md
 ├── compound/              沉淀类文档统一目录
@@ -55,6 +60,10 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 ├── brainstorm/            brainstorm 阶段 spike 实验代码区（cs-brainstorm 临时产出）
 │   └── {slug}/            一次 spike 一个子目录，文件名随意
 │                          验完不强制清理，结论回写到对应 brainstorm note
+├── brainstorms/           brainstorm / interview 持久记录目录
+│   └── {slug}/
+│       ├── brainstorm.md        （case 4 grill / brainstorm 记录，可选）
+│       └── approval-report.md
 ├── tools/                 跨工作流共享脚本（onboard 从技能包释放）
 └── reference/             共享参考文档（onboard 从技能包释放）
 ```
@@ -166,6 +175,18 @@ packet 和 subagent 执行选择已拆到
 `.codestable/reference/execution-conventions.md`。子技能只在本文件记录目录
 和生命周期共享口径；涉及实际改代码、review、commit、finish 或 merge 前，
 必须读取 execution conventions。
+
+## 2.7 owner 审批报告
+
+需要 owner 做选择、授权、审批、接受风险、merge / deploy 决策、gate override
+或 interview / grill checkpoint 时，先按
+`.codestable/reference/approval-conventions.md` 写对应 unit 下的
+`approval-report.md`，再让 owner 一次性决策。
+
+已有阶段报告能完整承载 decision、options、recommendation、tradeoffs、
+evidence、consequence、next action 时不重复写 `approval-report.md`，例如
+feature design review、issue analysis 修复方案、issue fix-note、feature
+acceptance。没有正式阶段报告的场景必须补 `approval-report.md`。
 
 ## 3. 阶段收尾推荐
 

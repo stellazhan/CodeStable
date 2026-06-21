@@ -111,13 +111,19 @@ For CodeStable harness roadmap or design work, read
 `references/harness-improvement-plan.md` first, then
 `references/harness-implementation-plan.md` when the task asks what to build
 next. For the implemented behavior runner, read
-`references/behavior-harness-tool.md`. For global `cs` routing, owner-review context, owner-judgment context,
+`references/behavior-harness-tool.md`. For global `cs` routing, owner approval reports,
 context levels, owner-stop/skip rules, finish-time checks, or harness coverage
 across routed workflows, also read `references/global-route-governance.md`. For
 spec drift, requirement delta, clarification, or human-readable spec governance
-work, read `references/spec-governance-roadmap.md`. Together they capture the
-current proposal derived from GammaSource, BetaSoul, and CodeStable workflow
-failures:
+work, read `references/spec-governance-roadmap.md`; for rollout tasks, continue
+with `references/spec-governance-roadmap-implementation.md`. Together they
+capture the current proposal derived from GammaSource, BetaSoul, and CodeStable
+workflow failures:
+
+Older harness roadmap references to `owner context`, `owner decision context`,
+or `owner judgment context` mean auxiliary context only. Current approval
+checkpoints must follow `approval-conventions.md` and write `approval-report.md`
+unless a canonical stage report fully satisfies the L2 rule.
 
 - `codestable-doctor`
 - worktree start/commit/recovery gates

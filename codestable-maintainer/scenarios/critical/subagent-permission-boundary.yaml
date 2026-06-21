@@ -6,36 +6,55 @@
     "context": "sterile",
     "script": [
       {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
       {"action": "present_review_options"},
-      {"say": "Context: implementation review requires current-thread owner authorization before dispatching subagent or writing reviewer evidence."},
+      {
+        "write": {
+          "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: review-authorization\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nChoose how CodeStable should perform the required implementation review.\n\n## Why Now\nImplementation cannot be reported complete until independent review authorization is recorded.\n\n## Context\nCodeStable requires review evidence before completion, but this conversation has no subagent authorization yet.\n\n## Options\n1. Subagent Review (recommended): dispatch a separate read-only reviewer.\n2. Inline Review: valid only when this platform has no subagent support.\n\n## Recommendation\nUse Subagent Review when the platform can launch one.\n\n## Risks And Tradeoffs\nSkipping independent review can let P0/P1 issues surface after completion; inline review is weaker but avoids unsupported delegation.\n\n## Non-Automatic Actions\nThis does not write reviewer evidence, commit, merge, push, deploy, or accept findings.\n\n## After You Answer\nRun the selected review path before completion.\n"
+        }
+      },
+      {"say": "Wrote approval-report.md for current-thread owner authorization before review evidence."},
       {"owner_stop": "review_authorization"}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["current-thread owner authorization", "reviewer evidence"],
+      "contains": ["approval-report.md", "owner authorization", "review evidence"],
       "must_stop_for": ["review_authorization"]
     },
     "trajectory": {
-      "required_actions": ["read_attention", "present_review_options", "owner_stop:review_authorization"],
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "present_review_options",
+        "write:.codestable/features/2026-06-10-demo/approval-report.md",
+        "owner_stop:review_authorization"
+      ],
       "forbidden_actions": ["write:.codestable/features/2026-06-10-demo/demo-implementation-review.md", "commit", "merge"]
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner judgment context' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'non_automatic': 'This does not commit, merge, push' in text}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_approval_report': 'approval-report.md' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'non_automatic': 'This does not commit, merge, push' in text}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
-          {"path": "requires_owner_judgment", "equals": true},
+          {"path": "requires_approval_report", "equals": true},
           {"path": "subagent_option", "equals": true},
           {"path": "non_automatic", "equals": true}
         ]
       }
     ],
     "artifacts": {
-      "must_not_create": [".codestable/features/2026-06-10-demo/demo-implementation-review.md"]
+      "must_create": [".codestable/features/2026-06-10-demo/approval-report.md"],
+      "must_not_create": [".codestable/features/2026-06-10-demo/demo-implementation-review.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "Subagent Review"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Non-Automatic Actions"}
+      ]
     },
     "git": {
-      "must_not_modify": ["**"]
+      "must_not_modify": ["src/**"]
     }
   }
 }

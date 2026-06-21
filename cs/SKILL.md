@@ -65,7 +65,7 @@ CodeStable 把开发活动建模成一组**核心实体 + 4 个流程**，所有
 - **新增能力**：`cs-feat-design` → `cs-feat-impl` → `cs-feat-accept`（想法模糊先 `cs-brainstorm` 分诊）
 - **修 bug**：`cs-issue-report` → `cs-issue-analyze` → `cs-issue-fix`
 - **重构**（beta）：`cs-refactor` / `cs-refactor-ff`
-- **目标达成**：`cs-goal` 先轻量 grill，再自主实现 / 验证 / 迭代并写双语报告
+- **目标达成**：`cs-goal` 先轻量 grill，再自主实现 / 验证 / 迭代并写目标报告
 
 **横切**：流程跑完发现"值得记下来" → `cs-learn` / `cs-trick` / `cs-decide` / `cs-explore` 沉淀到 `compound/`。
 
@@ -101,6 +101,16 @@ Context level 只用于说明轻重，不在 `cs` 阶段生成重型产物：
 - L3：会改变长期 spec、future agent 输入、capability boundary 或公开契约。
 - L4：旧 spec 漂移、冲突、source-of-truth 不清，需要 inventory / rehabilitation。
 
+L2/L3 需要 owner 做审批、选择、授权或接受风险时，子流程必须先按
+`.codestable/reference/approval-conventions.md` 在对应 unit 下写
+`approval-report.md`，除非 design / issue analysis / acceptance 等阶段报告已
+完整承载审批上下文。
+
+`cs` 本身通常只路由。唯一例外：route choice 本身就需要 owner 选择且还没有
+明确 unit 时，先把它当 intake decision，写
+`.codestable/brainstorms/{slug}/approval-report.md`，再 owner-stop。不要只给
+chat-only route-choice brief。
+
 升级触发器：
 
 - 需要 owner 判断方向、授权、接受风险或 finish/merge readiness；
@@ -108,7 +118,7 @@ Context level 只用于说明轻重，不在 `cs` 阶段生成重型产物：
 - fast path 发现 capability boundary、public contract、future-agent instruction 或 spec drift；
 - 旧文档冲突或不确定哪个 doc 是 canonical。
 
-如果路由不确定，停在 L2 route-choice brief，让用户选，不要硬猜。
+如果路由不确定，按上面的 intake `approval-report.md` 规则停下让用户选，不要硬猜。
 
 | 用户说什么 / 想做什么 | 路由到 |
 |---|---|

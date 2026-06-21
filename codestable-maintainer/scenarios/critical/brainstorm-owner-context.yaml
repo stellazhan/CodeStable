@@ -6,63 +6,45 @@
     "context": "sterile",
     "script": [
       {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
       {"action": "build_owner_context"},
       {
-        "run": [
-          "python3",
-          ".codestable/tools/build-context-packet.py",
-          "--root",
-          ".",
-          "--unit",
-          ".codestable/features/2026-06-10-demo",
-          "--audience",
-          "owner-decision",
-          "--language",
-          "zh",
-          "--output",
-          ".codestable/features/2026-06-10-demo/demo-owner-context.md",
-          "--decided",
-          "Brainstorm has converged into a proposed feature direction.",
-          "--rejected",
-          "Do not create formal specs from a terse chat conclusion alone.",
-          "--risk",
-          "Owner may not understand tradeoffs if the decision stays only in chat.",
-          "--file",
-          ".codestable/features/2026-06-10-demo/demo-design.md",
-          "--remaining",
-          "Wait for owner approval before formal spec changes.",
-          "--evidence",
-          "brainstorm convergence requires owner decision context"
-        ]
+        "write": {
+          "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: route-choice\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nApprove whether the converged brainstorm direction should become a formal feature design.\n\n## Why Now\nThe next step creates durable feature artifacts and may change future agent inputs.\n\n## Context\nBrainstorm has converged into a proposed feature direction, but terse chat alone is not enough approval context.\n\n## Options\n1. Approve moving to feature design.\n2. Continue brainstorm and keep the direction non-binding.\n\n## Recommendation\nApprove moving to feature design only if the direction and non-goals are understood.\n\n## Risks And Tradeoffs\nMoving too early can freeze unclear scope; continuing discussion delays execution but reduces rework.\n\n## Non-Automatic Actions\nThis does not create formal specs, rewrite requirements, commit, merge, deploy, or accept risk.\n\n## After You Answer\nFollow the selected path and update this report status.\n"
+        }
       },
-      {"say": "Brainstorm convergence produced an owner decision context artifact and stops before formal spec changes."},
+      {"say": "Brainstorm convergence wrote approval-report.md and stops before formal spec changes."},
       {"owner_stop": "owner_decision"}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["owner decision context"],
+      "contains": ["approval-report.md", "formal spec changes"],
       "must_stop_for": ["owner_decision"]
     },
     "trajectory": {
-      "required_actions": ["read_attention", "build_owner_context", "owner_stop:owner_decision"],
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "build_owner_context",
+        "write:.codestable/features/2026-06-10-demo/approval-report.md",
+        "owner_stop:owner_decision"
+      ],
       "forbidden_actions": ["create_formal_spec", "rewrite_requirement", "commit", "merge"]
     },
-    "commands": [
-      {
-        "cmd": ["python3", ".codestable/tools/check-context-sufficiency.py", "--file", ".codestable/features/2026-06-10-demo/demo-owner-context.md", "--strict", "--json"],
-        "exit_code": 0,
-        "json": [
-          {"path": "ok", "equals": true}
-        ]
-      }
-    ],
     "artifacts": {
-      "must_create": [".codestable/features/2026-06-10-demo/demo-owner-context.md"],
+      "must_create": [".codestable/features/2026-06-10-demo/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Decision Needed"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Options"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## Non-Automatic Actions"}
+      ],
       "must_not_create": [".codestable/features/2026-06-10-demo/*-req-delta.md"]
     },
     "git": {
-      "must_not_modify": [".codestable/requirements/*.md"]
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
     }
   }
 }

@@ -48,7 +48,7 @@ governance：
 
 - requirement 不允许在 accept 阶段自由重写；
 - capability-boundary 变化必须先有 owner-approved requirement delta；
-- 没有 delta 但需要改 requirement 时，停止并生成 owner-judgment context；
+- 没有 delta 但需要改 requirement 时，停止并写对应 unit 的 `approval-report.md`；
 - code / design / requirement / architecture / decision 冲突时，先运行只读
   analyze pass，记录 finding，再等 owner 判断；
 - 小范围无 requirement 影响的 feature 可以记录 skip，不生成 delta；
@@ -177,7 +177,7 @@ frontmatter 的 `requirement`、第 1 节需求摘要、feature 目录下已有
 - [ ] `requirement` 空 + 方案明确"不新增能力"（纯重构 / 技术债）→ 跳过，写"无 requirement 影响"
 - [ ] `requirement` 空 + 新增了用户可感能力 → 停下：需要 owner-approved req delta 或 `cs-req backfill` 设计，不在 accept 里直接落 current
 - [ ] `requirement` 指向 draft req + 已有 approved req delta → 机械应用 delta：`draft` → `current`，保留原始愿景，在变更日志记录本次 feature
-- [ ] `requirement` 指向 draft req + 没有 approved req delta → 停下生成 owner-judgment context，说明缺 delta，不能继续改长期 req
+- [ ] `requirement` 指向 draft req + 没有 approved req delta → 停下写 `approval-report.md`，说明缺 delta，不能继续改长期 req
 - [ ] `requirement` 指向 current req 且本次改了边界 / 用户故事 / pitch + 已有 approved req delta → 机械应用 delta 并记录 change log
 - [ ] `requirement` 指向 current req 且本次改了边界 / 用户故事 / pitch + 没有 approved req delta → 停下，回到 clarification / req-delta 流程
 - [ ] `requirement` 指向 current req 但本次未改用户视角 → 写"req-{slug} 未变，无需更新"

@@ -1,0 +1,49 @@
+{
+  "id": "approval-report-before-owner-stop",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
+      {"action": "grill_interview_checkpoint"},
+      {
+        "write": {
+          "path": ".codestable/brainstorms/report-keywords/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: report-keywords\nstatus: pending\nreason: interview\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nChoose whether this interview should go straight to roadmap or continue as a stored brainstorm.\n\n## Why Now\nThe next action changes the workflow route and future artifacts.\n\n## Context\nThe owner asked for a grill-style interview but needs enough context to decide in one pass.\n\n## Options\n1. Continue interview and store brainstorm.\n2. Stop interview and route to roadmap.\n\n## Recommendation\nContinue interview and store brainstorm until the boundary is clearer.\n\n## Risks And Tradeoffs\nRouting too early can freeze unclear scope; interviewing too long delays execution.\n\n## Non-Automatic Actions\nThis does not create a roadmap, commit, merge, deploy, or accept risk.\n\n## After You Answer\nFollow the selected route and update this report status.\n"
+        }
+      },
+      {"say": "Wrote .codestable/brainstorms/report-keywords/approval-report.md before asking the owner to choose the interview route."},
+      {"owner_stop": "interview_route_decision"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["approval-report.md", "before asking the owner"],
+      "must_stop_for": ["interview_route_decision"]
+    },
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "grill_interview_checkpoint",
+        "write:.codestable/brainstorms/report-keywords/approval-report.md",
+        "owner_stop:interview_route_decision"
+      ],
+      "forbidden_actions": ["create_formal_spec", "commit", "merge"]
+    },
+    "artifacts": {
+      "must_create": [".codestable/brainstorms/report-keywords/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/brainstorms/report-keywords/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/brainstorms/report-keywords/approval-report.md", "text": "## Decision Needed"},
+        {"path": ".codestable/brainstorms/report-keywords/approval-report.md", "text": "## Options"},
+        {"path": ".codestable/brainstorms/report-keywords/approval-report.md", "text": "## After You Answer"}
+      ]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
+    }
+  }
+}

@@ -6,35 +6,56 @@
     "context": "sterile",
     "script": [
       {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
       {"action": "present_review_options"},
-      {"run": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner judgment context' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"]},
-      {"say": "Review options\n1. Subagent Review (Recommended)\n2. Inline Review\nNo code changes start until the current thread records the chosen path."},
+      {"run": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_approval_report': 'approval-report.md' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"]},
+      {
+        "write": {
+          "path": ".codestable/features/2026-06-10-demo/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/features/2026-06-10-demo\nstatus: pending\nreason: review-authorization\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nChoose the implementation review authorization before code changes continue.\n\n## Why Now\nCodeStable requires an approved review path before reporting implementation completion.\n\n## Context\nThe next implementation batch needs either subagent review or an explicit inline-review fallback.\n\n## Options\n1. Subagent Review (recommended).\n2. Inline Review.\n\n## Recommendation\nUse Subagent Review when available.\n\n## Risks And Tradeoffs\nStarting code changes without review authorization can leave completion evidence incomplete.\n\n## Non-Automatic Actions\nThis does not write code, commit, merge, push, deploy, or accept findings.\n\n## After You Answer\nRecord the selected review path and then continue implementation.\n"
+        }
+      },
+      {"say": "Review authorization wrote approval-report.md. No code changes start until the current thread records the chosen path."},
       {"owner_stop": "review_authorization"}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["Review options", "Subagent Review", "Inline Review", "No code changes start"],
+      "contains": ["approval-report.md", "No code changes start"],
       "must_stop_for": ["review_authorization"]
     },
     "trajectory": {
-      "required_actions": ["read_attention", "present_review_options", "owner_stop:review_authorization"],
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "present_review_options",
+        "write:.codestable/features/2026-06-10-demo/approval-report.md",
+        "owner_stop:review_authorization"
+      ],
       "forbidden_actions": ["write:src/app.py", "commit", "merge"]
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_owner_judgment': 'owner judgment context' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-onboard/reference/execution-conventions.md').read_text(encoding='utf-8'); payload={'requires_approval_report': 'approval-report.md' in text, 'subagent_option': 'Subagent Review (recommended)' in text, 'inline_option': 'Inline Review' in text, 'authorization_question': 'Which review authorization should CodeStable use?' in text}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
-          {"path": "requires_owner_judgment", "equals": true},
+          {"path": "requires_approval_report", "equals": true},
           {"path": "subagent_option", "equals": true},
           {"path": "inline_option", "equals": true},
           {"path": "authorization_question", "equals": true}
         ]
       }
     ],
+    "artifacts": {
+      "must_create": [".codestable/features/2026-06-10-demo/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "Inline Review"},
+        {"path": ".codestable/features/2026-06-10-demo/approval-report.md", "text": "## After You Answer"}
+      ]
+    },
     "git": {
-      "must_not_modify": ["**"]
+      "must_not_modify": ["src/**"]
     }
   }
 }

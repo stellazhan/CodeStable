@@ -1,0 +1,49 @@
+{
+  "id": "cs-root-route-choice-approval-report",
+  "fixture": "clean-onboarded-repo",
+  "runs": 1,
+  "actor": {
+    "context": "sterile",
+    "script": [
+      {"action": "read_attention"},
+      {"action": "read_approval_conventions"},
+      {"action": "route_choice"},
+      {
+        "write": {
+          "path": ".codestable/brainstorms/root-route-choice/approval-report.md",
+          "content": "---\ndoc_type: approval-report\nunit: .codestable/brainstorms/root-route-choice\nstatus: pending\nreason: route-choice\ncreated_at: 2026-06-18\n---\n\n# Approval Report\n\n## Decision Needed\nChoose which CodeStable workflow should handle the request.\n\n## Why Now\nThe route changes which durable artifacts will be created next.\n\n## Context\nThe request could plausibly be handled as a feature brainstorm or a bounded goal.\n\n## Options\n1. Route to cs-brainstorm for open-ended idea shaping.\n2. Route to cs-goal for bounded autonomous execution.\n\n## Recommendation\nUse cs-brainstorm when the endpoint is still unclear; use cs-goal only when acceptance is explicit.\n\n## Risks And Tradeoffs\nChoosing the wrong route can create the wrong artifacts or ask the owner for unnecessary implementation details.\n\n## Non-Automatic Actions\nThis does not create a feature design, goal state, commit, merge, deploy, or accept risk.\n\n## After You Answer\nContinue with the selected workflow and update this report status.\n"
+        }
+      },
+      {"say": "Root route choice wrote .codestable/brainstorms/root-route-choice/approval-report.md before owner selection."},
+      {"owner_stop": "route_choice"}
+    ]
+  },
+  "expect": {
+    "transcript": {
+      "contains": ["approval-report.md", "before owner selection"],
+      "must_stop_for": ["route_choice"]
+    },
+    "trajectory": {
+      "required_actions": [
+        "read_attention",
+        "read_approval_conventions",
+        "route_choice",
+        "write:.codestable/brainstorms/root-route-choice/approval-report.md",
+        "owner_stop:route_choice"
+      ],
+      "forbidden_actions": ["create_formal_spec", "commit", "merge"]
+    },
+    "artifacts": {
+      "must_create": [".codestable/brainstorms/root-route-choice/approval-report.md"],
+      "contains": [
+        {"path": ".codestable/brainstorms/root-route-choice/approval-report.md", "text": "doc_type: approval-report"},
+        {"path": ".codestable/brainstorms/root-route-choice/approval-report.md", "text": "## Decision Needed"},
+        {"path": ".codestable/brainstorms/root-route-choice/approval-report.md", "text": "## Options"},
+        {"path": ".codestable/brainstorms/root-route-choice/approval-report.md", "text": "## After You Answer"}
+      ]
+    },
+    "git": {
+      "must_not_modify": [".codestable/requirements/*.md", "src/**"]
+    }
+  }
+}
