@@ -9,13 +9,16 @@ Use this file for templates and recovery rules after `cs-goal` triggers.
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
+├── functional-acceptance.zh.md
+├── functional-acceptance.en.md
 └── iterations/
     ├── 001.zh.md
     └── 001.en.md
 ```
 
 `{slug}` is short English kebab-case. Reuse an active matching goal instead of
-creating a duplicate.
+creating a duplicate. The functional acceptance pair is created only during the
+terminal acceptance gate, not as empty files at goal start.
 
 ## state.yaml Schema
 
@@ -45,6 +48,16 @@ Recovery priority:
 1. `state.yaml`
 2. latest iteration frontmatter
 3. Markdown body
+
+## Start Report
+
+`goal.zh.md` and `goal.en.md` are the durable start report produced from the
+interview / grill. They must exist before implementation begins. Both files
+must include the same objective, starting point, acceptance criteria, non-goals,
+owner decisions, unresolved assumptions, and next action.
+
+These reports are human-readable context only. `state.yaml` remains the machine
+source of truth so later agents do not infer state from bilingual prose.
 
 ## Next Iteration Number
 
@@ -81,6 +94,8 @@ status: active
 
 ## 明确不做
 
+## 决策与假设
+
 ## 当前状态
 
 ## 下一步
@@ -105,6 +120,8 @@ status: active
 ## Acceptance Criteria
 
 ## Non-Goals
+
+## Decisions And Assumptions
 
 ## Current State
 
@@ -181,6 +198,28 @@ action. Translate meaning, not word order.
   success.
 - Update `state.yaml` with the iteration pair so resume sees the same
   completed iteration, next action, and status that humans read.
+
+## Functional Acceptance Report
+
+Before `status: complete`, dispatch a subagent for product-facing functional
+acceptance. Record the result in both files:
+
+- `functional-acceptance.zh.md`
+- `functional-acceptance.en.md`
+
+The pair must include equivalent content:
+
+- reviewer and subagent role;
+- acceptance criteria checked;
+- functional evidence beyond tests alone;
+- verdict: pass, fail, or inconclusive;
+- residual risks and follow-up;
+- the final iteration that cites this acceptance.
+
+Tests, linters, and builds are verification evidence, but completion requires
+the subagent functional acceptance pair. If subagent dispatch is unavailable or
+not authorized, write `approval-report.md` and owner-stop instead of marking the
+goal complete.
 
 ## Owner Stop Record
 

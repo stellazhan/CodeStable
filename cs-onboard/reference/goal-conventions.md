@@ -7,8 +7,9 @@ for `cs-goal`.
 ## Purpose
 
 Goals are bounded start/end work units. The owner defines the outcome and
-acceptance signal; AI grills briefly, implements, verifies, self-iterates, and
-writes bilingual reports.
+acceptance signal; AI interviews / grills briefly, writes a bilingual start
+report, implements, verifies, self-iterates, and writes bilingual reports. A
+goal can close only after subagent functional acceptance of the produced result.
 
 Use goals when the request says "reach this result", "run until accepted",
 "self-iterate", "AI implements autonomously", or "grill me first".
@@ -20,6 +21,8 @@ Use goals when the request says "reach this result", "run until accepted",
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
+├── functional-acceptance.zh.md
+├── functional-acceptance.en.md
 └── iterations/
     ├── 001.zh.md
     └── 001.en.md
@@ -28,6 +31,13 @@ Use goals when the request says "reach this result", "run until accepted",
 `state.yaml` is the machine source of truth. Markdown is human-readable context.
 Recovery priority is `state.yaml` > latest iteration frontmatter > Markdown
 body.
+
+The functional acceptance pair is created only during the terminal acceptance
+gate, not as empty files at goal start.
+
+`goal.zh.md` and `goal.en.md` are the start report from interview / grill. They
+must exist before implementation and include objective, start point, acceptance,
+non-goals, owner decisions, unresolved assumptions, and next action.
 
 ## State Model
 
@@ -78,6 +88,16 @@ Reports are not command logs. One iteration equals a coherent implementation and
 verification attempt. Both languages must include the same understanding,
 implementation approach, changes, verification evidence, problems, next attempt,
 and state update.
+
+Before `status: complete`, write:
+
+- `functional-acceptance.zh.md`
+- `functional-acceptance.en.md`
+
+This pair records subagent functional acceptance of the product / artifact
+against the owner acceptance criteria. Include reviewer, scope, functional
+evidence, verdict, residual risks, and the final iteration that cites it. Tests
+alone are not enough to complete a goal.
 
 ## Strict Owner Stops
 

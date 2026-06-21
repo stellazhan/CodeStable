@@ -52,6 +52,8 @@ CRITICAL_SCENARIO_IDS = {
     "approval-report-reuse-history",
     "goal-autonomous-iteration-docs",
     "goal-code-edits-use-execution-gate",
+    "goal-functional-acceptance-before-complete",
+    "goal-start-report-before-code",
     "handoff-context-packet",
     "implementation-review-required",
     "issue-fix-escalates-on-wrong-spec",

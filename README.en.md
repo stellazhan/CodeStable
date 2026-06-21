@@ -69,7 +69,7 @@ CodeStable's bet is simple: in serious software work, chaos often comes not from
 | Requirement | `.codestable/requirements/` | Capability intent: what users need, what the system provides, where boundaries are |
 | Architecture | `.codestable/architecture/` | Current system map only; no future plans |
 | Roadmap | `.codestable/roadmap/` | High-level plan, interface contracts, and executable feature list for large needs |
-| Goal | `.codestable/goals/` | Bounded start/end work with autonomous iterations and bilingual reports |
+| Goal | `.codestable/goals/` | Bounded start/end work with start reports, autonomous iterations, and subagent functional acceptance |
 | Feature | `.codestable/features/` | Design to implementation to acceptance loop |
 | Issue | `.codestable/issues/` | Report to root-cause analysis to fix-note loop |
 | Knowledge | `.codestable/compound/` | Unified sink for learning / trick / decision / explore records |
@@ -79,7 +79,7 @@ CodeStable's bet is simple: in serious software work, chaos often comes not from
 | Flow | Skill chain | Notes |
 |---|---|---|
 | Feature delivery | `cs-feat` -> `cs-feat-design` -> `cs-feat-impl` -> `cs-feat-accept` | Think, design, implement by checklist, verify against design |
-| Goal delivery | `cs-goal` | Grill lightly, implement, verify, and self-iterate until complete or blocked |
+| Goal delivery | `cs-goal` | Interview / grill into start reports, implement, verify, self-iterate, and require subagent functional acceptance before completion |
 | Issue fixing | `cs-issue` -> `cs-issue-report` -> `cs-issue-analyze` -> `cs-issue-fix` | Record symptoms, find the root cause, then fix precisely |
 | Refactoring | `cs-refactor` / `cs-refactor-ff` | Behavior stays the same; structure changes; full flow is scan / design / apply |
 
@@ -96,7 +96,7 @@ CodeStable's bet is simple: in serious software work, chaos often comes not from
 <tr><td><b>Onboard</b></td><td><code>cs-onboard</code></td><td>Create or migrate the CodeStable skeleton for a repository</td></tr>
 <tr><td rowspan="2"><b>Requirements & architecture</b></td><td><code>cs-req</code></td><td>Maintain capability-intent docs with draft / current / outdated states</td></tr>
 <tr><td><code>cs-arch</code></td><td>Maintain the current architecture map; no future planning</td></tr>
-<tr><td rowspan="3"><b>Planning & discussion</b></td><td><code>cs-goal</code></td><td>Bounded start/end goals with light grill, autonomous iteration, and bilingual reports</td></tr>
+<tr><td rowspan="3"><b>Planning & discussion</b></td><td><code>cs-goal</code></td><td>Bounded goals with start reports, autonomous iteration, and subagent functional acceptance</td></tr>
 <tr><td><code>cs-roadmap</code></td><td>Produce high-level design, interface contracts, and sub-feature lists for large needs</td></tr>
 <tr><td><code>cs-brainstorm</code></td><td>Discuss and triage fuzzy ideas into design, lightweight feature work, or roadmap</td></tr>
 <tr><td rowspan="5"><b>Feature flow</b></td><td><code>cs-feat</code></td><td>Feature sub-flow entry; routes instead of running stages itself</td></tr>
@@ -135,7 +135,7 @@ your-project/
 │   ├── requirements/                # Capability intent, including VISION.md
 │   ├── architecture/                # Current system map
 │   ├── roadmap/                     # Large-need plans and sub-feature lists
-│   ├── goals/                       # Bounded goal state and bilingual iteration reports
+│   ├── goals/                       # Bounded goal state, start reports, iteration reports, functional acceptance
 │   ├── features/                    # Feature design / checklist / review / acceptance
 │   ├── issues/                      # Report / analysis / review / fix-note
 │   ├── refactors/                   # Scan / design / checklist / review / apply-notes
@@ -150,7 +150,7 @@ Hard constraints:
 
 - Sub-skills only use `.codestable/attention.md` as the project attention entry. `AGENTS.md` / `CLAUDE.md` are not CodeStable state sources.
 - Shared conventions are not referenced across skill package directories. `cs-onboard` copies `reference/` and `tools/` into the working project's `.codestable/`.
-- `requirements/` and `architecture/` are long-lived archives; `roadmap/` is the planning layer; `goals/` stores autonomous goal state; `features/`, `issues/`, and `refactors/` are event records; `compound/` is the single knowledge sink.
+- `requirements/` and `architecture/` are long-lived archives; `roadmap/` is the planning layer; `goals/` stores autonomous goal state and terminal functional acceptance; `features/`, `issues/`, and `refactors/` are event records; `compound/` is the single knowledge sink.
 - Old `codestable/` / `easysdd/` directories are historical compatibility entry points. Current sub-skills read `.codestable/`.
 
 ---

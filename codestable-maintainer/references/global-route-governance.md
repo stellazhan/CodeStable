@@ -27,7 +27,7 @@ Behavior harness 必须测试这套矩阵本身，而不是只测试某个 roadm
 - 轻量任务保持轻量，不生成不必要的 requirement delta。
 - 模糊任务在 route choice 前写 `approval-report.md`。
 - fast path 一旦发现 capability boundary 或 spec drift，升级到 L3。
-- goal path 默认自主迭代，但验收冲突、spec/public contract 变化或重复 blocker 会 owner-stop。
+- goal path 先把 interview / grill 落成起点报告，再默认自主迭代；完成前必须有 subagent 功能性验收。验收冲突、spec/public contract 变化或重复 blocker 会 owner-stop。
 - implementation / fix / refactor 过程中发现长期文档错误时，停止直接改 spec。
 - finish worktree 检查 learner/context report、`covered_head` 和 inbox 状态。
 - clean / compacted actor 能从 artifacts 和 tools 恢复同样的 next action。
@@ -137,7 +137,7 @@ accept risk, or defer unresolved findings must upgrade to L2 or higher.
 |---|---|---|
 | `cs` | L1/L2 | Explain route, nearby exclusions when ambiguous, context level, and escalation trigger. If route choice itself needs owner approval before any unit exists, write `.codestable/brainstorms/{slug}/approval-report.md` and owner-stop. |
 | `cs-onboard` | L2/L4 | Empty repos can stay L1. Existing docs require inventory, mapping, trusted/stale classification, and owner approval before migration. |
-| `cs-goal` | L1/L2 | Grill bounded start/end goals, create `state.yaml` plus bilingual goal/iteration docs, and autonomously iterate. Acceptance conflicts, spec/public-contract changes, repeated blockers, budget exhaustion, or risk acceptance trigger owner-stop with `approval-report.md` if the iteration report is insufficient. |
+| `cs-goal` | L1/L2 | Grill bounded start/end goals, create `state.yaml` plus bilingual start/iteration docs before implementation, autonomously iterate, and require subagent functional acceptance before completion. Acceptance conflicts, spec/public-contract changes, repeated blockers, budget exhaustion, unavailable subagent acceptance, or risk acceptance trigger owner-stop with `approval-report.md` if the iteration report is insufficient. |
 | `cs-brainstorm` | L1 -> L2 | Freeform discussion stays light. When interview / grill / route choice needs owner approval context, write `approval-report.md` before asking. |
 | `cs-roadmap` | L2/L3 | Owner brief, scope/non-goals, phases, owner decisions, clarifications, and any spec deltas implied by the roadmap. |
 | `cs-feat` | L1 | Stage routing and whether this is design, fast-forward, implementation, or acceptance. Ambiguous route requires a route-choice brief. |
@@ -195,7 +195,9 @@ explicit non-goal. Core scenarios:
 | `cs-route-brief-minimal` | A short prompt routes to the correct skill, emits L1 context, and does not create heavy artifacts. |
 | `cs-root-route-choice-approval-report` | Root route ambiguity writes intake `approval-report.md` under `brainstorms/` before owner choice. |
 | `goal-autonomous-iteration-docs` | Bounded goal creates machine state, bilingual goal docs, bilingual iteration docs, and does not ask owner for routine technical choices. |
+| `goal-start-report-before-code` | Interview / grill creates bilingual start reports before implementation and does not edit code first. |
 | `goal-code-edits-use-execution-gate` | Goal-wrapped code edits read execution conventions, run the worktree start gate, and stop before code changes when a linked worktree is required. |
+| `goal-functional-acceptance-before-complete` | Goal completion dispatches subagent functional acceptance and writes bilingual functional acceptance reports; tests alone do not close the goal. |
 | `approval-report-before-owner-stop` | A grill / interview owner decision writes `approval-report.md` in the relevant unit before stopping for owner approval. |
 | `approval-report-pending-not-overwritten` | A new checkpoint does not overwrite an unresolved pending `approval-report.md`. |
 | `approval-report-reuse-history` | A later approval for the same unit reuses `approval-report.md` while preserving prior decision history. |

@@ -1,13 +1,15 @@
 ---
 name: cs-goal
-description: Goal-driven autonomous workflow for bounded start/end tasks. Use when the owner gives a desired outcome, acceptance result, budget, or asks AI to "reach this goal", "run until accepted", "self-iterate", "autonomous iteration", or "grill me" before implementation. Creates bilingual goal and iteration artifacts under `.codestable/goals/`.
+description: Goal-driven autonomous workflow for bounded start/end tasks. Use when the owner gives a desired outcome, acceptance result, budget, or asks AI to "reach this goal", "run until accepted", "self-iterate", "autonomous iteration", or "grill me" before implementation. Creates bilingual start, iteration, and functional acceptance artifacts under `.codestable/goals/`.
 ---
 
 # cs-goal
 
 `cs-goal` handles bounded goals: the owner gives the starting point and desired
-end state, then CodeStable grills lightly, implements autonomously, verifies, and
-writes bilingual iteration reports.
+end state, then CodeStable interviews / grills lightly, writes a bilingual start
+report before implementation, implements autonomously, verifies, requests
+subagent functional acceptance before completion, and writes bilingual iteration
+reports.
 
 This is a goal wrapper, not a replacement for feature / issue / refactor rules.
 When the goal crosses a capability boundary, exposes a bug root cause, or needs
@@ -79,7 +81,8 @@ has a clear value.
 
 ## Phase 1: Grill Alignment
 
-Always grill before creating a new goal. Keep it short and owner-level.
+Always grill before creating a new goal. Treat interview / grill as the formal
+goal start point, not disposable chat. Keep it short and owner-level.
 
 Ask at most 3-5 focused questions. Each round uses one question plus 2-4
 meaningfully different choices. Avoid asking for implementation details unless
@@ -100,26 +103,38 @@ Collect only:
 - strict owner-stop conditions that are specific to this goal.
 
 If the owner already gave enough information, summarize it and proceed.
+Before any code edit or autonomous implementation attempt, Phase 2 must create
+or refresh the bilingual start report pair.
 
 ---
 
 ## Phase 2: Create Or Resume Goal
 
-New goal directory:
+Goal directory over its lifecycle:
 
 ```text
 .codestable/goals/{slug}/
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
+├── functional-acceptance.zh.md
+├── functional-acceptance.en.md
 └── iterations/
 ```
 
-`goal.zh.md` and `goal.en.md` contain equivalent human-readable goal context.
-Keep them concise and update them only when the goal state changes.
+Create the functional acceptance pair only during the terminal acceptance gate,
+not as empty files at goal start.
+
+`goal.zh.md` and `goal.en.md` are the bilingual start report from the interview
+/ grill. They must exist before implementation. Include objective, starting
+point, acceptance criteria, non-goals, owner decisions, unresolved assumptions,
+and next action. Keep them concise and update them only when the goal boundary
+or state changes.
 
 If an active matching goal exists, resume it instead of creating a duplicate.
-Read `state.yaml`, then the latest `iterations/{n}.zh.md` and `{n}.en.md`.
+Read `state.yaml`, the start report pair, then the latest
+`iterations/{n}.zh.md` and `{n}.en.md`. If the start report pair is missing,
+reconstruct it from state and interview evidence before code edits.
 
 ---
 
@@ -145,6 +160,28 @@ Loop while `state: active`:
 7. Continue autonomously unless an owner-stop condition fires.
 
 Do not write reports after every command. Reports are iteration summaries.
+Do not mark a goal complete from ordinary test evidence alone; run the terminal
+functional acceptance gate first.
+
+## Terminal Functional Acceptance
+
+Before changing `state.yaml.status` to `complete`:
+
+1. Run normal verification with fresh evidence.
+2. Dispatch a subagent to perform functional acceptance against the recorded
+   owner acceptance criteria and actual product / artifact behavior.
+3. Record the result in both `functional-acceptance.zh.md` and
+   `functional-acceptance.en.md`, including reviewer, scope, acceptance checks,
+   functional evidence, verdict, residual risks, and any follow-up.
+4. Reference the functional acceptance pair in the final bilingual iteration.
+
+Functional acceptance is product-facing evidence. It may include black-box usage,
+artifact inspection, UI / API workflow checks, fixture output review, or another
+owner-relevant proof. Unit tests, linters, and build checks are useful evidence
+but are not enough by themselves.
+
+If subagent dispatch is unavailable or not authorized, owner-stop with
+`approval-report.md`; do not self-accept the goal as complete.
 
 ## Strict Owner Stops
 
@@ -166,8 +203,9 @@ refactors are AI-owned unless they cross one of the stops above.
 
 ## Completion And Blocked Rules
 
-Mark `complete` only when the acceptance signal is satisfied and evidence is
-recorded in the final iteration.
+Mark `complete` only when the acceptance signal is satisfied, the subagent
+functional acceptance pair records a passing verdict, and evidence is recorded
+in the final iteration.
 
 Mark `blocked` only after the same blocker has repeated for at least three
 consecutive iterations or the owner-stop rule says the AI cannot safely proceed.
@@ -186,13 +224,15 @@ pretending completion.
 
 A goal run exits with one of:
 
-- `complete`: acceptance evidence recorded, final bilingual iteration written.
+- `complete`: acceptance evidence, subagent functional acceptance, and final
+  bilingual iteration written.
 - `blocked`: blocker evidence and owner question recorded.
 - `active`: iteration report written and next action recorded, but the current
   turn or budget ends before more work can be done.
 
-Final replies should be short and point to `goal.zh.md`, `goal.en.md`, and the
-latest bilingual iteration pair.
+Final replies should be short and point to `goal.zh.md`, `goal.en.md`, the
+latest bilingual iteration pair, and the functional acceptance pair when the
+goal is complete.
 
 ---
 
@@ -202,5 +242,6 @@ latest bilingual iteration pair.
 - Do not let bilingual prose override `state.yaml`.
 - Do not create duplicate active goals for the same objective.
 - Do not skip iteration reports after meaningful work.
+- Do not mark completion from tests alone or forge subagent acceptance.
 - Do not keep iterating after a strict owner-stop fires.
 - Keep every Markdown artifact under 300 lines; split long reports.

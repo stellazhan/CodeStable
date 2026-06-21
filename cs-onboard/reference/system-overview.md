@@ -18,7 +18,7 @@ CodeStable 把这几类场景各配一套子技能，产物放进统一的目录
 - `cs-feat` — 新功能,design → implement → acceptance（想法还模糊时先走讨论层 `cs-brainstorm` 做分诊，不属于 feature 流程内部）
 - `cs-issue` — 修 bug,report → analyze → fix
 - `cs-refactor` — 代码优化(行为不变、结构/性能/可读性变),scan → design → apply
-- `cs-goal` — 限定起点和终点的目标达成,先 grill 对齐，再自主迭代并写中英文报告
+- `cs-goal` — 限定起点和终点的目标达成,先 interview / grill 写起点报告，再自主迭代，完成前做 subagent 功能验收
 
 这些流程都先建立可恢复的上下文，再让 AI 动手；goal 场景把状态放进 `state.yaml`，feature / issue / refactor 则用各自 spec 或 analysis。需要 owner 审批、选择、授权或接受风险但没有阶段报告承载上下文时，先在对应目录写 `approval-report.md`。这样能控制术语冲突、范围失控、改完不留存档这三种 AI 默认会出的问题。
 
@@ -52,7 +52,7 @@ CodeStable 把这几类场景各配一套子技能，产物放进统一的目录
 
 | 场景 | 子技能 |
 |---|---|
-| 限定起点 / 终点 / 验收结果，想让 AI 自主迭代到完成 | `cs-goal` |
+| 限定起点 / 终点 / 验收结果，想让 AI 自主迭代到完成并做终点功能验收 | `cs-goal` |
 | 想法还模糊 / "有个想法没想清楚" / "先聊聊" | `cs-brainstorm`(分诊后路由到 design / feature-brainstorm 落盘 / roadmap) |
 | 新功能 / 新能力 | `cs-feat` |
 | BUG / 异常 / 文档错误 | `cs-issue` |
