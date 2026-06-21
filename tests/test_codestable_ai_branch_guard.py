@@ -21,6 +21,7 @@ def load_tool(module_name: str, filename: str):
 
 
 guard = load_tool("codestable_ai_branch_guard", "codestable-ai-branch-guard.py")
+main_publish = load_tool("codestable_main_publish", "codestable-main-publish.py")
 
 
 def run(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -43,6 +44,15 @@ def init_repo(tmp_path: Path) -> Path:
     (repo / "README.md").write_text("base\n", encoding="utf-8")
     run(repo, "add", "README.md")
     run(repo, "commit", "-m", "init")
+    return repo
+
+
+def init_repo_with_remote(tmp_path: Path) -> Path:
+    remote = tmp_path / "remote.git"
+    run(tmp_path, "init", "--bare", remote.as_posix())
+    repo = init_repo(tmp_path)
+    run(repo, "remote", "add", "origin", remote.as_posix())
+    run(repo, "push", "-u", "origin", "main")
     return repo
 
 
@@ -112,6 +122,61 @@ def test_pre_commit_blocks_staged_implementation_on_main(tmp_path: Path) -> None
     assert not result.ok
     assert result.reason == "pre_commit_implementation_on_protected_branch"
     assert result.paths == ("src/app.py",)
+
+
+def test_owner_intent_allows_protected_pre_push(tmp_path: Path) -> None:
+    repo = init_repo_with_remote(tmp_path)
+
+    blocked = guard.guard_git_hook(repo, "pre-push", {"main", "master"})
+    created = main_publish.begin(repo, "main", "origin", [], "owner approved release", 5)
+    allowed = guard.guard_git_hook(repo, "pre-push", {"main", "master"})
+
+    assert created["ok"]
+    assert not blocked.ok
+    assert allowed.ok
+    assert allowed.reason == "owner_intent_main_publish"
+
+
+def test_owner_intent_allows_merge_command_but_not_switch(tmp_path: Path) -> None:
+    repo = init_repo_with_remote(tmp_path)
+    main_publish.begin(repo, "main", "origin", [], "owner approved release", 5)
+
+    merge_payload = {"tool_name": "Bash", "tool_input": {"command": "git merge origin/codex/demo"}}
+    switch_payload = {"tool_name": "Bash", "tool_input": {"command": "git switch codex/demo"}}
+
+    assert guard.guard_payload(merge_payload, repo, {"main", "master"}).ok
+    assert guard.guard_payload(switch_payload, repo, {"main", "master"}).reason == "branch_switch_command"
+
+
+def test_owner_intent_does_not_allow_force_push(tmp_path: Path) -> None:
+    repo = init_repo_with_remote(tmp_path)
+    main_publish.begin(repo, "main", "origin", [], "owner approved release", 5)
+    payload = {"tool_name": "Bash", "tool_input": {"command": "git push --force-with-lease origin main"}}
+
+    result = guard.guard_payload(payload, repo, {"main", "master"})
+
+    assert not result.ok
+    assert result.reason == "git_push_on_protected_branch"
+
+
+def test_owner_intent_allows_real_hooked_merge_and_push(tmp_path: Path) -> None:
+    repo = init_repo_with_remote(tmp_path)
+    run(repo, "switch", "-c", "codex/demo")
+    (repo / "README.md").write_text("published\n", encoding="utf-8")
+    run(repo, "add", "README.md")
+    run(repo, "commit", "-m", "demo change")
+    run(repo, "push", "-u", "origin", "codex/demo")
+    run(repo, "switch", "main")
+    guard.install_git_hooks(repo, force=False)
+
+    main_publish.begin(repo, "main", "origin", ["codex/demo"], "owner approved release", 5)
+    merge = run(repo, "merge", "--no-ff", "--no-edit", "origin/codex/demo", check=False)
+    push = run(repo, "push", "origin", "main", check=False)
+    ended = main_publish.end(repo)
+
+    assert merge.returncode == 0, merge.stderr
+    assert push.returncode == 0, push.stderr
+    assert ended["removed"]
 
 
 def test_allows_implementation_edit_in_linked_worktree_branch(tmp_path: Path) -> None:

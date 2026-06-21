@@ -245,6 +245,7 @@ def test_runtime_tool_paths_are_documented() -> None:
         encoding="utf-8"
     )
     assert "codestable-ai-branch-guard.py" in hook_doc
+    assert "codestable-main-publish.py" in hook_doc
 
 
 def test_missing_unit_cli_returns_json_finding(tmp_path: Path) -> None:

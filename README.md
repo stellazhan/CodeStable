@@ -163,6 +163,7 @@ your-project/
 |---|---|
 | `codestable-doctor.py` | 汇总当前仓库状态、worktree 状态、review / backlog / inbox 风险 |
 | `codestable-ai-branch-guard.py` | 作为 agent hook 阻止 AI 切换主检出分支或在 `main` / `master` 上实现 |
+| `codestable-main-publish.py` | 在明确 owner intent 下生成短期发布授权，让 main merge / push 通过 hook 并可审计 |
 | `codestable-worktree-gate.py` | 在 start / commit / quarantine 三个节点检查是否在正确 worktree 内 |
 | `validate-implementation-review.py` | 确认实现类变更有 implementation review 证据 |
 | `build-review-packet.py` | 为 implementation / spec / quality review 生成可审查输入包 |
@@ -189,6 +190,8 @@ python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remot
 ```
 
 真实 `/Users/qiyuanzhan/.agents/skills` 只从远端 `main` 更新。分支合入并推送到 `origin/main` 后再运行：
+
+AI 执行 owner 授权的 main 发布时，用 `codestable-main-publish.py begin` / `end` 包住 merge 和 push，不裸用 `--no-verify`。
 
 ```bash
 python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json

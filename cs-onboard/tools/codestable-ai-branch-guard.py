@@ -16,6 +16,7 @@ import shlex
 import stat
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -52,6 +53,7 @@ GIT_OPTIONS_WITH_VALUE = {
 }
 PROTECTED_WRITE_COMMANDS = {"add", "commit", "merge", "rebase", "cherry-pick", "revert", "apply", "am", "reset", "stash", "rm", "mv", "push"}
 HOOK_MARKER = "# CodeStable AI branch guard"
+PUBLISH_INTENT_FILENAME = "codestable-main-publish-intent.json"
 
 
 @dataclass(frozen=True)
@@ -178,9 +180,72 @@ def staged_implementation_paths(root: Path) -> list[str]:
     return sorted(item.path for item in staged_files(root) if is_implementation_path(item.path))
 
 
-def command_write_block(root: Path, command: str) -> tuple[str, tuple[str, ...]] | None:
+def git_common_dir(root: Path) -> Path:
+    result = run_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    if result.returncode == 0 and result.stdout.strip():
+        return Path(result.stdout.strip()).resolve()
+    return root / ".git"
+
+
+def publish_intent_path(root: Path) -> Path:
+    return git_common_dir(root) / PUBLISH_INTENT_FILENAME
+
+
+def merge_in_progress(root: Path) -> bool:
+    result = run_git(root, "rev-parse", "--git-path", "MERGE_HEAD")
+    path = (root / result.stdout.strip()).resolve() if result.returncode == 0 and result.stdout.strip() else root / ".git/MERGE_HEAD"
+    return path.exists()
+
+
+def active_publish_intent(root: Path, protected: set[str]) -> dict[str, Any] | None:
+    path = publish_intent_path(root)
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    branch = current_branch(root)
+    if branch not in protected:
+        return None
+    if payload.get("target_branch") != branch:
+        return None
+    root_value = payload.get("root")
+    if not isinstance(root_value, str) or not root_value.strip():
+        return None
+    if Path(root_value).expanduser().resolve() != root.resolve():
+        return None
+    try:
+        expires_at = float(payload.get("expires_at", 0))
+    except (TypeError, ValueError):
+        return None
+    if expires_at <= time.time():
+        return None
+    if not str(payload.get("owner_intent", "")).strip():
+        return None
+    return payload
+
+
+def publish_intent_allows_command(root: Path, subcommand: str, args: list[str], intent: dict[str, Any] | None) -> bool:
+    if not intent:
+        return False
+    if subcommand == "merge":
+        return True
+    if subcommand == "push":
+        return not any(
+            arg == "-f" or arg.startswith(("--force", "--force-with-lease", "--force-if-includes"))
+            for arg in args
+        )
+    return subcommand in {"add", "commit"} and merge_in_progress(root)
+
+
+def command_write_block(root: Path, command: str, intent: dict[str, Any] | None = None) -> tuple[str, tuple[str, ...]] | None:
     for subcommand, args in git_invocations(command):
         if subcommand not in PROTECTED_WRITE_COMMANDS:
+            continue
+
+        if publish_intent_allows_command(root, subcommand, args, intent):
             continue
 
         if subcommand == "add":
@@ -222,8 +287,9 @@ def guard_payload(payload: dict[str, Any], root: Path, protected: set[str]) -> G
         )
 
     on_protected = branch in protected
+    intent = active_publish_intent(root, protected)
     if command and on_protected:
-        blocked = command_write_block(root, command)
+        blocked = command_write_block(root, command, intent)
         if blocked:
             reason, paths = blocked
             return GuardResult(
@@ -237,7 +303,7 @@ def guard_payload(payload: dict[str, Any], root: Path, protected: set[str]) -> G
 
     if on_protected and tool_name in EDIT_TOOL_NAMES:
         impl_paths = tuple(path for path in payload_paths(payload, root) if is_implementation_path(path))
-        if impl_paths:
+        if impl_paths and not (intent and merge_in_progress(root)):
             return GuardResult(
                 False,
                 "AI agents must not edit implementation files on main/master. Use a linked execution worktree on a codex/... branch.",
@@ -256,7 +322,10 @@ def guard_git_hook(root: Path, hook_name: str, protected: set[str]) -> GuardResu
     if branch not in protected:
         return GuardResult(True, "allowed", "allowed", branch, linked)
 
+    intent = active_publish_intent(root, protected)
     if hook_name == "pre-commit":
+        if intent and merge_in_progress(root):
+            return GuardResult(True, "allowed by owner-intent main publish", "owner_intent_main_publish", branch, linked)
         impl = tuple(staged_implementation_paths(root))
         if impl:
             return GuardResult(
@@ -268,6 +337,9 @@ def guard_git_hook(root: Path, hook_name: str, protected: set[str]) -> GuardResu
                 impl,
             )
         return GuardResult(True, "allowed", "allowed", branch, linked)
+
+    if hook_name in {"pre-merge-commit", "pre-push"} and intent:
+        return GuardResult(True, "allowed by owner-intent main publish", "owner_intent_main_publish", branch, linked)
 
     return GuardResult(
         False,
