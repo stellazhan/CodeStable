@@ -5,23 +5,23 @@
   "setup": {
     "files": [
       {
-        "path": ".codestable/goals/pass-smoke/state.yaml",
+        "path": ".codestable/goals/2026-06-21-pass-smoke/state.yaml",
         "content": "schema_version: 1\ngoal: pass-smoke\nstatus: active\nobjective: Make the smoke workflow pass for a user.\nstart_point: The smoke workflow has been implemented but needs terminal acceptance.\nacceptance:\n  - A user-facing smoke workflow succeeds end to end.\nnon_goals:\n  - Do not deploy or merge.\nbudget:\n  kind: iterations\n  limit: 3\ncurrent_iteration: 2\nnext_action: Run terminal functional acceptance before completion.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
       },
       {
-        "path": ".codestable/goals/pass-smoke/goal.zh.md",
+        "path": ".codestable/goals/2026-06-21-pass-smoke/goal.zh.md",
         "content": "# Pass Smoke\n\n## 目标\n让用户视角的 smoke workflow 通过。\n\n## 起点\n实现已完成，需要终点功能验收。\n"
       },
       {
-        "path": ".codestable/goals/pass-smoke/goal.en.md",
+        "path": ".codestable/goals/2026-06-21-pass-smoke/goal.en.md",
         "content": "# Pass Smoke\n\n## Objective\nMake the user-facing smoke workflow pass.\n\n## Starting Point\nImplementation is done and terminal functional acceptance is needed.\n"
       },
       {
-        "path": ".codestable/goals/pass-smoke/iterations/002.zh.md",
+        "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.zh.md",
         "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 2\nlanguage: zh\nstatus_after: active\nnext_action: Run terminal functional acceptance before completion.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 002\n\n## 状态更新\n实现验证已通过，但还不能完成。\n"
       },
       {
-        "path": ".codestable/goals/pass-smoke/iterations/002.en.md",
+        "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.en.md",
         "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 2\nlanguage: en\nstatus_after: active\nnext_action: Run terminal functional acceptance before completion.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 002\n\n## State Update\nImplementation verification has passed, but the goal is not complete yet.\n"
       }
     ]
@@ -35,31 +35,31 @@
       {"action": "dispatch_subagent_functional_acceptance"},
       {
         "write": {
-          "path": ".codestable/goals/pass-smoke/functional-acceptance.zh.md",
+          "path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.zh.md",
           "content": "---\ndoc_type: goal-functional-acceptance\ngoal: pass-smoke\nlanguage: zh\nreviewer: subagent\nverdict: pass\nupdated_at: 2026-06-21\n---\n\n# Functional Acceptance\n\n## 验收范围\nsubagent 从用户视角检查 smoke workflow 是否端到端成功。\n\n## 功能证据\n黑盒执行 workflow，确认产物行为满足 acceptance；测试结果只是辅助证据。\n\n## 结论\npass。可以进入 complete 状态。\n\n## 剩余风险\n未发现阻塞风险。\n\n## 引用迭代\niterations/003.zh.md\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/pass-smoke/functional-acceptance.en.md",
+          "path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.en.md",
           "content": "---\ndoc_type: goal-functional-acceptance\ngoal: pass-smoke\nlanguage: en\nreviewer: subagent\nverdict: pass\nupdated_at: 2026-06-21\n---\n\n# Functional Acceptance\n\n## Acceptance Scope\nA subagent checked the smoke workflow end to end from the user perspective.\n\n## Functional Evidence\nThe workflow was exercised as a black-box path and the artifact behavior matched acceptance; test results were supporting evidence only.\n\n## Verdict\npass. The goal may move to complete.\n\n## Residual Risks\nNo blocking risk found.\n\n## Referenced Iteration\niterations/003.en.md\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/pass-smoke/iterations/003.zh.md",
+          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/003.zh.md",
           "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 3\nlanguage: zh\nstatus_after: complete\nnext_action: Goal complete after subagent functional acceptance.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 003\n\n## 本轮理解\n测试通过仍不足以完成；必须使用 subagent 做功能性验收。\n\n## 实现方式\n运行常规验证后发起 subagent functional acceptance。\n\n## 本轮变更\n写入双语功能验收报告。\n\n## 验证证据\nfunctional-acceptance.zh.md 记录 reviewer: subagent 与 verdict: pass。\n\n## 遇到的问题\n无阻塞。\n\n## 下一步尝试\n无需下一步。\n\n## 状态更新\nstate.yaml 更新为 complete。\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/pass-smoke/iterations/003.en.md",
+          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/003.en.md",
           "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 3\nlanguage: en\nstatus_after: complete\nnext_action: Goal complete after subagent functional acceptance.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 003\n\n## Current Understanding\nPassing tests is still insufficient; a subagent must perform functional acceptance.\n\n## Implementation Approach\nRun normal verification, then dispatch subagent functional acceptance.\n\n## Changes This Iteration\nWrote the bilingual functional acceptance reports.\n\n## Verification Evidence\nfunctional-acceptance.en.md records reviewer: subagent and verdict: pass.\n\n## Problems Encountered\nNo blocker.\n\n## Next Attempt\nNo next attempt needed.\n\n## State Update\nstate.yaml is updated to complete.\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/pass-smoke/state.yaml",
+          "path": ".codestable/goals/2026-06-21-pass-smoke/state.yaml",
           "content": "schema_version: 1\ngoal: pass-smoke\nstatus: complete\nobjective: Make the smoke workflow pass for a user.\nstart_point: The smoke workflow has been implemented but needs terminal acceptance.\nacceptance:\n  - A user-facing smoke workflow succeeds end to end.\nnon_goals:\n  - Do not deploy or merge.\nbudget:\n  kind: iterations\n  limit: 3\ncurrent_iteration: 3\nnext_action: Goal complete after subagent functional acceptance.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
         }
       },
@@ -76,11 +76,11 @@
         "read_goal_state",
         "run_tests",
         "dispatch_subagent_functional_acceptance",
-        "write:.codestable/goals/pass-smoke/functional-acceptance.zh.md",
-        "write:.codestable/goals/pass-smoke/functional-acceptance.en.md",
-        "write:.codestable/goals/pass-smoke/iterations/003.zh.md",
-        "write:.codestable/goals/pass-smoke/iterations/003.en.md",
-        "write:.codestable/goals/pass-smoke/state.yaml"
+        "write:.codestable/goals/2026-06-21-pass-smoke/functional-acceptance.zh.md",
+        "write:.codestable/goals/2026-06-21-pass-smoke/functional-acceptance.en.md",
+        "write:.codestable/goals/2026-06-21-pass-smoke/iterations/003.zh.md",
+        "write:.codestable/goals/2026-06-21-pass-smoke/iterations/003.en.md",
+        "write:.codestable/goals/2026-06-21-pass-smoke/state.yaml"
       ],
       "forbidden_actions": ["report_complete_without_functional_acceptance", "commit", "merge"]
     },
@@ -97,19 +97,19 @@
     ],
     "artifacts": {
       "must_create": [
-        ".codestable/goals/pass-smoke/functional-acceptance.zh.md",
-        ".codestable/goals/pass-smoke/functional-acceptance.en.md",
-        ".codestable/goals/pass-smoke/iterations/003.zh.md",
-        ".codestable/goals/pass-smoke/iterations/003.en.md"
+        ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.zh.md",
+        ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.en.md",
+        ".codestable/goals/2026-06-21-pass-smoke/iterations/003.zh.md",
+        ".codestable/goals/2026-06-21-pass-smoke/iterations/003.en.md"
       ],
       "contains": [
-        {"path": ".codestable/goals/pass-smoke/state.yaml", "text": "status: complete"},
-        {"path": ".codestable/goals/pass-smoke/state.yaml", "text": "current_iteration: 3"},
-        {"path": ".codestable/goals/pass-smoke/functional-acceptance.zh.md", "text": "reviewer: subagent"},
-        {"path": ".codestable/goals/pass-smoke/functional-acceptance.zh.md", "text": "测试结果只是辅助证据"},
-        {"path": ".codestable/goals/pass-smoke/functional-acceptance.en.md", "text": "reviewer: subagent"},
-        {"path": ".codestable/goals/pass-smoke/functional-acceptance.en.md", "text": "supporting evidence only"},
-        {"path": ".codestable/goals/pass-smoke/iterations/003.en.md", "text": "Passing tests is still insufficient"}
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/state.yaml", "text": "status: complete"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/state.yaml", "text": "current_iteration: 3"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.zh.md", "text": "reviewer: subagent"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.zh.md", "text": "测试结果只是辅助证据"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.en.md", "text": "reviewer: subagent"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/functional-acceptance.en.md", "text": "supporting evidence only"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/003.en.md", "text": "Passing tests is still insufficient"}
       ]
     },
     "git": {

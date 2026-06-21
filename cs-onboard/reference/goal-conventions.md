@@ -17,7 +17,7 @@ Use goals when the request says "reach this result", "run until accepted",
 ## Directory
 
 ```text
-.codestable/goals/{slug}/
+.codestable/goals/YYYY-MM-DD-{slug}/
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
@@ -27,6 +27,10 @@ Use goals when the request says "reach this result", "run until accepted",
     ├── 001.zh.md
     └── 001.en.md
 ```
+
+The directory date is the goal creation date. `state.yaml.goal` remains the bare
+slug so humans and agents can compare related dated units without parsing the
+filesystem name.
 
 `state.yaml` is the machine source of truth. Markdown is human-readable context.
 Recovery priority is `state.yaml` > latest iteration frontmatter > Markdown

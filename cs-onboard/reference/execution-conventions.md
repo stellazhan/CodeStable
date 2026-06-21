@@ -14,8 +14,9 @@ CodeStable separates discussion / planning from code edits:
   refactor uses its own git worktree and `codex/...` branch unless the owner
   explicitly approves direct edits in the current checkout.
 
-Goal work may use `.codestable/goals/{slug}` as the wrapper unit, but code edits
-still obey the feature / issue / refactor worktree rules when those flows apply.
+Goal work may use `.codestable/goals/YYYY-MM-DD-{slug}` as the wrapper unit, but
+code edits still obey the feature / issue / refactor worktree rules when those
+flows apply.
 
 ## Short Correct Usage
 

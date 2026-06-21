@@ -183,7 +183,7 @@ chat-only route-choice brief。
 
 ### goal 被误当成 feature / brainstorm
 
-用户同时给出**起点、终点 / 验收结果**，并希望 AI 自主实现、自我迭代或每轮写报告 → 优先路由 `cs-goal`。`cs-goal` 会先把 interview / grill 落成双语起点报告，完成前用 subagent 做功能验收；它可以在内部引用 feature / issue / refactor，但状态和迭代报告归 `.codestable/goals/{slug}/`。
+用户同时给出**起点、终点 / 验收结果**，并希望 AI 自主实现、自我迭代或每轮写报告 → 优先路由 `cs-goal`。`cs-goal` 会先把 interview / grill 落成双语起点报告，完成前用 subagent 做功能验收；它可以在内部引用 feature / issue / refactor，但状态和迭代报告归 `.codestable/goals/YYYY-MM-DD-{slug}/`。
 
 ### "改一下 X" 但 X 是已有功能
 

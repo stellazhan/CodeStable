@@ -5,8 +5,8 @@
   "setup": {
     "files": [
       {
-        "path": ".codestable/goals/fix-demo/state.yaml",
-        "content": "schema_version: 1\ngoal: fix-demo\nstatus: active\nobjective: Fix the demo app without changing public behavior.\nstart_point: The demo app has a failing local check.\nacceptance:\n  - Fresh verification passes.\nnon_goals:\n  - Do not merge or deploy.\nbudget:\n  kind: iterations\n  limit: 2\ncurrent_iteration: 0\nnext_action: Start the execution gate before code edits.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-18\n"
+        "path": ".codestable/goals/2026-06-21-fix-demo/state.yaml",
+        "content": "schema_version: 1\ngoal: fix-demo\nstatus: active\nobjective: Fix the demo app without changing public behavior.\nstart_point: The demo app has a failing local check.\nacceptance:\n  - Fresh verification passes.\nnon_goals:\n  - Do not merge or deploy.\nbudget:\n  kind: iterations\n  limit: 2\ncurrent_iteration: 0\nnext_action: Start the execution gate before code edits.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
       }
     ]
   },
@@ -46,9 +46,9 @@
       }
     ],
     "artifacts": {
-      "must_exist": [".codestable/goals/fix-demo/state.yaml"],
+      "must_exist": [".codestable/goals/2026-06-21-fix-demo/state.yaml"],
       "contains": [
-        {"path": ".codestable/goals/fix-demo/state.yaml", "text": "next_action: Start the execution gate before code edits."}
+        {"path": ".codestable/goals/2026-06-21-fix-demo/state.yaml", "text": "next_action: Start the execution gate before code edits."}
       ]
     },
     "git": {

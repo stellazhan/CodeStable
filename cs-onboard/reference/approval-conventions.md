@@ -35,7 +35,7 @@ report reliably.
 
 Use the closest durable workflow directory:
 
-- goal: `.codestable/goals/{slug}/approval-report.md`
+- goal: `.codestable/goals/YYYY-MM-DD-{slug}/approval-report.md`
 - feature: `.codestable/features/YYYY-MM-DD-{slug}/approval-report.md`
 - issue: `.codestable/issues/YYYY-MM-DD-{slug}/approval-report.md`
 - refactor: `.codestable/refactors/YYYY-MM-DD-{slug}/approval-report.md`

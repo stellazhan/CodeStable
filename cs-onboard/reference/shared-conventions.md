@@ -24,7 +24,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 │       ├── approval-report.md  （需要 owner 审批但无阶段报告时）
 │       └── drafts/             可选
 ├── goals/                 限定起点/终点的自主迭代目标（起点报告 / iteration / 功能验收）
-│   └── {slug}/
+│   └── YYYY-MM-DD-{slug}/
 │       ├── state.yaml
 │       ├── goal.zh.md
 │       ├── goal.en.md
@@ -74,8 +74,7 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 
 - 需求文档：`requirements/{slug}.md`（能力愿景，不带日期前缀，扁平不分组）；中心索引 `requirements/VISION.md`
 - roadmap：`roadmap/{slug}/`（不带日期前缀，平铺不嵌套）
-- goal：`goals/{slug}/`（不带日期前缀；状态模型、双语报告和功能验收见 `.codestable/reference/goal-conventions.md`）
-- feature / issue / refactor 目录：带日期前缀 `YYYY-MM-DD-{slug}`
+- goal / feature / issue / refactor 目录：带日期前缀 `YYYY-MM-DD-{slug}`；goal 的 `state.yaml.goal` 保留裸 slug
 - 沉淀类：`compound/YYYY-MM-DD-{doc_type}-{slug}.md`，日期用**归档当天**
 - 架构 doc：`architecture/{type}-{slug}.md`（长效，不带日期前缀）；总入口固定 `ARCHITECTURE.md`
 - 项目注意事项入口固定为 `.codestable/attention.md`，所有 CodeStable 子技能启动前必须读取；不再兼容 `AGENTS.md` / `CLAUDE.md` 等外部入口

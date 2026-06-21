@@ -70,7 +70,7 @@ active | complete | blocked
 `state.yaml` is the machine source of truth. Markdown is for humans. Recovery
 priority is:
 
-1. `.codestable/goals/{slug}/state.yaml`
+1. `.codestable/goals/YYYY-MM-DD-{slug}/state.yaml`
 2. latest iteration frontmatter
 3. Markdown body text
 
@@ -90,8 +90,8 @@ the answer changes the goal boundary.
 
 If a grill answer requires owner approval of scope, route, budget, risk, or
 stopping policy and the options need explanation, first write
-`.codestable/goals/{slug}/approval-report.md`. A simple clarifying question can
-stay in chat; a decision checkpoint needs the report.
+`.codestable/goals/YYYY-MM-DD-{slug}/approval-report.md`. A simple clarifying
+question can stay in chat; a decision checkpoint needs the report.
 
 Collect only:
 
@@ -113,7 +113,7 @@ or refresh the bilingual start report pair.
 Goal directory over its lifecycle:
 
 ```text
-.codestable/goals/{slug}/
+.codestable/goals/YYYY-MM-DD-{slug}/
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
@@ -121,6 +121,10 @@ Goal directory over its lifecycle:
 ├── functional-acceptance.en.md
 └── iterations/
 ```
+
+Use the goal creation date in the directory name, matching feature / issue /
+refactor directory style. Keep the `state.yaml` `goal` field as the bare
+business slug.
 
 Create the functional acceptance pair only during the terminal acceptance gate,
 not as empty files at goal start.
@@ -131,7 +135,8 @@ point, acceptance criteria, non-goals, owner decisions, unresolved assumptions,
 and next action. Keep them concise and update them only when the goal boundary
 or state changes.
 
-If an active matching goal exists, resume it instead of creating a duplicate.
+If an active matching goal exists, resume it instead of creating a duplicate,
+even when its dated directory prefix differs from today's date.
 Read `state.yaml`, the start report pair, then the latest
 `iterations/{n}.zh.md` and `{n}.en.md`. If the start report pair is missing,
 reconstruct it from state and interview evidence before code edits.

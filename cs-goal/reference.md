@@ -5,7 +5,7 @@ Use this file for templates and recovery rules after `cs-goal` triggers.
 ## Directory
 
 ```text
-.codestable/goals/{slug}/
+.codestable/goals/YYYY-MM-DD-{slug}/
 ├── state.yaml
 ├── goal.zh.md
 ├── goal.en.md
@@ -16,9 +16,11 @@ Use this file for templates and recovery rules after `cs-goal` triggers.
     └── 001.en.md
 ```
 
-`{slug}` is short English kebab-case. Reuse an active matching goal instead of
-creating a duplicate. The functional acceptance pair is created only during the
-terminal acceptance gate, not as empty files at goal start.
+`{slug}` is short English kebab-case, and the date is the goal creation date.
+The dated directory name is the filesystem unit; the `state.yaml` `goal` field
+remains the bare slug. Reuse an active matching goal instead of creating a
+duplicate. The functional acceptance pair is created only during the terminal
+acceptance gate, not as empty files at goal start.
 
 ## state.yaml Schema
 
