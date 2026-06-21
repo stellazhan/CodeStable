@@ -163,6 +163,7 @@ Hard constraints:
 |---|---|
 | `codestable-doctor.py` | Summarize repository state, worktree state, review / backlog / inbox risks |
 | `codestable-ai-branch-guard.py` | Run as an agent hook to block AI branch switches in the coordinator checkout and implementation work on `main` / `master` |
+| `codestable-main-publish.py` | Create a short-lived owner-intent publish grant so main merge / push can pass hooks with audit context |
 | `codestable-worktree-gate.py` | Check correct worktree usage at start / commit / quarantine |
 | `validate-implementation-review.py` | Confirm implementation changes have review evidence |
 | `build-review-packet.py` | Build review inputs for implementation / spec / quality review |
@@ -189,6 +190,8 @@ python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remot
 ```
 
 The real `/Users/qiyuanzhan/.agents/skills` root is updated only from remote `main`. After merging and pushing `origin/main`, run:
+
+When AI performs an owner-approved main publish, wrap merge and push in `codestable-main-publish.py begin` / `end`; do not use bare `--no-verify`.
 
 ```bash
 python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json

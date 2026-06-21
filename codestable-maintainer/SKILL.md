@@ -58,7 +58,9 @@ validator, harness tool, or README, switch to the source repo before editing.
    codestable-maintainer/tools/verify.py ... --sync-installed --json` command.
 10. Do not sync real installed roots from a feature branch. To make a CodeStable
     change globally available, merge it to `main`, push `origin/main`, then run
-    the verifier from a clean `main` checkout:
+    the verifier from a clean `main` checkout. Protected-branch merge / push
+    must be wrapped in `codestable-main-publish.py begin` / `end` with explicit
+    owner intent; do not use bare `--no-verify` as the normal path:
     `python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json`.
     Real installed roots are synchronized only from remote `main`.
 11. For changed source files that are not installed directly, record
@@ -78,6 +80,9 @@ python3 codestable-maintainer/tools/verify.py --repo . --branch <branch> --remot
 For real installed-copy deployment, first merge and push `origin/main`, then run:
 
 ```bash
+python3 cs-onboard/tools/codestable-main-publish.py --root . --json begin --owner-intent "owner approved publishing CodeStable changes to main" --branch <branch>
+# merge, validate, and push main while the intent is active
+python3 cs-onboard/tools/codestable-main-publish.py --root . --json end
 python3 codestable-maintainer/tools/verify.py --repo . --branch main --remote origin --installed-root /Users/qiyuanzhan/.agents/skills --sync-installed --json
 ```
 

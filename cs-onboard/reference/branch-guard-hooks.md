@@ -45,6 +45,28 @@ Installed fallbacks:
 
 Use `--force` only when replacing an existing local hook is intentional.
 
+## Owner-Intent Main Publish
+
+Protected-branch merge and push are allowed only during a short owner-approved
+publish window. Start the window from a clean `main` checkout that matches
+`origin/main`:
+
+```bash
+python3 .codestable/tools/codestable-main-publish.py --root . --json begin \
+  --owner-intent "owner approved publishing branch X to main" \
+  --branch codex/example
+```
+
+Then run the merge / validation / push. The guard allows `git merge`,
+merge-conflict resolution commits, and `git push` while the intent is active.
+It still blocks `git switch` / `git checkout`.
+
+Finish by removing the intent:
+
+```bash
+python3 .codestable/tools/codestable-main-publish.py --root . --json end
+```
+
 ## Recovery
 
 If work has already started in the coordinator checkout, stop and create a

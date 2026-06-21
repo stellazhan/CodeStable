@@ -12,13 +12,13 @@
     "script": [
       {"action": "inspect_source_repo"},
       {"action": "plan_source_push_temp_verify_main_sync"},
-      {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); installed=Path(r'{work}/installed/cs-onboard/SKILL.md'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); payload={'source_repo': all((source/path).exists() for path in ['README.md', 'cs-onboard/SKILL.md', 'codestable-maintainer/SKILL.md']), 'verify_sync_flag': '--sync-installed' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"]},
-      {"say": "Source repo: /Users/qiyuanzhan/code/CodeStable\nInstalled copies are deployment artifacts; do not edit /Users/qiyuanzhan/.agents/skills first.\nRequired closeout: commit, push, run branch verification against a temporary installed root, then sync real installed roots only after origin/main is updated."}
+      {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); installed=Path(r'{work}/installed/cs-onboard/SKILL.md'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); publish=(source/'cs-onboard/tools/codestable-main-publish.py').exists(); payload={'source_repo': all((source/path).exists() for path in ['README.md', 'cs-onboard/SKILL.md', 'codestable-maintainer/SKILL.md']), 'verify_sync_flag': '--sync-installed' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'publish_tool': publish, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"]},
+      {"say": "Source repo: /Users/qiyuanzhan/code/CodeStable\nInstalled copies are deployment artifacts; do not edit /Users/qiyuanzhan/.agents/skills first.\nRequired closeout: commit, push, run branch verification against a temporary installed root, wrap owner-approved main merge/push in codestable-main-publish.py begin/end, then sync real installed roots only after origin/main is updated."}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["/Users/qiyuanzhan/code/CodeStable", "do not edit /Users/qiyuanzhan/.agents/skills first", "temporary installed root", "origin/main"]
+      "contains": ["/Users/qiyuanzhan/code/CodeStable", "do not edit /Users/qiyuanzhan/.agents/skills first", "temporary installed root", "codestable-main-publish.py", "origin/main"]
     },
     "trajectory": {
       "required_actions": ["inspect_source_repo", "plan_source_push_temp_verify_main_sync"],
@@ -26,12 +26,13 @@
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); installed=Path(r'{work}/installed/cs-onboard/SKILL.md'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); payload={'source_repo': all((source/path).exists() for path in ['README.md', 'cs-onboard/SKILL.md', 'codestable-maintainer/SKILL.md']), 'verify_sync_flag': '--sync-installed' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); installed=Path(r'{work}/installed/cs-onboard/SKILL.md'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); publish=(source/'cs-onboard/tools/codestable-main-publish.py').exists(); payload={'source_repo': all((source/path).exists() for path in ['README.md', 'cs-onboard/SKILL.md', 'codestable-maintainer/SKILL.md']), 'verify_sync_flag': '--sync-installed' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'publish_tool': publish, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
           {"path": "source_repo", "equals": true},
           {"path": "verify_sync_flag", "equals": true},
           {"path": "main_only", "equals": true},
+          {"path": "publish_tool", "equals": true},
           {"path": "installed_sentinel", "equals": "installed sentinel\n"}
         ]
       }

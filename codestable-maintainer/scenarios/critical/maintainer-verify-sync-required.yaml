@@ -12,13 +12,13 @@
     "script": [
       {"action": "plan_source_commit_push"},
       {"action": "plan_fresh_clone_verify"},
-      {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); installed=Path(r'{work}/installed/codestable-maintainer/SKILL.md'); payload={'sync_flag': '--sync-installed' in verify, 'fresh_clone': '\"clone\"' in verify, 'behavior_suite': 'run_behavior_suite_if_needed' in verify, 'diff_check': 'dirs_match' in verify, 'sync_copy': 'sync_dir' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"]},
-      {"say": "A CodeStable source change is not complete after local tests. Required order: commit source repo, push branch, run fresh-clone maintainer verify with --sync-installed against a temporary installed root, then sync real installed copies only from origin/main after merge."}
+      {"run": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); installed=Path(r'{work}/installed/codestable-maintainer/SKILL.md'); publish=(source/'cs-onboard/tools/codestable-main-publish.py').exists(); payload={'sync_flag': '--sync-installed' in verify, 'fresh_clone': '\"clone\"' in verify, 'behavior_suite': 'run_behavior_suite_if_needed' in verify, 'diff_check': 'dirs_match' in verify, 'sync_copy': 'sync_dir' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'publish_tool': publish, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"]},
+      {"say": "A CodeStable source change is not complete after local tests. Required order: commit source repo, push branch, run fresh-clone maintainer verify with --sync-installed against a temporary installed root, wrap owner-approved main merge/push in codestable-main-publish.py, then sync real installed copies only from origin/main after merge."}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["commit source repo", "push branch", "fresh-clone maintainer verify", "--sync-installed", "temporary installed root", "origin/main"]
+      "contains": ["commit source repo", "push branch", "fresh-clone maintainer verify", "--sync-installed", "temporary installed root", "codestable-main-publish.py", "origin/main"]
     },
     "trajectory": {
       "required_actions": ["plan_source_commit_push", "plan_fresh_clone_verify"],
@@ -26,7 +26,7 @@
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); installed=Path(r'{work}/installed/codestable-maintainer/SKILL.md'); payload={'sync_flag': '--sync-installed' in verify, 'fresh_clone': '\"clone\"' in verify, 'behavior_suite': 'run_behavior_suite_if_needed' in verify, 'diff_check': 'dirs_match' in verify, 'sync_copy': 'sync_dir' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; source=Path(r'{source}'); verify=(source/'codestable-maintainer/tools/verify.py').read_text(encoding='utf-8'); installed=Path(r'{work}/installed/codestable-maintainer/SKILL.md'); publish=(source/'cs-onboard/tools/codestable-main-publish.py').exists(); payload={'sync_flag': '--sync-installed' in verify, 'fresh_clone': '\"clone\"' in verify, 'behavior_suite': 'run_behavior_suite_if_needed' in verify, 'diff_check': 'dirs_match' in verify, 'sync_copy': 'sync_dir' in verify, 'main_only': 'Real installed skill roots may only be synced' in verify, 'publish_tool': publish, 'installed_sentinel': installed.read_text(encoding='utf-8')}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
           {"path": "sync_flag", "equals": true},
@@ -35,6 +35,7 @@
           {"path": "diff_check", "equals": true},
           {"path": "sync_copy", "equals": true},
           {"path": "main_only", "equals": true},
+          {"path": "publish_tool", "equals": true},
           {"path": "installed_sentinel", "equals": "installed sentinel\n"}
         ]
       }
