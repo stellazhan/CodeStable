@@ -125,8 +125,13 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 For human-facing reports:
 
 ```bash
-python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience human-reviewer --language zh --output /tmp/codestable-human-review.md --decided "{已决定}" --remaining "{下一步}" --evidence "{验证证据}"
+python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/features/YYYY-MM-DD-{slug} --audience human-reviewer --language {en-or-zh} --output /tmp/codestable-human-review.md --decided "{decided}" --remaining "{next step}" --evidence "{verification evidence}"
 ```
+
+Choose `{en-or-zh}` by mapping `.codestable/attention.md` to a supported tool
+language. If the project's report language policy is not covered by the tool's
+`--language` choices, write or adapt the human-facing report in the project
+language instead of passing the raw attention prose as a CLI value.
 
 Run sufficiency gate before sending:
 

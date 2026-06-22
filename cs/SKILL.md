@@ -123,7 +123,7 @@ chat-only route-choice brief。
 | 用户说什么 / 想做什么 | 路由到 |
 |---|---|
 | 仓库还没有 `.codestable/` | **先 `cs-onboard`**——所有其他 cs-* 都依赖这个目录 |
-| 限定起点和终点 / 明确验收结果 / "帮我达成这个 goal" / "自主迭代直到完成" / "grill me 后开干" | `cs-goal`（双语起点 / iteration 报告；实现细节由 AI 自主推进；完成前 subagent 功能验收） |
+| 限定起点和终点 / 明确验收结果 / "帮我达成这个 goal" / "自主迭代直到完成" / "grill me 后开干" | `cs-goal`（起点 / iteration 报告；报告语言由 attention 决定；实现细节由 AI 自主推进；完成前 subagent 功能验收） |
 | 想法还模糊 / "有想法没想清楚" / "先聊聊" / "不知道是不是新功能" | `cs-brainstorm`（分诊后路由到 design / feature-brainstorm 落盘 / roadmap） |
 | 新功能 / "加个 X" / "实现 XX" | `cs-feat`（路由 design / ff / impl / accept） |
 | BUG / 异常 / 报错 / "这里不对" / "文档错了" | `cs-issue`（路由 report / analyze / fix） |
@@ -183,7 +183,7 @@ chat-only route-choice brief。
 
 ### goal 被误当成 feature / brainstorm
 
-用户同时给出**起点、终点 / 验收结果**，并希望 AI 自主实现、自我迭代或每轮写报告 → 优先路由 `cs-goal`。`cs-goal` 会先把 interview / grill 落成双语起点报告，完成前用 subagent 做功能验收；它可以在内部引用 feature / issue / refactor，但状态和迭代报告归 `.codestable/goals/YYYY-MM-DD-{slug}/`。
+用户同时给出**起点、终点 / 验收结果**，并希望 AI 自主实现、自我迭代或每轮写报告 → 优先路由 `cs-goal`。`cs-goal` 会先把 interview / grill 落成起点报告，报告语言由 `.codestable/attention.md` 决定，完成前用 subagent 做功能验收；它可以在内部引用 feature / issue / refactor，但状态和迭代报告归 `.codestable/goals/YYYY-MM-DD-{slug}/`。
 
 ### "改一下 X" 但 X 是已有功能
 

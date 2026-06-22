@@ -20,7 +20,7 @@ python3 .codestable/tools/build-context-packet.py --root . --unit .codestable/fe
 
 Audiences:
 
-- `handoff`: next-stage agent / reviewer context, fixed English six-section shape.
+- `handoff`: next-stage agent / reviewer context, fixed six-section shape.
 - `human-reviewer`: full context report for human review.
 - `owner-decision` / `owner-judgment`: auxiliary context for decisions, never a
   replacement for `approval-report.md`.
@@ -41,8 +41,10 @@ Handoff output sections:
 - `Evidence`
 
 Non-handoff audiences output `Decision Brief`, `Working Context`, and
-`Evidence Appendix`; `--language zh` uses Chinese headings. Secret-like paths and
-tokens are redacted.
+`Evidence Appendix`. Map `.codestable/attention.md` to a supported `--language`
+value (`en` or `zh`). When the project's report language policy is not
+supported by the tool, adapt the generated packet into the project language
+before sharing it. Secret-like paths and tokens are redacted.
 
 ## 2. check-context-sufficiency.py
 

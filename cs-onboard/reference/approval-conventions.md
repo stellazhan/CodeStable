@@ -27,9 +27,10 @@ When no such stage report exists, write:
 
 Do not ask a bare multi-choice question when the decision needs context.
 
-Use the owner's conversation language for prose unless the unit already has a
-stricter language rule. Keep the heading names stable so agents can parse the
-report reliably.
+Use the report language policy from `.codestable/attention.md` for prose. If
+attention has no report language policy, use the owner's current conversation
+language. Keep the heading names stable so agents can parse the report
+reliably.
 
 ## Unit Path
 

@@ -149,6 +149,7 @@ your-project/
 Hard constraints:
 
 - Sub-skills only use `.codestable/attention.md` as the project attention entry. `AGENTS.md` / `CLAUDE.md` are not CodeStable state sources.
+- Human-facing report prose follows the project policy in `.codestable/attention.md`; sub-skills do not hard-code a specific language or bilingual copies.
 - Shared conventions are not referenced across skill package directories. `cs-onboard` copies `reference/` and `tools/` into the working project's `.codestable/`.
 - `requirements/` and `architecture/` are long-lived archives; `roadmap/` is the planning layer; `goals/` stores autonomous goal state and terminal functional acceptance; `features/`, `issues/`, and `refactors/` are event records; `compound/` is the single knowledge sink.
 - Old `codestable/` / `easysdd/` directories are historical compatibility entry points. Current sub-skills read `.codestable/`.

@@ -135,8 +135,8 @@ The current critical suite covers:
   `approval-report.md` before public contract mutation;
 - implementation starts only in a linked execution worktree, and a path named
   `.codex/worktrees/...` is not enough by itself;
-- goal starts write bilingual interview / grill reports under dated goal
-  directories before code edits;
+- goal starts write interview / grill reports under dated goal directories
+  before code edits, following the project's attention report language policy;
 - goal completion requires subagent functional acceptance reports instead of
   treating tests alone as enough;
 - completed implementation units require implementation review evidence before

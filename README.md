@@ -149,6 +149,7 @@ your-project/
 几条硬约束：
 
 - 子技能只读 `.codestable/attention.md` 作为项目注意事项入口，不兼容 `AGENTS.md` / `CLAUDE.md` 作为 CodeStable 状态源。
+- 人读报告的正文语言由 `.codestable/attention.md` 的项目规则决定；子技能不硬编码特定语言或双语副本。
 - 共享口径不放在某个 skill 包里互相引用；`cs-onboard` 会把 `reference/` 和 `tools/` 复制到工作项目的 `.codestable/` 下。
 - `requirements/` 和 `architecture/` 是长效档案；`roadmap/` 是规划层；`goals/` 是自主迭代目标和终点功能验收记录；`features/`、`issues/`、`refactors/` 是事件执行记录；`compound/` 是唯一知识沉淀目录。
 - 旧版 `codestable/` / `easysdd/` 目录属于历史兼容入口，当前子技能只认 `.codestable/`。

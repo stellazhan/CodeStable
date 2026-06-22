@@ -10,27 +10,21 @@
       {
         "write": {
           "path": ".codestable/goals/2026-06-21-report-keywords/state.yaml",
-          "content": "schema_version: 1\ngoal: report-keywords\nstatus: active\nobjective: Add global CodeStable report keywords.\nstart_point: Owner asked for a goal after grill me.\nacceptance:\n  - Report keywords are defined and validated.\nnon_goals:\n  - Do not ask for routine implementation choices.\nbudget:\n  kind: iterations\n  limit: 3\ncurrent_iteration: 0\nnext_action: Begin implementation after the start report pair exists.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
+          "content": "schema_version: 1\ngoal: report-keywords\nstatus: active\nobjective: Add global CodeStable report keywords.\nstart_point: Owner asked for a goal after grill me.\nacceptance:\n  - Report keywords are defined and validated.\nnon_goals:\n  - Do not ask for routine implementation choices.\nbudget:\n  kind: iterations\n  limit: 3\ncurrent_iteration: 0\nnext_action: Begin implementation after the start report exists.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/2026-06-21-report-keywords/goal.zh.md",
-          "content": "---\ndoc_type: goal\ngoal: report-keywords\nlanguage: zh\nstatus: active\n---\n\n# Report Keywords\n\n## 目标\n为 CodeStable 报告能力增加全局关键词。\n\n## 起点\nowner 通过 grill me 给出起点和期望结果。\n\n## 验收标准\n关键词定义清楚，并有验证证据。\n\n## 明确不做\n不向 owner 询问常规技术选型。\n\n## 决策与假设\n这是实现前的起点报告；后续实现必须从这里恢复目标边界。\n\n## 当前状态\nactive，尚未开始代码实现。\n\n## 下一步\n在起点报告存在后开始最小实现尝试。\n"
+          "path": ".codestable/goals/2026-06-21-report-keywords/goal.md",
+          "content": "---\ndoc_type: goal\ngoal: report-keywords\nstatus: active\n---\n\n# Report Keywords\n\n## Objective\nAdd global keywords for CodeStable report behavior.\n\n## Starting Point\nThe owner gave the starting point and desired result through grill me.\n\n## Acceptance Criteria\nKeywords are clearly defined and backed by validation evidence.\n\n## Non-Goals\nDo not ask the owner to choose routine technical implementation details.\n\n## Decisions And Assumptions\nThis is the pre-implementation start report; future implementation must recover the goal boundary from it.\n\n## Current State\nActive, with code implementation not started yet.\n\n## Next Action\nBegin the smallest useful implementation attempt after the start report exists.\n"
         }
       },
-      {
-        "write": {
-          "path": ".codestable/goals/2026-06-21-report-keywords/goal.en.md",
-          "content": "---\ndoc_type: goal\ngoal: report-keywords\nlanguage: en\nstatus: active\n---\n\n# Report Keywords\n\n## Objective\nAdd global keywords for CodeStable report behavior.\n\n## Starting Point\nThe owner gave the starting point and desired result through grill me.\n\n## Acceptance Criteria\nKeywords are clearly defined and backed by validation evidence.\n\n## Non-Goals\nDo not ask the owner to choose routine technical implementation details.\n\n## Decisions And Assumptions\nThis is the pre-implementation start report; future implementation must recover the goal boundary from it.\n\n## Current State\nActive, with code implementation not started yet.\n\n## Next Action\nBegin the smallest useful implementation attempt after the start report exists.\n"
-        }
-      },
-      {"say": "Route: cs-goal\nContext: L1\nReason: bounded start/end goal.\nNext: start report pair is written before implementation; code edits can begin only after this point."}
+      {"say": "Route: cs-goal\nContext: L1\nReason: bounded start/end goal.\nNext: start report is written before implementation; code edits can begin only after this point."}
     ]
   },
   "expect": {
     "transcript": {
-      "contains": ["Route: cs-goal", "start report pair is written before implementation"],
+      "contains": ["Route: cs-goal", "start report is written before implementation"],
       "forbidden": ["Which framework should I use?"]
     },
     "trajectory": {
@@ -38,19 +32,20 @@
         "read_attention",
         "grill_goal",
         "write:.codestable/goals/2026-06-21-report-keywords/state.yaml",
-        "write:.codestable/goals/2026-06-21-report-keywords/goal.zh.md",
-        "write:.codestable/goals/2026-06-21-report-keywords/goal.en.md"
+        "write:.codestable/goals/2026-06-21-report-keywords/goal.md"
       ],
       "forbidden_actions": ["write:src/app.py", "commit", "merge"]
     },
     "commands": [
       {
-        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-goal/SKILL.md').read_text(encoding='utf-8'); payload={'formal_start': 'formal\\ngoal start point' in text or 'formal goal start point' in text, 'before_code': 'before any code edit' in text.lower() or 'before implementation' in text.lower(), 'start_pair': 'goal.zh.md' in text and 'goal.en.md' in text, 'dated_dir': 'YYYY-MM-DD-{slug}' in text}; print(json.dumps(payload, sort_keys=True))"],
+        "cmd": ["python3", "-c", "from pathlib import Path; import json; text=(Path(r'{source}')/'cs-goal/SKILL.md').read_text(encoding='utf-8'); payload={'formal_start': 'formal\\ngoal start point' in text or 'formal goal start point' in text, 'before_code': 'before any code edit' in text.lower() or 'before implementation' in text.lower(), 'canonical_report': 'goal.md' in text and 'Use canonical unsuffixed report paths by default' in text, 'optional_language_copies': 'language-suffixed copies' in text and 'do not require those variants by default' in text, 'attention_language': '.codestable/attention.md' in text and 'report language' in text, 'dated_dir': 'YYYY-MM-DD-{slug}' in text}; print(json.dumps(payload, sort_keys=True))"],
         "exit_code": 0,
         "json": [
           {"path": "formal_start", "equals": true},
           {"path": "before_code", "equals": true},
-          {"path": "start_pair", "equals": true},
+          {"path": "canonical_report", "equals": true},
+          {"path": "optional_language_copies", "equals": true},
+          {"path": "attention_language", "equals": true},
           {"path": "dated_dir", "equals": true}
         ]
       }
@@ -58,15 +53,12 @@
     "artifacts": {
       "must_create": [
         ".codestable/goals/2026-06-21-report-keywords/state.yaml",
-        ".codestable/goals/2026-06-21-report-keywords/goal.zh.md",
-        ".codestable/goals/2026-06-21-report-keywords/goal.en.md"
+        ".codestable/goals/2026-06-21-report-keywords/goal.md"
       ],
       "contains": [
         {"path": ".codestable/goals/2026-06-21-report-keywords/state.yaml", "text": "current_iteration: 0"},
-        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.zh.md", "text": "## 决策与假设"},
-        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.zh.md", "text": "尚未开始代码实现"},
-        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.en.md", "text": "## Decisions And Assumptions"},
-        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.en.md", "text": "code implementation not started yet"}
+        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.md", "text": "## Decisions And Assumptions"},
+        {"path": ".codestable/goals/2026-06-21-report-keywords/goal.md", "text": "code implementation not started yet"}
       ]
     },
     "git": {

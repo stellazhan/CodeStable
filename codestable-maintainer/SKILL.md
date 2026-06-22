@@ -129,6 +129,10 @@ Older harness roadmap references to `owner context`, `owner decision context`,
 or `owner judgment context` mean auxiliary context only. Current approval
 checkpoints must follow `approval-conventions.md` and write `approval-report.md`
 unless a canonical stage report fully satisfies the L2 rule.
+Older roadmap examples that hard-code `--language zh` or "Chinese reports" are
+historical examples only. Current human-facing reports follow the project report
+language policy in `.codestable/attention.md`; map that policy to supported
+tool language enums only when a tool requires an enum.
 
 - `codestable-doctor`
 - worktree start/commit/recovery gates

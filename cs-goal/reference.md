@@ -2,25 +2,38 @@
 
 Use this file for templates and recovery rules after `cs-goal` triggers.
 
+## Report Language
+
+Read `.codestable/attention.md` before writing reports. If it contains a report
+language policy, follow it. If it does not, use the owner's current conversation
+language. Do not hard-code a required two-language pair in this skill.
+
+Use canonical unsuffixed report paths by default. Add language-suffixed copies
+only when `.codestable/attention.md` explicitly asks for multiple language
+copies.
+
 ## Directory
 
 ```text
 .codestable/goals/YYYY-MM-DD-{slug}/
 ├── state.yaml
-├── goal.zh.md
-├── goal.en.md
-├── functional-acceptance.zh.md
-├── functional-acceptance.en.md
+├── goal.md
+├── functional-acceptance.md
 └── iterations/
-    ├── 001.zh.md
-    └── 001.en.md
+    └── 001.md
 ```
 
 `{slug}` is short English kebab-case, and the date is the goal creation date.
 The dated directory name is the filesystem unit; the `state.yaml` `goal` field
 remains the bare slug. Reuse an active matching goal instead of creating a
-duplicate. The functional acceptance pair is created only during the terminal
-acceptance gate, not as empty files at goal start.
+duplicate.
+
+Create `functional-acceptance.md` only during the terminal acceptance gate, not
+as an empty file at goal start.
+
+If attention explicitly requires language variants, use suffix copies such as
+`goal.{lang}.md`, `functional-acceptance.{lang}.md`, and
+`iterations/{nnn}.{lang}.md`. `state.yaml` remains the machine source of truth.
 
 ## state.yaml Schema
 
@@ -53,13 +66,19 @@ Recovery priority:
 
 ## Start Report
 
-`goal.zh.md` and `goal.en.md` are the durable start report produced from the
-interview / grill. They must exist before implementation begins. Both files
-must include the same objective, starting point, acceptance criteria, non-goals,
-owner decisions, unresolved assumptions, and next action.
+`goal.md` is the durable start report produced from the interview / grill. It
+must exist before implementation begins and include:
+
+- objective;
+- starting point;
+- acceptance criteria;
+- non-goals;
+- owner decisions;
+- unresolved assumptions;
+- next action.
 
 These reports are human-readable context only. `state.yaml` remains the machine
-source of truth so later agents do not infer state from bilingual prose.
+source of truth so later agents do not infer state from report prose.
 
 ## Next Iteration Number
 
@@ -69,47 +88,23 @@ in-progress attempt.
 Before changing `current_iteration`, compute the next `{nnn}` as:
 
 ```text
-max(state.yaml.current_iteration, highest existing iterations/{nnn}.*.md) + 1
+max(state.yaml.current_iteration, highest existing iterations/{nnn}*.md) + 1
 ```
 
-Format it with three digits, then write both language files and leave
+Format it with three digits, write `iterations/{nnn}.md`, then leave
 `state.yaml.current_iteration` equal to that completed number. Never overwrite
-an existing iteration file.
+an existing iteration file. Add language-suffixed copies only when attention
+requires them.
 
-## goal.zh.md Template
+## goal.md Template
 
-```markdown
----
-doc_type: goal
-goal: {slug}
-language: zh
-status: active
----
-
-# {目标名}
-
-## 目标
-
-## 起点
-
-## 验收标准
-
-## 明确不做
-
-## 决策与假设
-
-## 当前状态
-
-## 下一步
-```
-
-## goal.en.md Template
+Use headings in the project's report language while preserving these section
+semantics:
 
 ```markdown
 ---
 doc_type: goal
 goal: {slug}
-language: en
 status: active
 ---
 
@@ -130,9 +125,6 @@ status: active
 ## Next Action
 ```
 
-The Chinese and English files must be content-equivalent, not summary versus
-full detail.
-
 ## Iteration Frontmatter
 
 ```yaml
@@ -140,7 +132,6 @@ full detail.
 doc_type: goal-iteration
 goal: "{slug}"
 iteration: 1
-language: zh # zh | en
 status_after: active # active | complete | blocked
 next_action: "{same meaning as state.yaml}"
 blocker_signature: null
@@ -148,27 +139,10 @@ updated_at: "YYYY-MM-DD"
 ---
 ```
 
-## Chinese Iteration Headings
+## Iteration Headings
 
-```markdown
-# Iteration 001
-
-## 本轮理解
-
-## 实现方式
-
-## 本轮变更
-
-## 验证证据
-
-## 遇到的问题
-
-## 下一步尝试
-
-## 状态更新
-```
-
-## English Iteration Headings
+Use headings in the project's report language while preserving these section
+semantics:
 
 ```markdown
 # Iteration 001
@@ -188,9 +162,6 @@ updated_at: "YYYY-MM-DD"
 ## State Update
 ```
 
-Both language files should carry the same facts, evidence, risks, and next
-action. Translate meaning, not word order.
-
 ## Iteration Rules
 
 - Write reports only at iteration end.
@@ -198,18 +169,15 @@ action. Translate meaning, not word order.
 - If nothing changed, say so and explain what was learned.
 - Keep historical failed attempts in iteration reports; do not rewrite them into
   success.
-- Update `state.yaml` with the iteration pair so resume sees the same
+- Update `state.yaml` with the iteration report so resume sees the same
   completed iteration, next action, and status that humans read.
 
 ## Functional Acceptance Report
 
 Before `status: complete`, dispatch a subagent for product-facing functional
-acceptance. Record the result in both files:
+acceptance. Record the result in `functional-acceptance.md`.
 
-- `functional-acceptance.zh.md`
-- `functional-acceptance.en.md`
-
-The pair must include equivalent content:
+The report must include:
 
 - reviewer and subagent role;
 - acceptance criteria checked;
@@ -219,8 +187,8 @@ The pair must include equivalent content:
 - the final iteration that cites this acceptance.
 
 Tests, linters, and builds are verification evidence, but completion requires
-the subagent functional acceptance pair. If subagent dispatch is unavailable or
-not authorized, write `approval-report.md` and owner-stop instead of marking the
+subagent functional acceptance. If subagent dispatch is unavailable or not
+authorized, write `approval-report.md` and owner-stop instead of marking the
 goal complete.
 
 ## Owner Stop Record
@@ -235,7 +203,7 @@ owner_stop: "{question or approval needed}"
 next_action: "Wait for owner decision on {topic}."
 ```
 
-The latest iteration pair must explain:
+The latest iteration report must explain:
 
 - what decision is needed;
 - why AI cannot safely continue;

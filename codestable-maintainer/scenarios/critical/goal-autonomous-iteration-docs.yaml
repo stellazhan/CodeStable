@@ -2,6 +2,14 @@
   "id": "goal-autonomous-iteration-docs",
   "fixture": "clean-onboarded-repo",
   "runs": 1,
+  "setup": {
+    "files": [
+      {
+        "path": ".codestable/attention.md",
+        "content": "# Attention\n\n## 项目碎片知识\n\n### 报告语言策略\n- 人读报告正文使用中文；默认只写 canonical 报告文件，不自动写双语副本。\n"
+      }
+    ]
+  },
   "actor": {
     "context": "sterile",
     "script": [
@@ -15,26 +23,14 @@
       },
       {
         "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/goal.zh.md",
-          "content": "---\ndoc_type: goal\ngoal: pass-smoke\nlanguage: zh\nstatus: active\n---\n\n# Pass Smoke\n\n## 目标\n让现有 smoke check 通过。\n\n## 起点\n仓库已接入 CodeStable，smoke check 当前失败。\n\n## 验收标准\nfresh smoke check 通过并记录证据。\n\n## 下一步\n运行最小验证尝试。\n"
+          "path": ".codestable/goals/2026-06-21-pass-smoke/goal.md",
+          "content": "---\ndoc_type: goal\ngoal: pass-smoke\nstatus: active\n---\n\n# Pass Smoke\n\n## 目标\n让现有 smoke check 通过。\n\n## 起点\n仓库已接入 CodeStable，smoke check 当前失败。\n\n## 验收标准\nfresh smoke check 通过并记录证据。\n\n## 下一步\n运行最小验证尝试。\n"
         }
       },
       {
         "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/goal.en.md",
-          "content": "---\ndoc_type: goal\ngoal: pass-smoke\nlanguage: en\nstatus: active\n---\n\n# Pass Smoke\n\n## Objective\nMake the existing smoke check pass.\n\n## Starting Point\nThe repository is onboarded and the smoke check is failing.\n\n## Acceptance Criteria\nFresh smoke check passes and evidence is recorded.\n\n## Next Action\nRun the smallest verification attempt.\n"
-        }
-      },
-      {
-        "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.zh.md",
-          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 1\nlanguage: zh\nstatus_after: active\nnext_action: Run the next smallest verification attempt.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 001\n\n## 本轮理解\n目标是达成 smoke check 通过，不询问 routine 技术选型。\n\n## 实现方式\n先做最小验证闭环。\n\n## 本轮变更\n建立 goal 状态和报告。\n\n## 验证证据\n记录 fresh evidence placeholder。\n\n## 遇到的问题\n暂无 blocker。\n\n## 下一步尝试\n运行下一次最小验证。\n\n## 状态更新\nstate.yaml 保持 active。\n"
-        }
-      },
-      {
-        "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.en.md",
-          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 1\nlanguage: en\nstatus_after: active\nnext_action: Run the next smallest verification attempt.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 001\n\n## Current Understanding\nThe goal is to make the smoke check pass without asking about routine technical choices.\n\n## Implementation Approach\nStart with the smallest verification loop.\n\n## Changes This Iteration\nCreated goal state and reports.\n\n## Verification Evidence\nRecorded fresh evidence placeholder.\n\n## Problems Encountered\nNo blocker yet.\n\n## Next Attempt\nRun the next smallest verification attempt.\n\n## State Update\nstate.yaml remains active.\n"
+          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.md",
+          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 1\nstatus_after: active\nnext_action: Run the next smallest verification attempt.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 001\n\n## 本轮理解\n目标是达成 smoke check 通过，不询问 routine 技术选型。\n\n## 实现方式\n先做最小验证闭环。\n\n## 本轮变更\n建立 goal 状态和报告。\n\n## 验证证据\n记录 fresh evidence placeholder。\n\n## 遇到的问题\n暂无 blocker。\n\n## 下一步尝试\n运行下一次最小验证。\n\n## 状态更新\nstate.yaml 保持 active。\n"
         }
       },
       {
@@ -43,18 +39,12 @@
           "content": "schema_version: 1\ngoal: pass-smoke\nstatus: active\nobjective: Make the existing smoke check pass.\nstart_point: The repository is onboarded and the smoke check is failing.\nacceptance:\n  - Smoke check passes with fresh evidence.\nnon_goals:\n  - Do not change public behavior beyond the smoke fix.\nbudget:\n  kind: iterations\n  limit: 3\ncurrent_iteration: 1\nnext_action: Run the next smallest verification attempt.\nblocker_signature: null\nblocker_count: 0\nowner_stop: null\nupdated_at: 2026-06-21\n"
         }
       },
-      {"say": "Route: cs-goal\nContext: L1\nReason: bounded start/end goal with autonomous iteration.\nEscalation: acceptance conflict, spec/public contract change, repeated blocker, or budget exhaustion.\nNext: continue autonomously from state.yaml and write the next bilingual iteration pair."},
+      {"say": "Route: cs-goal\nContext: L1\nReason: bounded start/end goal with autonomous iteration.\nEscalation: acceptance conflict, spec/public contract change, repeated blocker, or budget exhaustion.\nNext: continue autonomously from state.yaml and write the next iteration report using the attention report language policy."},
       {"action": "resume_goal"},
       {
         "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.zh.md",
-          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 2\nlanguage: zh\nstatus_after: active\nnext_action: Compare the second fresh smoke result with acceptance.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 002\n\n## 本轮理解\n从 state.yaml 和已有 001 报告恢复，第二轮必须写 002 而不是覆盖历史。\n\n## 实现方式\n继续最小验证闭环。\n\n## 本轮变更\n追加第二轮 goal 报告。\n\n## 验证证据\n记录第二轮 fresh evidence placeholder。\n\n## 遇到的问题\n暂无 blocker。\n\n## 下一步尝试\n对照 acceptance 判断是否完成。\n\n## 状态更新\nstate.yaml current_iteration: 2。\n"
-        }
-      },
-      {
-        "write": {
-          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.en.md",
-          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 2\nlanguage: en\nstatus_after: active\nnext_action: Compare the second fresh smoke result with acceptance.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 002\n\n## Current Understanding\nResume from state.yaml and the existing 001 reports; the second iteration must write 002 instead of overwriting history.\n\n## Implementation Approach\nContinue the smallest verification loop.\n\n## Changes This Iteration\nAppended the second goal report.\n\n## Verification Evidence\nRecorded second-round fresh evidence placeholder.\n\n## Problems Encountered\nNo blocker yet.\n\n## Next Attempt\nCompare against acceptance and decide completion.\n\n## State Update\nstate.yaml current_iteration: 2.\n"
+          "path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.md",
+          "content": "---\ndoc_type: goal-iteration\ngoal: pass-smoke\niteration: 2\nstatus_after: active\nnext_action: Compare the second fresh smoke result with acceptance.\nblocker_signature: null\nupdated_at: 2026-06-21\n---\n\n# Iteration 002\n\n## 本轮理解\n从 state.yaml 和已有 001 报告恢复，第二轮必须写 002 而不是覆盖历史。\n\n## 实现方式\n继续最小验证闭环。\n\n## 本轮变更\n追加第二轮 goal 报告。\n\n## 验证证据\n记录第二轮 fresh evidence placeholder。\n\n## 遇到的问题\n暂无 blocker。\n\n## 下一步尝试\n对照 acceptance 判断是否完成。\n\n## 状态更新\nstate.yaml current_iteration: 2。\n"
         }
       },
       {
@@ -67,7 +57,7 @@
   },
   "expect": {
     "transcript": {
-      "contains": ["Route: cs-goal", "Context: L1", "continue autonomously"],
+      "contains": ["Route: cs-goal", "Context: L1", "continue autonomously", "attention report language policy"],
       "forbidden": ["Which technical approach should I use?"]
     },
     "trajectory": {
@@ -77,19 +67,16 @@
     "artifacts": {
       "must_create": [
         ".codestable/goals/2026-06-21-pass-smoke/state.yaml",
-        ".codestable/goals/2026-06-21-pass-smoke/goal.zh.md",
-        ".codestable/goals/2026-06-21-pass-smoke/goal.en.md",
-        ".codestable/goals/2026-06-21-pass-smoke/iterations/001.zh.md",
-        ".codestable/goals/2026-06-21-pass-smoke/iterations/001.en.md",
-        ".codestable/goals/2026-06-21-pass-smoke/iterations/002.zh.md",
-        ".codestable/goals/2026-06-21-pass-smoke/iterations/002.en.md"
+        ".codestable/goals/2026-06-21-pass-smoke/goal.md",
+        ".codestable/goals/2026-06-21-pass-smoke/iterations/001.md",
+        ".codestable/goals/2026-06-21-pass-smoke/iterations/002.md"
       ],
       "contains": [
+        {"path": ".codestable/attention.md", "text": "人读报告正文使用中文"},
         {"path": ".codestable/goals/2026-06-21-pass-smoke/state.yaml", "text": "current_iteration: 2"},
-        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.zh.md", "text": "## 本轮理解"},
-        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.en.md", "text": "## Current Understanding"},
-        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.zh.md", "text": "第二轮必须写 002"},
-        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.en.md", "text": "must write 002"}
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/goal.md", "text": "## 目标"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/001.md", "text": "## 本轮理解"},
+        {"path": ".codestable/goals/2026-06-21-pass-smoke/iterations/002.md", "text": "第二轮必须写 002"}
       ]
     },
     "git": {

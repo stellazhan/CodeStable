@@ -137,7 +137,7 @@ accept risk, or defer unresolved findings must upgrade to L2 or higher.
 |---|---|---|
 | `cs` | L1/L2 | Explain route, nearby exclusions when ambiguous, context level, and escalation trigger. If route choice itself needs owner approval before any unit exists, write `.codestable/brainstorms/{slug}/approval-report.md` and owner-stop. |
 | `cs-onboard` | L2/L4 | Empty repos can stay L1. Existing docs require inventory, mapping, trusted/stale classification, and owner approval before migration. |
-| `cs-goal` | L1/L2 | Grill bounded start/end goals, create dated `goals/YYYY-MM-DD-{slug}/` with `state.yaml` plus bilingual start/iteration docs before implementation, autonomously iterate, and require subagent functional acceptance before completion. Acceptance conflicts, spec/public-contract changes, repeated blockers, budget exhaustion, unavailable subagent acceptance, or risk acceptance trigger owner-stop with `approval-report.md` if the iteration report is insufficient. |
+| `cs-goal` | L1/L2 | Grill bounded start/end goals, create dated `goals/YYYY-MM-DD-{slug}/` with `state.yaml` plus start/iteration reports before implementation, follow the report language policy from `.codestable/attention.md`, autonomously iterate, and require subagent functional acceptance before completion. Acceptance conflicts, spec/public-contract changes, repeated blockers, budget exhaustion, unavailable subagent acceptance, or risk acceptance trigger owner-stop with `approval-report.md` if the iteration report is insufficient. |
 | `cs-brainstorm` | L1 -> L2 | Freeform discussion stays light. When interview / grill / route choice needs owner approval context, write `approval-report.md` before asking. |
 | `cs-roadmap` | L2/L3 | Owner brief, scope/non-goals, phases, owner decisions, clarifications, and any spec deltas implied by the roadmap. |
 | `cs-feat` | L1 | Stage routing and whether this is design, fast-forward, implementation, or acceptance. Ambiguous route requires a route-choice brief. |
@@ -194,10 +194,10 @@ explicit non-goal. Core scenarios:
 |---|---|
 | `cs-route-brief-minimal` | A short prompt routes to the correct skill, emits L1 context, and does not create heavy artifacts. |
 | `cs-root-route-choice-approval-report` | Root route ambiguity writes intake `approval-report.md` under `brainstorms/` before owner choice. |
-| `goal-autonomous-iteration-docs` | Bounded goal creates a dated goal directory, machine state, bilingual goal docs, bilingual iteration docs, and does not ask owner for routine technical choices. |
-| `goal-start-report-before-code` | Interview / grill creates bilingual start reports in a dated goal directory before implementation and does not edit code first. |
+| `goal-autonomous-iteration-docs` | Bounded goal creates a dated goal directory, machine state, start docs, iteration docs, follows attention report language policy, and does not ask owner for routine technical choices. |
+| `goal-start-report-before-code` | Interview / grill creates a start report in a dated goal directory before implementation and does not edit code first. |
 | `goal-code-edits-use-execution-gate` | Goal-wrapped code edits read execution conventions, run the worktree start gate, and stop before code changes when a linked worktree is required. |
-| `goal-functional-acceptance-before-complete` | Goal completion dispatches subagent functional acceptance and writes bilingual functional acceptance reports; tests alone do not close the goal. |
+| `goal-functional-acceptance-before-complete` | Goal completion dispatches subagent functional acceptance and writes a functional acceptance report; tests alone do not close the goal. |
 | `approval-report-before-owner-stop` | A grill / interview owner decision writes `approval-report.md` in the relevant unit before stopping for owner approval. |
 | `approval-report-pending-not-overwritten` | A new checkpoint does not overwrite an unresolved pending `approval-report.md`. |
 | `approval-report-reuse-history` | A later approval for the same unit reuses `approval-report.md` while preserving prior decision history. |

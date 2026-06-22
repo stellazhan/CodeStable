@@ -26,10 +26,8 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 ├── goals/                 限定起点/终点的自主迭代目标（起点报告 / iteration / 功能验收）
 │   └── YYYY-MM-DD-{slug}/
 │       ├── state.yaml
-│       ├── goal.zh.md
-│       ├── goal.en.md
-│       ├── functional-acceptance.zh.md
-│       ├── functional-acceptance.en.md
+│       ├── goal.md
+│       ├── functional-acceptance.md
 │       ├── approval-report.md  （需要 owner 审批但最近迭代报告未承载上下文时）
 │       └── iterations/
 ├── features/              feature spec 聚合根
@@ -78,6 +76,13 @@ onboard 完成后骨架（`cs-onboard` 负责搭建）：
 - 沉淀类：`compound/YYYY-MM-DD-{doc_type}-{slug}.md`，日期用**归档当天**
 - 架构 doc：`architecture/{type}-{slug}.md`（长效，不带日期前缀）；总入口固定 `ARCHITECTURE.md`
 - 项目注意事项入口固定为 `.codestable/attention.md`，所有 CodeStable 子技能启动前必须读取；不再兼容 `AGENTS.md` / `CLAUDE.md` 等外部入口
+
+### 报告语言策略
+
+- CodeStable 技能不在技能说明里硬编码报告语言；所有人读报告的正文语言以 `.codestable/attention.md` 的项目规则为准
+- attention 未写报告语言策略时，使用 owner 当前对话语言
+- 默认只写 canonical 报告文件；只有 attention 明确要求多语言副本时，才额外写 `{name}.{lang}.md`
+- 机器状态以 YAML / JSON / `state.yaml` 为准，不从不同语言的叙述反推状态
 
 ### 架构 doc 分组规则（同类聚合）
 

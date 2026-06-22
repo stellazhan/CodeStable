@@ -1,15 +1,16 @@
 ---
 name: cs-goal
-description: Goal-driven autonomous workflow for bounded start/end tasks. Use when the owner gives a desired outcome, acceptance result, budget, or asks AI to "reach this goal", "run until accepted", "self-iterate", "autonomous iteration", or "grill me" before implementation. Creates bilingual start, iteration, and functional acceptance artifacts under `.codestable/goals/`.
+description: Goal-driven autonomous workflow for bounded start/end tasks. Use when the owner gives a desired outcome, acceptance result, budget, or asks AI to "reach this goal", "run until accepted", "self-iterate", "autonomous iteration", or "grill me" before implementation. Creates start, iteration, and functional acceptance artifacts under `.codestable/goals/`; report prose follows `.codestable/attention.md`.
 ---
 
 # cs-goal
 
 `cs-goal` handles bounded goals: the owner gives the starting point and desired
-end state, then CodeStable interviews / grills lightly, writes a bilingual start
-report before implementation, implements autonomously, verifies, requests
-subagent functional acceptance before completion, and writes bilingual iteration
-reports.
+end state, then CodeStable interviews / grills lightly, writes a start report
+before implementation, implements autonomously, verifies, requests subagent
+functional acceptance before completion, and writes iteration reports. Report
+prose follows the project's report language policy in `.codestable/attention.md`;
+if no policy exists, use the owner's current conversation language.
 
 This is a goal wrapper, not a replacement for feature / issue / refactor rules.
 When the goal crosses a capability boundary, exposes a bug root cause, or needs
@@ -74,8 +75,8 @@ priority is:
 2. latest iteration frontmatter
 3. Markdown body text
 
-Never infer the current machine state from bilingual narrative when `state.yaml`
-has a clear value.
+Never infer the current machine state from report prose when `state.yaml` has a
+clear value.
 
 ---
 
@@ -104,7 +105,7 @@ Collect only:
 
 If the owner already gave enough information, summarize it and proceed.
 Before any code edit or autonomous implementation attempt, Phase 2 must create
-or refresh the bilingual start report pair.
+or refresh the start report.
 
 ---
 
@@ -115,10 +116,8 @@ Goal directory over its lifecycle:
 ```text
 .codestable/goals/YYYY-MM-DD-{slug}/
 ├── state.yaml
-├── goal.zh.md
-├── goal.en.md
-├── functional-acceptance.zh.md
-├── functional-acceptance.en.md
+├── goal.md
+├── functional-acceptance.md
 └── iterations/
 ```
 
@@ -126,20 +125,24 @@ Use the goal creation date in the directory name, matching feature / issue /
 refactor directory style. Keep the `state.yaml` `goal` field as the bare
 business slug.
 
-Create the functional acceptance pair only during the terminal acceptance gate,
-not as empty files at goal start.
+Create the functional acceptance report only during the terminal acceptance
+gate, not as an empty file at goal start.
 
-`goal.zh.md` and `goal.en.md` are the bilingual start report from the interview
-/ grill. They must exist before implementation. Include objective, starting
-point, acceptance criteria, non-goals, owner decisions, unresolved assumptions,
-and next action. Keep them concise and update them only when the goal boundary
-or state changes.
+`goal.md` is the durable start report from the interview / grill. It must exist
+before implementation. Include objective, starting point, acceptance criteria,
+non-goals, owner decisions, unresolved assumptions, and next action. Keep it
+concise and update it only when the goal boundary or state changes.
+
+Use canonical unsuffixed report paths by default. If `.codestable/attention.md`
+explicitly requires additional language copies, add suffix copies such as
+`goal.{lang}.md`, `functional-acceptance.{lang}.md`, and
+`iterations/{nnn}.{lang}.md`; do not require those variants by default.
 
 If an active matching goal exists, resume it instead of creating a duplicate,
 even when its dated directory prefix differs from today's date.
-Read `state.yaml`, the start report pair, then the latest
-`iterations/{n}.zh.md` and `{n}.en.md`. If the start report pair is missing,
-reconstruct it from state and interview evidence before code edits.
+Read `state.yaml`, existing start reports matching `goal*.md`, then the latest
+`iterations/{nnn}*.md`. If the start report is missing, reconstruct it from
+state and interview evidence before code edits.
 
 ---
 
@@ -156,12 +159,13 @@ Loop while `state: active`:
 3. Verify with fresh commands or evidence.
 4. Before changing `state.yaml.current_iteration`, derive the next zero-padded
    iteration number from
-   `state.yaml.current_iteration` and existing `iterations/{nnn}.*.md` files;
+   `state.yaml.current_iteration` and existing `iterations/{nnn}*.md` files;
    never overwrite a prior report.
 5. Update `state.yaml` for the completed attempt, leaving
    `current_iteration: {n}`.
-6. Write exactly one bilingual report pair for that completed iteration:
-   `iterations/{nnn}.zh.md` and `iterations/{nnn}.en.md`.
+6. Write the canonical report for that completed iteration:
+   `iterations/{nnn}.md`. Add language-suffixed copies only when
+   `.codestable/attention.md` requires them.
 7. Continue autonomously unless an owner-stop condition fires.
 
 Do not write reports after every command. Reports are iteration summaries.
@@ -175,10 +179,10 @@ Before changing `state.yaml.status` to `complete`:
 1. Run normal verification with fresh evidence.
 2. Dispatch a subagent to perform functional acceptance against the recorded
    owner acceptance criteria and actual product / artifact behavior.
-3. Record the result in both `functional-acceptance.zh.md` and
-   `functional-acceptance.en.md`, including reviewer, scope, acceptance checks,
-   functional evidence, verdict, residual risks, and any follow-up.
-4. Reference the functional acceptance pair in the final bilingual iteration.
+3. Record the result in `functional-acceptance.md`, including reviewer, scope,
+   acceptance checks, functional evidence, verdict, residual risks, and any
+   follow-up.
+4. Reference the functional acceptance report in the final iteration.
 
 Functional acceptance is product-facing evidence. It may include black-box usage,
 artifact inspection, UI / API workflow checks, fixture output review, or another
@@ -209,14 +213,14 @@ refactors are AI-owned unless they cross one of the stops above.
 ## Completion And Blocked Rules
 
 Mark `complete` only when the acceptance signal is satisfied, the subagent
-functional acceptance pair records a passing verdict, and evidence is recorded
-in the final iteration.
+functional acceptance report records a passing verdict, and evidence is
+recorded in the final iteration.
 
 Mark `blocked` only after the same blocker has repeated for at least three
 consecutive iterations or the owner-stop rule says the AI cannot safely proceed.
 Record `blocker_signature`, `blocker_count`, evidence, and the owner decision
 needed. Before asking the owner to decide, write `approval-report.md` in the goal
-directory unless the latest iteration pair already contains the full decision
+directory unless the latest iteration report already contains the full decision
 context, options, recommendation, tradeoffs, evidence, consequence, and next
 action.
 
@@ -230,21 +234,20 @@ pretending completion.
 A goal run exits with one of:
 
 - `complete`: acceptance evidence, subagent functional acceptance, and final
-  bilingual iteration written.
+  iteration written.
 - `blocked`: blocker evidence and owner question recorded.
 - `active`: iteration report written and next action recorded, but the current
   turn or budget ends before more work can be done.
 
-Final replies should be short and point to `goal.zh.md`, `goal.en.md`, the
-latest bilingual iteration pair, and the functional acceptance pair when the
-goal is complete.
+Final replies should be short and point to `goal.md`, the latest iteration
+report, and `functional-acceptance.md` when the goal is complete.
 
 ---
 
 ## Guardrails
 
 - Do not ask the owner to choose routine technical details.
-- Do not let bilingual prose override `state.yaml`.
+- Do not let report prose override `state.yaml`.
 - Do not create duplicate active goals for the same objective.
 - Do not skip iteration reports after meaningful work.
 - Do not mark completion from tests alone or forge subagent acceptance.
